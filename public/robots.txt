@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Disallow: /dashboard
+Disallow: /clients
+Disallow: /plans
+
+Sitemap: https://yourptaihelper.com/sitemap.xml

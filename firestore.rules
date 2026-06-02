@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users — trainers can only read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Clients — trainer owns their own clients
+    match /clients/{clientId} {
+      allow read, write: if request.auth != null && resource.data.trainerId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // Plans — trainer owns their own plans
+    match /plans/{planId} {
+      allow read, write: if request.auth != null && resource.data.trainerId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // Check-in schedules — trainer only
+    match /checkInSchedules/{scheduleId} {
+      allow read, write: if request.auth != null && resource.data.trainerId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // Check-ins:
+    //   - Trainer has full access to their own check-ins
+    //   - Public (unauthenticated) can READ a check-in if status == 'sent'
+    //     (document ID is the token — only accessible if you know the UUID link)
+    //   - Public can UPDATE to set status='answered' + answers (one-time only)
+    match /checkIns/{checkInId} {
+      allow read, write: if request.auth != null && resource.data.trainerId == request.auth.uid;
+      allow create: if request.auth != null;
+
+      // Public read — client accesses via the link in their email
+      allow read: if resource.data.status == 'sent';
+
+      // Public write — client submits their answers (status must go from 'sent' → 'answered')
+      allow update: if resource.data.status == 'sent'
+                    && request.resource.data.status == 'answered'
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'answers', 'answeredAt']);
+    }
+  }
+}
