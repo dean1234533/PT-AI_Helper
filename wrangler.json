@@ -1,4 +1,9 @@
 {
+  "name": "pthelper",
+  "compatibility_date": "2026-06-02",
+  "assets": {
+    "directory": "./dist"
+  },
   "observability": {
     "enabled": false
   }
