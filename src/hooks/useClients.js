@@ -25,10 +25,17 @@ export function useClients() {
       where('trainerId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setClients(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setClients(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('useClients snapshot error:', err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, [user]);
 

@@ -19,10 +19,17 @@ export function useCheckIns(clientId = null) {
     ];
     if (clientId) constraints.splice(1, 0, where('clientId', '==', clientId));
     const q = query(collection(db, 'checkIns'), ...constraints);
-    const unsub = onSnapshot(q, (snap) => {
-      setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('useCheckIns snapshot error:', err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, [user, clientId]);
 
@@ -52,10 +59,17 @@ export function useCheckInSchedules() {
       where('trainerId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setSchedules(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setSchedules(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('useCheckInSchedules snapshot error:', err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, [user]);
 

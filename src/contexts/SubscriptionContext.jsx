@@ -25,32 +25,44 @@ export function SubscriptionProvider({ children }) {
 
     const ref = doc(db, 'users', user.uid);
 
-    const unsub = onSnapshot(ref, async (snap) => {
-      if (!snap.exists()) {
-        // First login — create user document
-        const data = {
-          email: user.email,
-          displayName: user.displayName,
-          plan: 'free',
-          plansThisMonth: 0,
-          planMonth: currentMonth(),
-          createdAt: serverTimestamp(),
-        };
-        await setDoc(ref, data);
-        setSub(data);
-      } else {
-        const data = snap.data();
-        // Reset monthly counter if it's a new month
-        if (data.planMonth !== currentMonth()) {
-          const reset = { plansThisMonth: 0, planMonth: currentMonth() };
-          await updateDoc(ref, reset);
-          setSub({ ...data, ...reset });
-        } else {
-          setSub(data);
+    const unsub = onSnapshot(
+      ref,
+      async (snap) => {
+        try {
+          if (!snap.exists()) {
+            // First login — create user document
+            const data = {
+              email: user.email,
+              displayName: user.displayName,
+              plan: 'free',
+              plansThisMonth: 0,
+              planMonth: currentMonth(),
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(ref, data);
+            setSub(data);
+          } else {
+            const data = snap.data();
+            // Reset monthly counter if it's a new month
+            if (data.planMonth !== currentMonth()) {
+              const reset = { plansThisMonth: 0, planMonth: currentMonth() };
+              await updateDoc(ref, reset);
+              setSub({ ...data, ...reset });
+            } else {
+              setSub(data);
+            }
+          }
+        } catch (err) {
+          console.error('SubscriptionContext update error:', err);
+        } finally {
+          setLoading(false);
         }
+      },
+      (err) => {
+        console.error('SubscriptionContext snapshot error:', err);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    );
 
     return unsub;
   }, [user]);

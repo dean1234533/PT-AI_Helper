@@ -27,7 +27,7 @@ function useAnsweredCheckIns() {
       where('trainerId', '==', user.uid),
       where('status', '==', 'answered')
     );
-    const unsub = onSnapshot(q, (snap) => setCount(snap.size));
+    const unsub = onSnapshot(q, (snap) => setCount(snap.size), (err) => console.error('checkIn badge error:', err));
     return unsub;
   }, [user]);
   return count;
@@ -154,6 +154,16 @@ export default function Layout({ children }) {
 
   // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
+
+  // Lock body scroll when mobile sidebar is open to prevent layout shift
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    return () => document.body.classList.remove('sidebar-open');
+  }, [sidebarOpen]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

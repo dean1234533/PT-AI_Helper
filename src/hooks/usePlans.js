@@ -24,10 +24,17 @@ export function usePlans(clientId = null) {
     const constraints = [where('trainerId', '==', user.uid), orderBy('createdAt', 'desc')];
     if (clientId) constraints.splice(1, 0, where('clientId', '==', clientId));
     const q = query(collection(db, 'plans'), ...constraints);
-    const unsub = onSnapshot(q, (snap) => {
-      setPlans(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setPlans(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('usePlans snapshot error:', err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, [user, clientId]);
 
