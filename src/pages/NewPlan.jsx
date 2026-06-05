@@ -100,11 +100,11 @@ function StepIndicator({ step }) {
   );
 }
 
-function CheckboxGroup({ options, selected, onChange, cols = 2 }) {
+function CheckboxGroup({ options, selected, onChange }) {
   const toggle = (val) =>
     onChange(selected.includes(val) ? selected.filter((x) => x !== val) : [...selected, val]);
   return (
-    <div className={`grid grid-cols-${cols} gap-2`}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {options.map((opt) => (
         <label key={opt} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all text-sm ${
           selected.includes(opt) ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-gray-200 hover:border-gray-300 text-gray-700'
@@ -190,7 +190,7 @@ function Step2({ form, set }) {
         <p className="text-gray-500 text-sm mt-1">Basic stats and what they want to achieve.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Age" type="number" min="16" max="90" value={form.age} onChange={(e) => set({ age: e.target.value })} placeholder="32" required />
         <Select label="Gender" value={form.gender} onChange={(e) => set({ gender: e.target.value })} required>
           <option value="">Select...</option>
@@ -201,13 +201,13 @@ function Step2({ form, set }) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Input label="Height (cm)" type="number" value={form.heightCm} onChange={(e) => set({ heightCm: e.target.value })} placeholder="170" />
         <Input label="Current weight (kg)" type="number" value={form.weightKg} onChange={(e) => set({ weightKg: e.target.value })} placeholder="75" />
         <Input label="Goal weight (kg)" type="number" value={form.goalWeightKg} onChange={(e) => set({ goalWeightKg: e.target.value })} placeholder="70" hint="Optional" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select label="Primary goal *" value={form.primaryGoal} onChange={(e) => set({ primaryGoal: e.target.value })} required>
           <option value="">Select goal...</option>
           {goals.map((g) => <option key={g}>{g}</option>)}
@@ -273,7 +273,7 @@ function Step3({ form, set }) {
 
       <Input label="Occupation / job type" value={form.occupation} onChange={(e) => set({ occupation: e.target.value })} placeholder="e.g. Office worker, Nurse, Builder, Teacher..." />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select label="Average sleep per night" value={form.sleepHours} onChange={(e) => set({ sleepHours: e.target.value })}>
           {['Less than 5', '5', '6', '7', '8', '9', '10+'].map((v) => <option key={v} value={v}>{v} hours</option>)}
         </Select>
@@ -287,7 +287,7 @@ function Step3({ form, set }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select label="Smoking status" value={form.smokingStatus} onChange={(e) => set({ smokingStatus: e.target.value })}>
           <option value="no">Non-smoker</option>
           <option value="ex">Ex-smoker</option>
@@ -317,7 +317,7 @@ function Step4({ form, set }) {
 
       <div>
         <label className="text-sm font-medium text-gray-700 block mb-2">Dietary style *</label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {dietaryStyles.map((d) => (
             <label key={d} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-sm transition-all ${form.dietaryStyle === d ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-gray-200 hover:border-gray-300 text-gray-700'}`}>
               <input type="radio" className="hidden" value={d} checked={form.dietaryStyle === d} onChange={() => set({ dietaryStyle: d })} />
@@ -330,7 +330,7 @@ function Step4({ form, set }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Select label="Meals per day" value={form.mealsPerDay} onChange={(e) => set({ mealsPerDay: e.target.value })}>
           <option value="2">2 meals</option>
           <option value="3">3 meals</option>
@@ -391,10 +391,10 @@ function Step5({ form, set }) {
 
       <div>
         <label className="text-sm font-medium text-gray-700 block mb-2">Equipment available (tick all that apply)</label>
-        <CheckboxGroup options={equipmentList} selected={form.equipment} onChange={(v) => set({ equipment: v })} cols={2} />
+        <CheckboxGroup options={equipmentList} selected={form.equipment} onChange={(v) => set({ equipment: v })} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">Workout days per week: {form.workoutDaysPerWeek}</label>
           <input type="range" min="1" max="7" value={form.workoutDaysPerWeek} onChange={(e) => set({ workoutDaysPerWeek: e.target.value })} className="w-full accent-brand-600" />
@@ -415,7 +415,7 @@ function Step5({ form, set }) {
 
       <div>
         <label className="text-sm font-medium text-gray-700 block mb-2">Preferred workout styles (tick all that apply)</label>
-        <CheckboxGroup options={workoutTypes} selected={form.preferredWorkoutTypes} onChange={(v) => set({ preferredWorkoutTypes: v })} cols={2} />
+        <CheckboxGroup options={workoutTypes} selected={form.preferredWorkoutTypes} onChange={(v) => set({ preferredWorkoutTypes: v })} />
       </div>
 
       <Textarea label="Exercises to avoid" value={form.exercisesToAvoid} onChange={(e) => set({ exercisesToAvoid: e.target.value })} placeholder="e.g. No running (knee), no overhead press (shoulder injury)..." rows={2} />
@@ -458,9 +458,7 @@ function Step6({ form, set, onGenerate, generating }) {
           <p className="font-medium text-gray-600">Drag & drop a photo, or click to browse</p>
           <p className="text-xs text-gray-400 mt-1">JPG, PNG — optional but improves accuracy</p>
           <input type="file" accept="image/*" className="hidden" id="photo-upload" onChange={(e) => handleFile(e.target.files[0])} />
-          <label htmlFor="photo-upload">
-            <Button size="sm" variant="secondary" className="mt-4 cursor-pointer" as="span">Choose Photo</Button>
-          </label>
+          <Button size="sm" variant="secondary" className="mt-4 cursor-pointer" type="button" onClick={() => document.getElementById('photo-upload').click()}>Choose Photo</Button>
         </div>
       ) : (
         <div className="relative rounded-xl overflow-hidden border border-gray-200">
@@ -535,9 +533,13 @@ export default function NewPlan() {
     try {
       let photoUrl = '';
       if (form.photoFile) {
-        const fileRef = ref(storage, `client-photos/${Date.now()}-${form.photoFile.name}`);
-        await uploadBytes(fileRef, form.photoFile);
-        photoUrl = await getDownloadURL(fileRef);
+        try {
+          const fileRef = ref(storage, `client-photos/${Date.now()}-${form.photoFile.name}`);
+          await uploadBytes(fileRef, form.photoFile);
+          photoUrl = await getDownloadURL(fileRef);
+        } catch (uploadErr) {
+          console.warn('Photo upload failed, continuing without photo:', uploadErr);
+        }
       }
 
       const questionnaire = { ...form, photoFile: undefined, photoUrl: undefined };
@@ -548,7 +550,10 @@ export default function NewPlan() {
         body: JSON.stringify({ questionnaire, photoUrl }),
       });
 
-      if (!res.ok) throw new Error('Generation failed');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || errData.error || 'Generation failed');
+      }
       const { plan } = await res.json();
 
       const savedPlan = await savePlan({
@@ -591,7 +596,7 @@ export default function NewPlan() {
 
         <StepIndicator step={step} />
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-7">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sm:p-7">
           {step === 1 && <Step1 {...stepProps} clients={clients} />}
           {step === 2 && <Step2 {...stepProps} />}
           {step === 3 && <Step3 {...stepProps} />}

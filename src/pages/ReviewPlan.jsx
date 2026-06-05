@@ -109,32 +109,32 @@ export default function ReviewPlan() {
 
   return (
     <Layout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Breadcrumb items={[{ label: 'Plans', href: '/plans' }, { label: `${plan.clientName}'s Plan` }]} />
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{plan.clientName}'s Plan</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3 mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{plan.clientName}'s Plan</h1>
               <Badge status={plan.status} />
             </div>
             <p className="text-gray-500 text-sm">{plan.clientEmail} · {q.primaryGoal} · {q.fitnessLevel}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={() => setRevisionModal(true)}>
-              <RefreshCw className="w-4 h-4" /> Request Revision
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button variant="secondary" size="sm" onClick={() => setRevisionModal(true)}>
+              <RefreshCw className="w-4 h-4" /> Revision
             </Button>
-            <Button variant="secondary" onClick={handleSave} loading={saving}>
+            <Button variant="secondary" size="sm" onClick={handleSave} loading={saving}>
               <Save className="w-4 h-4" /> Save
             </Button>
-            <Button onClick={handleSend} loading={sending} variant="success">
+            <Button size="sm" onClick={handleSend} loading={sending} variant="success">
               <Send className="w-4 h-4" /> Send to Client
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: client summary */}
           <div className="space-y-4">
             {/* Client card */}
@@ -252,11 +252,11 @@ export default function ReviewPlan() {
             </div>
 
             {/* Bottom action bar */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex items-center justify-between">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <p className="text-sm text-gray-500">
                 Review the plan, add your notes, and send it to <span className="font-medium text-gray-800">{plan.clientEmail}</span>
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3 shrink-0">
                 <Button variant="secondary" onClick={handleSave} loading={saving} size="sm">
                   <Save className="w-4 h-4" /> Save Draft
                 </Button>

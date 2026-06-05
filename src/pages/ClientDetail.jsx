@@ -39,20 +39,20 @@ export default function ClientDetail() {
 
   return (
     <Layout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Breadcrumb items={[{ label: 'Clients', href: '/clients' }, { label: client.name }]} />
 
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xl font-bold">
+            <div className="w-14 h-14 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xl font-bold shrink-0">
               {client.name?.[0]?.toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
-              <p className="text-gray-500">{client.email}{client.phone ? ` · ${client.phone}` : ''}</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{client.name}</h1>
+              <p className="text-gray-500 text-sm sm:text-base truncate">{client.email}{client.phone ? ` · ${client.phone}` : ''}</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/plans/new', { state: { clientId: client.id, clientName: client.name, clientEmail: client.email } })}>
+          <Button className="shrink-0 self-start" onClick={() => navigate('/plans/new', { state: { clientId: client.id, clientName: client.name, clientEmail: client.email } })}>
             <Plus className="w-4 h-4" /> New Plan
           </Button>
         </div>
@@ -74,28 +74,30 @@ export default function ClientDetail() {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100">
-                  <th className="px-6 py-3 font-medium">Goal</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Created</th>
-                  <th className="px-6 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {plans.map((plan) => (
-                  <tr key={plan.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate(plan.status === 'draft' ? `/plans/${plan.id}/review` : `/plans/${plan.id}`)}>
-                    <td className="px-6 py-4 font-medium text-gray-800">{plan.questionnaire?.primaryGoal || '—'}</td>
-                    <td className="px-6 py-4"><Badge status={plan.status} /></td>
-                    <td className="px-6 py-4 text-gray-400">{timeAgo(plan.createdAt)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-brand-600 font-medium">{plan.status === 'draft' ? 'Review' : 'View'}</span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[360px]">
+                <thead>
+                  <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100">
+                    <th className="px-4 sm:px-6 py-3 font-medium">Goal</th>
+                    <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium hidden sm:table-cell">Created</th>
+                    <th className="px-4 sm:px-6 py-3 font-medium"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {plans.map((plan) => (
+                    <tr key={plan.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate(plan.status === 'draft' ? `/plans/${plan.id}/review` : `/plans/${plan.id}`)}>
+                      <td className="px-4 sm:px-6 py-4 font-medium text-gray-800">{plan.questionnaire?.primaryGoal || '—'}</td>
+                      <td className="px-4 sm:px-6 py-4"><Badge status={plan.status} /></td>
+                      <td className="px-6 py-4 text-gray-400 hidden sm:table-cell">{timeAgo(plan.createdAt)}</td>
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <span className="text-brand-600 font-medium">{plan.status === 'draft' ? 'Review' : 'View'}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

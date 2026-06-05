@@ -43,7 +43,7 @@ export default function Plans() {
 
   return (
     <Layout>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="All Plans"
           subtitle={`${plans.length} plans total`}
@@ -55,8 +55,8 @@ export default function Plans() {
         />
 
         {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div className="relative flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               value={search}
@@ -65,7 +65,7 @@ export default function Plans() {
               className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {['all', 'draft', 'approved', 'sent'].map((s) => (
               <button
                 key={s}
@@ -90,39 +90,41 @@ export default function Plans() {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 bg-gray-50/50">
-                  <th className="px-6 py-3 font-medium">Client</th>
-                  <th className="px-6 py-3 font-medium">Goal</th>
-                  <th className="px-6 py-3 font-medium">Fitness Level</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Created</th>
-                  <th className="px-6 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map((plan) => (
-                  <tr key={plan.id} className="hover:bg-gray-50/70 transition-colors cursor-pointer" onClick={() => navigate(plan.status === 'draft' ? `/plans/${plan.id}/review` : `/plans/${plan.id}`)}>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-gray-900">{plan.clientName}</p>
-                        <p className="text-gray-400 text-xs">{plan.clientEmail}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{plan.questionnaire?.primaryGoal || '—'}</td>
-                    <td className="px-6 py-4 text-gray-600 capitalize">{plan.questionnaire?.fitnessLevel || '—'}</td>
-                    <td className="px-6 py-4"><Badge status={plan.status} /></td>
-                    <td className="px-6 py-4 text-gray-400">{timeAgo(plan.createdAt)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-brand-600 hover:text-brand-700 font-medium">
-                        {plan.status === 'draft' ? 'Review' : 'View'}
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[560px]">
+                <thead>
+                  <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100 bg-gray-50/50">
+                    <th className="px-4 sm:px-6 py-3 font-medium">Client</th>
+                    <th className="px-6 py-3 font-medium hidden sm:table-cell">Goal</th>
+                    <th className="px-6 py-3 font-medium hidden md:table-cell">Fitness Level</th>
+                    <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium hidden sm:table-cell">Created</th>
+                    <th className="px-4 sm:px-6 py-3 font-medium"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filtered.map((plan) => (
+                    <tr key={plan.id} className="hover:bg-gray-50/70 transition-colors cursor-pointer" onClick={() => navigate(plan.status === 'draft' ? `/plans/${plan.id}/review` : `/plans/${plan.id}`)}>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-gray-900">{plan.clientName}</p>
+                          <p className="text-gray-400 text-xs">{plan.clientEmail}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">{plan.questionnaire?.primaryGoal || '—'}</td>
+                      <td className="px-6 py-4 text-gray-600 capitalize hidden md:table-cell">{plan.questionnaire?.fitnessLevel || '—'}</td>
+                      <td className="px-4 sm:px-6 py-4"><Badge status={plan.status} /></td>
+                      <td className="px-6 py-4 text-gray-400 hidden sm:table-cell">{timeAgo(plan.createdAt)}</td>
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <button className="text-brand-600 hover:text-brand-700 font-medium">
+                          {plan.status === 'draft' ? 'Review' : 'View'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

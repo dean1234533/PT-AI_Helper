@@ -5,7 +5,8 @@ const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
 
 function WeeklyScheduleGrid({ schedule }) {
   return (
-    <div className="grid grid-cols-7 gap-1">
+    <div className="overflow-x-auto">
+    <div className="grid grid-cols-7 gap-1 min-w-[420px]">
       {dayOrder.map((day) => {
         const activity = schedule[day];
         return (
@@ -17,6 +18,7 @@ function WeeklyScheduleGrid({ schedule }) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

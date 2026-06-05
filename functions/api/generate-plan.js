@@ -1,14 +1,119 @@
 /**
  * Cloudflare Pages Function — POST /api/generate-plan
  *
- * Env vars required (set in Cloudflare Pages dashboard):
- *   ANTHROPIC_API_KEY
- *   USDA_API_KEY  (free key from https://fdc.nal.usda.gov/api-key-signup.html — defaults to DEMO_KEY)
+ * Tries each AI provider in order; moves to next on 429/402/503 (rate-limit / quota).
+ * Set these in the Cloudflare Pages dashboard (Settings → Environment Variables):
  *
- * External APIs used:
- *   USDA FoodData Central  — real nutritional data per food (free, no auth needed for DEMO_KEY)
- *   wger REST API          — real exercise database filtered by equipment (free, no auth needed)
+ *   CEREBRAS_API_KEY     → cerebras.ai/free
+ *   GROQ_API_KEY         → console.groq.com
+ *   OPENROUTER_API_KEY   → openrouter.ai
+ *   MISTRAL_API_KEY      → console.mistral.ai
+ *   GITHUB_MODELS_TOKEN  → github.com → Settings → Developer settings → Personal access tokens
+ *   USDA_API_KEY         → fdc.nal.usda.gov/api-key-signup.html (optional, falls back to DEMO_KEY)
+ *
+ * External APIs (free, no key needed):
+ *   USDA FoodData Central — verified nutritional data per food
+ *   wger REST API         — exercise database filtered by client equipment
  */
+
+// ─── AI provider cascade ─────────────────────────────────────────────────────
+
+const PROVIDERS = [
+  {
+    name: 'Cerebras',
+    envKey: 'CEREBRAS_API_KEY',
+    url: 'https://api.cerebras.ai/v1/chat/completions',
+    model: 'llama-3.3-70b',
+    visionModel: null,
+    maxTokens: 8192,
+    jsonMode: true,
+  },
+  {
+    name: 'Groq',
+    envKey: 'GROQ_API_KEY',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    model: 'llama-3.3-70b-versatile',
+    visionModel: 'llama-3.2-11b-vision-preview',
+    maxTokens: 8192,
+    jsonMode: true,
+  },
+  {
+    name: 'OpenRouter',
+    envKey: 'OPENROUTER_API_KEY',
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    model: 'meta-llama/llama-3.3-70b-instruct:free',
+    visionModel: 'meta-llama/llama-3.2-11b-vision-instruct:free',
+    maxTokens: 8192,
+    jsonMode: false,
+  },
+  {
+    name: 'Mistral',
+    envKey: 'MISTRAL_API_KEY',
+    url: 'https://api.mistral.ai/v1/chat/completions',
+    model: 'open-mistral-7b',
+    visionModel: null,
+    maxTokens: 8192,
+    jsonMode: false,
+  },
+  {
+    name: 'GitHub Models',
+    envKey: 'GITHUB_MODELS_TOKEN',
+    url: 'https://models.inference.ai.azure.com/chat/completions',
+    model: 'meta-llama-3.1-70b-instruct',
+    visionModel: null,
+    maxTokens: 4096,
+    jsonMode: false,
+  },
+];
+
+// Fall through to the next provider on these status codes
+const FALLTHROUGH_CODES = new Set([429, 402, 503, 529]);
+
+async function callProvider(provider, key, systemPrompt, userText, photoUrl) {
+  const useVision = !!(photoUrl && provider.visionModel);
+  const model = useVision ? provider.visionModel : provider.model;
+
+  const userContent = useVision
+    ? [
+        { type: 'image_url', image_url: { url: photoUrl } },
+        { type: 'text', text: userText },
+      ]
+    : userText;
+
+  const body = {
+    model,
+    max_tokens: provider.maxTokens,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
+    ],
+  };
+
+  // JSON mode enforces valid JSON output; disable for vision models (not universally supported)
+  if (provider.jsonMode && !useVision) {
+    body.response_format = { type: 'json_object' };
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${key}`,
+  };
+
+  // OpenRouter requires these headers to identify the app
+  if (provider.name === 'OpenRouter') {
+    headers['HTTP-Referer'] = 'https://pt-ai-helper.pages.dev';
+    headers['X-Title'] = 'PT AI Helper';
+  }
+
+  const res = await fetch(provider.url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(55000),
+  });
+
+  return { res, model, providerName: provider.name };
+}
 
 // ─── USDA: food queries per dietary style ───────────────────────────────────
 
@@ -336,8 +441,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'questionnaire is required' }), { status: 400, headers: corsHeaders });
     }
 
-    // Fetch real data from USDA and wger in parallel — both are fire-and-forget;
-    // if they fail we still generate the plan with Claude's own knowledge
+    // Fetch real food and exercise data in parallel — failures are non-fatal
     const [usdaFoods, wgerExercises] = await Promise.all([
       fetchUSDAFoods(questionnaire.dietaryStyle, env.USDA_API_KEY).catch(() => []),
       fetchWgerExercises(questionnaire.equipment, questionnaire.preferredWorkoutTypes).catch(() => []),
@@ -347,36 +451,57 @@ export async function onRequestPost(context) {
 
     const userText = buildUserPrompt(questionnaire, photoUrl, usdaFoods, wgerExercises);
 
-    // Build message — include photo for Claude vision if provided
-    const messageContent = [];
-    if (photoUrl) {
-      messageContent.push({ type: 'image', source: { type: 'url', url: photoUrl } });
+    // ── Provider cascade ─────────────────────────────────────────────────────
+    let rawText = null;
+    let usedProvider = null;
+    const errors = [];
+
+    for (const provider of PROVIDERS) {
+      const key = env[provider.envKey];
+      if (!key) {
+        console.log(`Skipping ${provider.name} — ${provider.envKey} not configured`);
+        continue;
+      }
+
+      try {
+        console.log(`Trying ${provider.name}…`);
+        const { res, model, providerName } = await callProvider(provider, key, SYSTEM_PROMPT, userText, photoUrl);
+
+        if (FALLTHROUGH_CODES.has(res.status)) {
+          const body = await res.text();
+          console.warn(`${providerName} rate-limited (${res.status}): ${body.slice(0, 200)}`);
+          errors.push(`${providerName}: ${res.status}`);
+          continue;
+        }
+
+        if (!res.ok) {
+          const body = await res.text();
+          console.error(`${providerName} error (${res.status}): ${body.slice(0, 300)}`);
+          errors.push(`${providerName}: ${res.status} — ${body.slice(0, 150)}`);
+          continue;
+        }
+
+        const data = await res.json();
+        rawText = data.choices?.[0]?.message?.content || '';
+        usedProvider = `${providerName} / ${model}`;
+        console.log(`Generated with ${usedProvider} (${rawText.length} chars)`);
+        break;
+
+      } catch (fetchErr) {
+        console.error(`${provider.name} fetch failed:`, fetchErr.message);
+        errors.push(`${provider.name}: ${fetchErr.message}`);
+      }
     }
-    messageContent.push({ type: 'text', text: userText });
 
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8192,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: messageContent }],
-      }),
-    });
-
-    if (!anthropicRes.ok) {
-      const err = await anthropicRes.text();
-      console.error('Anthropic error:', err);
-      return new Response(JSON.stringify({ error: 'AI generation failed', detail: err }), { status: 502, headers: corsHeaders });
+    if (!rawText) {
+      return new Response(
+        JSON.stringify({
+          error: 'All AI providers failed or are rate-limited. Add API keys in Cloudflare Pages → Settings → Environment Variables.',
+          providers: errors,
+        }),
+        { status: 502, headers: corsHeaders }
+      );
     }
-
-    const anthropicData = await anthropicRes.json();
-    const rawText = anthropicData.content?.[0]?.text || '';
 
     let plan;
     try {
@@ -390,11 +515,11 @@ export async function onRequestPost(context) {
       );
     }
 
-    // Attach data source metadata so the frontend can optionally show it
     plan._meta = {
       usdaFoodsUsed: usdaFoods.length,
       wgerExercisesUsed: wgerExercises.length,
       generatedAt: new Date().toISOString(),
+      provider: usedProvider,
     };
 
     return new Response(JSON.stringify({ success: true, plan }), { headers: corsHeaders });

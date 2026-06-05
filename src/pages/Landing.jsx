@@ -144,10 +144,10 @@ export default function Landing() {
         {/* ── Hero visual ──────────────────────────────────────────────────── */}
         <Section className="max-w-6xl mx-auto mb-24">
           <div className="bg-gradient-to-br from-[#1e1b4b] via-brand-700 to-purple-800 rounded-3xl p-1 shadow-2xl shadow-brand-500/20">
-            <div className="bg-gradient-to-br from-[#1e1b4b] to-[#312e81] rounded-[22px] p-8">
-              <div className="grid grid-cols-3 gap-4 text-white">
+            <div className="bg-gradient-to-br from-[#1e1b4b] to-[#312e81] rounded-[22px] p-4 sm:p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-white">
                 {/* Mock dashboard preview */}
-                <div className="col-span-1 bg-white/10 rounded-2xl p-4 space-y-3">
+                <div className="sm:col-span-1 bg-white/10 rounded-2xl p-4 space-y-3">
                   <p className="text-xs font-semibold text-white/50 uppercase tracking-wide">Clients</p>
                   {['Sarah J.', 'Mike T.', 'Emma R.', 'James L.'].map((n) => (
                     <div key={n} className="flex items-center gap-2.5 bg-white/5 rounded-xl px-3 py-2">
@@ -156,7 +156,7 @@ export default function Landing() {
                     </div>
                   ))}
                 </div>
-                <div className="col-span-2 space-y-3">
+                <div className="sm:col-span-2 space-y-3">
                   <div className="bg-white/10 rounded-2xl p-4">
                     <p className="text-xs font-semibold text-white/50 uppercase tracking-wide mb-3">Sarah's Nutrition Plan</p>
                     <div className="grid grid-cols-3 gap-2 mb-3">
@@ -229,7 +229,7 @@ export default function Landing() {
 
         {/* ── How it works ─────────────────────────────────────────────────── */}
         <Section className="max-w-4xl mx-auto mb-24" id="how-it-works">
-          <div className="bg-gradient-to-br from-gray-50 to-brand-50/40 rounded-3xl p-10 border border-gray-100">
+          <div className="bg-gradient-to-br from-gray-50 to-brand-50/40 rounded-3xl p-6 sm:p-10 border border-gray-100">
             <div className="text-center mb-10">
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3">From zero to plan in 5 steps</h2>
               <p className="text-gray-500">No technical knowledge required.</p>
@@ -290,7 +290,7 @@ export default function Landing() {
 
         {/* ── CTA ──────────────────────────────────────────────────────────── */}
         <Section className="max-w-3xl mx-auto mb-24 text-center">
-          <div className="bg-gradient-to-br from-brand-600 to-purple-700 rounded-3xl p-12 text-white shadow-2xl shadow-brand-500/20">
+          <div className="bg-gradient-to-br from-brand-600 to-purple-700 rounded-3xl p-6 sm:p-12 text-white shadow-2xl shadow-brand-500/20">
             <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-6">
               <Dumbbell className="w-7 h-7" />
             </div>

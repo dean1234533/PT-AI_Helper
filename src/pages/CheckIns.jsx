@@ -273,7 +273,7 @@ export default function CheckIns() {
           title="Client Check-ins"
           subtitle="Monitor client progress and schedule video calls."
           action={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {dueSchedules.length > 0 && (
                 <Button variant="secondary" onClick={handleProcessDue} loading={processing} size="sm">
                   <RefreshCw className="w-4 h-4" /> Send {dueSchedules.length} Due
@@ -282,7 +282,7 @@ export default function CheckIns() {
               <Button variant="secondary" onClick={() => setScheduleModal(true)} size="sm">
                 <Calendar className="w-4 h-4" /> Schedule
               </Button>
-              <Button onClick={() => setSendModal(true)}>
+              <Button size="sm" onClick={() => setSendModal(true)}>
                 <Plus className="w-4 h-4" /> Send Check-in
               </Button>
             </div>
