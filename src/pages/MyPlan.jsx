@@ -287,7 +287,7 @@ export default function MyPlan() {
     setError(null);
     try {
       const prompt = `
-You are an elite Personal Trainer and Sports Dietitian. Generate a comprehensive 7-day Workout & Nutrition Plan.
+You are an elite Personal Trainer and Sports Dietitian with 15 years experience. Generate a comprehensive, realistic 7-day Workout & Nutrition Plan.
 
 User Profile:
 - Name: ${profile.name}
@@ -311,6 +311,23 @@ User Profile:
 - Likes: ${profile.foodsLiked || 'None'}
 - Meals/day: ${profile.mealsPerDay}
 - Dietary restrictions: ${profile.dietaryRestrictions || 'None'}
+
+CRITICAL WORKOUT RULES — READ CAREFULLY:
+1. Every training day MUST have a MINIMUM of 6 exercises, ideally 7-8. A 2 or 3 exercise session is NOT acceptable. A real PT would never write a session with fewer than 6 movements.
+2. WARM UP must be detailed and specific to the muscle groups being trained that day — minimum 3-4 specific movements with duration. Example for a leg day: "5 min bike or brisk walk, leg swings x10 each leg, bodyweight squats x15, hip circles x10 each direction, walking lunges x10". NOT just "5 min dynamic warmup".
+3. COOL DOWN must be detailed and specific — minimum 4-5 stretches targeting the muscles worked, each held 30-45 seconds. Example for chest day: "Doorframe chest stretch 45s each side, cross-body shoulder stretch 30s each, tricep overhead stretch 30s each, child's pose 45s, cat-cow 10 reps". NOT just "pec stretch, child's pose".
+4. Session duration is ${profile.sessionDuration} mins — plan exercises, sets, reps and rest times accordingly so the session actually fills that time.
+5. Exercise selection must match the equipment available: ${profile.equipment?.join(', ') || 'bodyweight only'}.
+6. Progressive overload note must be SPECIFIC per exercise — what exact weight/rep change happens each week.
+
+CRITICAL MEAL PLAN RULES — READ CAREFULLY:
+1. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
+2. LUNCH should be a proper midday meal: sandwiches, wraps, salads, soups, pasta, jacket potato, stir fry, sushi bowls.
+3. DINNER should be a proper evening meal: grilled fish/chicken/meat with vegetables and a carb source, pasta dishes, curry with rice, stir fry, burgers, steak, salmon.
+4. SNACKS should be realistic: protein bar, fruit, Greek yogurt, nuts, rice cakes with peanut butter, cottage cheese, protein shake.
+5. VARIETY is essential — do NOT repeat the same meal more than twice across the 7 days. Each day should feel different and enjoyable.
+6. Make meals CULTURALLY APPROPRIATE and APPEALING — these are meals real people in the UK would actually enjoy eating.
+7. Calorie targets must be REALISTIC for the user's goal and body weight. Do not under-eat — a ${profile.weight}kg person needs substantial calories.
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -354,7 +371,7 @@ Return ONLY a valid JSON object with this exact structure:
           "time": "7:30 AM",
           "calories": 550,
           "macros": { "protein": 40, "carbs": 60, "fat": 15 },
-          "ingredients": ["150g rolled oats", "2 whole eggs", "30g whey protein", "200ml semi-skimmed milk", "1 medium banana"]
+          "ingredients": ["80g rolled oats", "250ml semi-skimmed milk", "1 medium banana", "30g whey protein powder", "1 tbsp honey"]
         }
       ]
     }
@@ -364,11 +381,17 @@ Return ONLY a valid JSON object with this exact structure:
 Rules:
 - workoutPlan.days: provide exactly 7 days. Mark rest days with isRestDay: true and empty exercises array.
 - Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
+- Each training day MUST have a MINIMUM of 6 exercises — 7-8 is ideal. NEVER generate a session with fewer than 6 exercises.
+- Warm up must be specific to the muscle groups trained that day — list 3-4 named movements with reps/duration.
+- Cool down must list 4-5 specific stretches with hold times targeting muscles worked.
 - weeklyMealPlan: provide exactly 7 days, each with ${profile.mealsPerDay} meals (breakfast, ${Number(profile.mealsPerDay) >= 4 ? 'morning snack, ' : ''}lunch, ${Number(profile.mealsPerDay) >= 5 ? 'afternoon snack, ' : ''}dinner${Number(profile.mealsPerDay) >= 3 ? ', snack' : ''}).
-- Include ingredient gram weights in every ingredient string (e.g. "150g chicken breast").
+- Include ingredient gram weights in every ingredient string (e.g. "150g salmon fillet").
+- BREAKFAST MUST contain breakfast foods — oats, eggs, yogurt, toast, fruit, smoothies. NEVER chicken or rice at breakfast.
+- Vary meals across the week — no two identical breakfasts, lunches, or dinners.
 - exercises.notes: write like a qualified PT coaching cue — form, tempo, breathing.
 - exercises.progressionNote: specific week-by-week overload strategy for this exercise.
 - No allergens from: ${profile.allergies?.join(', ') || 'none'}. No dislikes: ${profile.foodsDisliked || 'none'}.
+- Liked foods to include where possible: ${profile.foodsLiked || 'none'}.
 - Return ONLY the JSON. No preamble, no markdown.
 `;
 
