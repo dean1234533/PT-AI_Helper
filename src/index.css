@@ -38,7 +38,7 @@
 
   /* Gradient text */
   .gradient-text {
-    background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%);
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #34d399 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -46,7 +46,7 @@
 
   /* Animated gradient border */
   .gradient-border {
-    background: linear-gradient(135deg, #7c3aed, #2563eb, #059669);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8, #059669);
     padding: 1px;
     border-radius: 1rem;
   }

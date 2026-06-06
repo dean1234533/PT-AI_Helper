@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, ClipboardList, CheckSquare, User,
+  LayoutDashboard, ClipboardList, CheckSquare, User, Users,
   LogOut, Dumbbell, Menu, X, MessageCircle, Settings,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,9 +15,14 @@ const navItems = [
   { to: '/profile',   label: 'My Profile', icon: User },
 ];
 
+const adminNavItems = [
+  { to: '/clients',   label: 'Clients',    icon: Users },
+];
+
 function Sidebar({ onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
   const handleLogout = async () => {
     await logout();
@@ -52,7 +57,7 @@ function Sidebar({ onClose }) {
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {[...navItems, ...(isAdmin ? adminNavItems : [])].map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

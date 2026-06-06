@@ -201,7 +201,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto px-4 pt-12">
@@ -223,7 +223,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
             onClick={() => { setActiveTab('new'); setAdjustmentSummary(null); }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'new'
-                ? 'bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-md'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -234,7 +234,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
             onClick={() => setActiveTab('history')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'history'
-                ? 'bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-md'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -268,7 +268,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
-                    <Weight className="w-4 h-4 text-violet-400" /> Current Weight (kg)
+                    <Weight className="w-4 h-4 text-blue-400" /> Current Weight (kg)
                   </label>
                   <input
                     type="number"
@@ -277,7 +277,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     placeholder="e.g. 74.5"
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl py-3.5 px-4 text-slate-100 text-sm outline-none transition-all"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl py-3.5 px-4 text-slate-100 text-sm outline-none transition-all"
                   />
                 </div>
 
@@ -293,7 +293,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                         max="10"
                         value={energy}
                         onChange={(e) => setEnergy(Number(e.target.value))}
-                        className="w-full accent-violet-600 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
+                        className="w-full accent-blue-600 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
                       />
                       <span className="font-extrabold text-sm text-slate-200 min-w-4 text-center">{energy}</span>
                     </div>
@@ -310,7 +310,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                         max="10"
                         value={mood}
                         onChange={(e) => setMood(Number(e.target.value))}
-                        className="w-full accent-violet-600 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
+                        className="w-full accent-blue-600 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
                       />
                       <span className="font-extrabold text-sm text-slate-200 min-w-4 text-center">{mood}</span>
                     </div>
@@ -336,7 +336,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                         onClick={() => setAdherenceWorkout(item.key)}
                         className={`py-3 text-xs font-semibold rounded-2xl border transition-all ${
                           adherenceWorkout === item.key
-                            ? 'bg-violet-600 border-transparent text-white'
+                            ? 'bg-blue-600 border-transparent text-white'
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
@@ -362,7 +362,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                         onClick={() => setAdherenceNutrition(item.key)}
                         className={`py-3 text-xs font-semibold rounded-2xl border transition-all ${
                           adherenceNutrition === item.key
-                            ? 'bg-violet-600 border-transparent text-white'
+                            ? 'bg-blue-600 border-transparent text-white'
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
@@ -384,7 +384,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                     value={notesWell}
                     onChange={(e) => setNotesWell(e.target.value)}
                     placeholder="e.g. Energy was high, hit all my protein goals, chest presses felt stronger..."
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all resize-none"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all resize-none"
                   />
                 </div>
 
@@ -397,7 +397,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                     value={notesChallenging}
                     onChange={(e) => setNotesChallenging(e.target.value)}
                     placeholder="e.g. Knee felt a bit tight on lunges, struggled to prep meals on Thursday..."
-                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all resize-none"
+                    className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all resize-none"
                   />
                 </div>
               </div>
@@ -420,7 +420,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                       </button>
                     </div>
                   ) : (
-                    <label className="w-20 h-20 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-violet-500/30 rounded-xl flex items-center justify-center cursor-pointer text-slate-400 transition-all">
+                    <label className="w-20 h-20 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/30 rounded-xl flex items-center justify-center cursor-pointer text-slate-400 transition-all">
                       <Camera className="w-6 h-6" />
                       <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                     </label>
@@ -437,7 +437,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 py-4 border border-transparent rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-emerald-600 hover:from-violet-500 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex justify-center items-center gap-2 py-4 border border-transparent rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -469,7 +469,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                   <div key={check.id} className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-lg">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-800/80 pb-4 mb-4 gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-violet-600/10 rounded-xl text-violet-400 font-extrabold text-xs">
+                        <div className="p-2 bg-blue-600/10 rounded-xl text-blue-400 font-extrabold text-xs">
                           W{check.weekNumber}
                         </div>
                         <div>
@@ -479,7 +479,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                       </div>
                       <div className="flex items-center gap-4 text-xs font-semibold text-slate-350">
                         <span className="flex items-center gap-1">
-                          <Weight className="w-3.5 h-3.5 text-violet-400" /> {check.weight} kg
+                          <Weight className="w-3.5 h-3.5 text-blue-400" /> {check.weight} kg
                         </span>
                         <span className="flex items-center gap-1">
                           <Zap className="w-3.5 h-3.5 text-amber-500" /> E: {check.energy}/10

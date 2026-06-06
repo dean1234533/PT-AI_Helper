@@ -12,6 +12,7 @@ import BodyAnalysis from './pages/BodyAnalysis';
 import Dashboard from './pages/Dashboard';
 import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
+import Clients from './pages/Clients';
 
 function AppRoutes() {
   return (
@@ -77,6 +78,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfileSetup />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/clients"
+        element={
+          <ProtectedRoute>
+            <Clients />
           </ProtectedRoute>
         }
       />

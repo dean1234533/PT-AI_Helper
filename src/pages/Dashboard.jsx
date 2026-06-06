@@ -159,7 +159,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-1.5 font-medium">{progressSummary.text}</p>
               </div>
-              <div className="p-3 bg-violet-600/10 border border-violet-500/20 text-violet-400 rounded-xl">
+              <div className="p-3 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-xl">
                 <Weight className="w-5 h-5" />
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-4">
                   <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <Calendar className="w-4.5 h-4.5 text-violet-400" />
+                    <Calendar className="w-4.5 h-4.5 text-blue-400" />
                     Today's Routine
                   </h3>
                   {todayWorkout?.isRestDay && (
@@ -233,7 +233,7 @@ export default function Dashboard() {
                     <p className="text-xs text-slate-500">No active workout plans found.</p>
                     <button
                       onClick={() => navigate('/plan')}
-                      className="mt-3 text-xs bg-violet-600 hover:bg-violet-500 text-white font-bold py-2 px-4 rounded-xl transition-all"
+                      className="mt-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-all"
                     >
                       Generate Your Plan
                     </button>
@@ -330,7 +330,7 @@ export default function Dashboard() {
                 onClick={() => navigate('/plan')}
                 className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
               >
-                <div className="p-3 bg-violet-600/10 text-violet-400 rounded-xl">
+                <div className="p-3 bg-blue-600/10 text-blue-400 rounded-xl">
                   <Dumbbell className="w-5 h-5" />
                 </div>
                 <div>
@@ -386,7 +386,7 @@ export default function Dashboard() {
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md space-y-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <Cpu className="w-4.5 h-4.5 text-violet-400" />
+                    <Cpu className="w-4.5 h-4.5 text-blue-400" />
                     AI Engine (Admin Only)
                   </h3>
                   <button
@@ -412,7 +412,7 @@ export default function Dashboard() {
                         onClick={() => { setAdminProvider(p.id); toast.success(`Switched to ${p.label}`); }}
                         className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border text-center transition-all ${
                           isActive
-                            ? 'border-violet-500/60 bg-violet-600/10 shadow-lg shadow-violet-900/20'
+                            ? 'border-blue-500/60 bg-blue-600/10 shadow-lg shadow-blue-900/20'
                             : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/60'
                         }`}
                       >
@@ -440,13 +440,13 @@ export default function Dashboard() {
                 {/* Model selector for active provider */}
                 <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Bot className="w-4 h-4 text-violet-400" />
+                    <Bot className="w-4 h-4 text-blue-400" />
                     <span className="text-xs font-semibold text-slate-300">Active Model:</span>
                   </div>
                   <select
                     value={activeModel}
                     onChange={(e) => { setAdminModel(e.target.value); toast.success('Model updated'); }}
-                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-violet-500 rounded-xl py-2 px-3 text-slate-200 text-xs outline-none transition-all"
+                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-blue-500 rounded-xl py-2 px-3 text-slate-200 text-xs outline-none transition-all"
                   >
                     {AI_PROVIDERS[activeProvider]?.models.map((m) => (
                       <option key={m.id} value={m.id}>{m.label}</option>
@@ -481,7 +481,7 @@ export default function Dashboard() {
               {/* ── Admin: Invite Link Generator ── */}
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md space-y-4">
                 <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                  <Link className="w-4.5 h-4.5 text-violet-400" />
+                  <Link className="w-4.5 h-4.5 text-blue-400" />
                   Invite Link Generator (Admin Only)
                 </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
@@ -495,11 +495,11 @@ export default function Dashboard() {
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="client@example.com"
-                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all"
+                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                   >
                     <Plus className="w-4 h-4" />
                     Generate Link
@@ -508,7 +508,7 @@ export default function Dashboard() {
 
                 {generatedLink && (
                   <div className="mt-4 bg-slate-950/60 p-4 border border-slate-850 rounded-2xl flex items-center justify-between gap-4 max-w-xl">
-                    <span className="text-xxs text-violet-400 font-mono break-all select-all">
+                    <span className="text-xxs text-blue-400 font-mono break-all select-all">
                       {generatedLink}
                     </span>
                     <button

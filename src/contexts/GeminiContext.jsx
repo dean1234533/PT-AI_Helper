@@ -35,7 +35,7 @@ export const AI_PROVIDERS = {
     id:       'groq',
     label:    'Groq',
     badge:    'Fast',
-    color:    '#F55036',
+    color:    '#2563eb',
     models: [
       { id: 'llama-3.3-70b-versatile',    label: 'Llama 3.3 70B (versatile)' },
       { id: 'llama-3.1-8b-instant',       label: 'Llama 3.1 8B (instant)' },
@@ -49,8 +49,9 @@ export const AI_PROVIDERS = {
     badge:    'Ultra-fast',
     color:    '#6B48FF',
     models: [
-      { id: 'gpt-oss-120b', label: 'GPT-OSS 120B (fastest)' },
-      { id: 'zai-glm-4.7', label: 'ZAI GLM 4.7' },
+      { id: 'llama-3.3-70b', label: 'Llama 3.3 70B (best)' },
+      { id: 'llama3.1-8b', label: 'Llama 3.1 8B (fast)' },
+      { id: 'gpt-oss-120b', label: 'GPT-OSS 120B' },
     ],
     supportsVision: false,
   },
@@ -176,9 +177,13 @@ export function GeminiProvider({ children }) {
     if (!key) throw new Error('Cerebras API key not configured');
     const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({
-        model: model || 'gpt-oss-120b',
+        model: model || 'llama-3.3-70b',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 8192,
@@ -186,7 +191,8 @@ export function GeminiProvider({ children }) {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Cerebras error ${res.status}`);
+      const msg = err?.error?.message || err?.message || `Cerebras error ${res.status}`;
+      throw new Error(msg);
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';

@@ -139,7 +139,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
         <div className="max-w-md text-center space-y-6">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto"></div>
+            <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
             <Sparkles className="w-8 h-8 text-emerald-400 absolute inset-0 m-auto animate-pulse" />
           </div>
           <div>
@@ -169,7 +169,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
           </div>
           <button
             onClick={performAnalysis}
-            className="flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-2xl mx-auto transition-colors"
+            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-2xl mx-auto transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Retry Analysis
@@ -185,7 +185,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
         <p className="text-slate-400 text-sm">Please set up your profile first.</p>
         <button
           onClick={() => navigate('/setup/profile')}
-          className="mt-4 px-4 py-2 bg-violet-600 rounded-xl text-xs font-semibold"
+          className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold"
         >
           Go to Profile Setup
         </button>
@@ -198,7 +198,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
       {/* Glow decorations */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto px-4 pt-12">
@@ -223,7 +223,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
         {/* Photo Upload Section */}
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl mb-8">
           <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wider mb-1 flex items-center gap-2">
-            <Camera className="w-4 h-4 text-violet-400" />
+            <Camera className="w-4 h-4 text-blue-400" />
             Full Body Photo (Recommended)
           </h3>
           <p className="text-slate-500 text-xs mb-4">
@@ -235,7 +235,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
                 <img
                   src={imagePreview}
                   alt="Body analysis photo"
-                  className="w-28 h-36 object-cover rounded-2xl border border-violet-500/30 shadow-lg"
+                  className="w-28 h-36 object-cover rounded-2xl border border-blue-500/30 shadow-lg"
                 />
                 <button
                   onClick={handleRemovePhoto}
@@ -249,8 +249,8 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
                 </div>
               </div>
             ) : (
-              <label className="w-28 h-36 bg-slate-900 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-violet-500/50 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all group">
-                <Upload className="w-7 h-7 text-slate-600 group-hover:text-violet-400 transition-colors mb-2" />
+              <label className="w-28 h-36 bg-slate-900 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500/50 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all group">
+                <Upload className="w-7 h-7 text-slate-600 group-hover:text-blue-400 transition-colors mb-2" />
                 <span className="text-slate-500 group-hover:text-slate-300 text-[10px] font-semibold transition-colors">Upload Photo</span>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
               </label>
@@ -260,7 +260,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
               <p>• Use good lighting — natural light works best</p>
               <p>• Fitted clothing helps the AI assess your build accurately</p>
               <p>• JPG or PNG, max 5MB</p>
-              <p className="text-violet-400 font-semibold">Your photo is only stored locally on your device — never uploaded to any server.</p>
+              <p className="text-blue-400 font-semibold">Your photo is only stored locally on your device — never uploaded to any server.</p>
             </div>
           </div>
         </div>
@@ -270,7 +270,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
           <div className="md:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-xl flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className="px-3.5 py-1.5 bg-violet-600/10 border border-violet-500/20 rounded-full text-violet-400 text-xs font-extrabold uppercase tracking-wider">
+                <span className="px-3.5 py-1.5 bg-blue-600/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-extrabold uppercase tracking-wider">
                   Diagnosis
                 </span>
                 <span className="text-emerald-400 text-xs font-semibold flex items-center gap-1">
@@ -293,7 +293,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-violet-600/10 rounded-xl text-violet-400 mt-0.5">
+                <div className="p-2 bg-blue-600/10 rounded-xl text-blue-400 mt-0.5">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
@@ -337,7 +337,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
               <div className="space-y-2.5 mt-4">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-violet-600"></div>
+                    <div className="w-3 h-3 rounded-full bg-blue-600"></div>
                     <span className="text-slate-400 font-medium">Protein (4 kcal/g)</span>
                   </div>
                   <span className="font-bold text-slate-200">{macros?.protein}%</span>
@@ -401,7 +401,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
         </div>
 
         {/* Next step prompt */}
-        <div className="mt-12 bg-gradient-to-r from-violet-900/30 to-emerald-950/20 border border-slate-800/80 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="mt-12 bg-gradient-to-r from-blue-900/30 to-emerald-950/20 border border-slate-800/80 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="text-center sm:text-left">
             <h3 className="font-bold text-slate-150 text-base">Your bio-profile is fully calibrated.</h3>
             <p className="text-xs text-slate-400 mt-1">
@@ -410,7 +410,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
           </div>
           <button
             onClick={() => navigate('/plan')}
-            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-violet-600 to-emerald-600 hover:from-violet-500 hover:to-emerald-500 text-white font-semibold text-sm rounded-2xl shadow-lg transition-all group"
+            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-semibold text-sm rounded-2xl shadow-lg transition-all group"
           >
             Generate My Plan
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
