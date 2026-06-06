@@ -49,8 +49,8 @@ export const AI_PROVIDERS = {
     badge:    'Ultra-fast',
     color:    '#6B48FF',
     models: [
-      { id: 'llama3.1-70b', label: 'Llama 3.1 70B' },
-      { id: 'llama3.1-8b',  label: 'Llama 3.1 8B (fastest)' },
+      { id: 'gpt-oss-120b', label: 'GPT-OSS 120B (fastest)' },
+      { id: 'zai-glm-4.7', label: 'ZAI GLM 4.7' },
     ],
     supportsVision: false,
   },
@@ -178,7 +178,7 @@ export function GeminiProvider({ children }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
       body: JSON.stringify({
-        model: model || 'llama3.1-70b',
+        model: model || 'gpt-oss-120b',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 8192,
