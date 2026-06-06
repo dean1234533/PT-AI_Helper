@@ -14,13 +14,7 @@ export default function ApiKeySetup() {
 
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
-  // Admin doesn't need a Gemini key — redirect them straight to profile setup
-  useEffect(() => {
-    if (isAdmin) {
-      toast.success('Admin access — built-in AI keys active. Skipping key setup.');
-      navigate('/setup/profile', { replace: true });
-    }
-  }, [isAdmin, navigate]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,8 +38,7 @@ export default function ApiKeySetup() {
     }
   };
 
-  // Render nothing while admin redirect happens
-  if (isAdmin) return null;
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -130,6 +123,19 @@ export default function ApiKeySetup() {
                   </>
                 )}
               </button>
+
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.success('Using built-in system keys. Skipping key setup.');
+                    navigate('/setup/profile');
+                  }}
+                  className="w-full flex justify-center items-center gap-2 py-3 px-4 mt-3 border border-slate-800 rounded-2xl text-sm font-semibold text-slate-300 bg-slate-950/40 hover:bg-slate-900/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all shadow-sm"
+                >
+                  Skip Setup (Use Built-in Keys)
+                </button>
+              )}
             </form>
           </div>
         </div>
