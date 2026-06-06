@@ -1,61 +1,35 @@
-import { useState, useEffect } from 'react';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { useAuth } from '../contexts/AuthContext';
+import { useLocalStorage } from './useLocalStorage';
 
-export function usePlans(clientId = null) {
-  const { user } = useAuth();
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
+export const PLANS_KEY = 'fitai_plans';
+export const ANALYSIS_KEY = 'fitai_analysis';
 
-  useEffect(() => {
-    if (!user) return;
-    const constraints = [where('trainerId', '==', user.uid), orderBy('createdAt', 'desc')];
-    if (clientId) constraints.splice(1, 0, where('clientId', '==', clientId));
-    const q = query(collection(db, 'plans'), ...constraints);
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        setPlans(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-        setLoading(false);
-      },
-      (err) => {
-        console.error('usePlans snapshot error:', err);
-        setLoading(false);
-      }
-    );
-    return unsub;
-  }, [user, clientId]);
+export function usePlans() {
+  const [plans, setPlans] = useLocalStorage(PLANS_KEY, []);
+  const [analysis, setAnalysis] = useLocalStorage(ANALYSIS_KEY, null);
 
-  const savePlan = async (data) => {
-    return addDoc(collection(db, 'plans'), {
-      ...data,
-      trainerId: user.uid,
-      status: 'draft',
-      createdAt: serverTimestamp(),
-    });
+  const savePlan = (planData) => {
+    const newPlan = {
+      id: `plan_${Date.now()}`,
+      generatedAt: new Date().toISOString(),
+      weekNumber: plans.length + 1,
+      ...planData,
+    };
+    const updated = [newPlan, ...plans];
+    setPlans(updated);
+    return newPlan;
   };
 
-  const updatePlan = async (planId, data) => {
-    return updateDoc(doc(db, 'plans', planId), { ...data, updatedAt: serverTimestamp() });
+  const saveAnalysis = (analysisData) => {
+    const updated = {
+      ...analysisData,
+      generatedAt: new Date().toISOString(),
+    };
+    setAnalysis(updated);
+    return updated;
   };
 
-  const getPlan = async (planId) => {
-    const snap = await getDoc(doc(db, 'plans', planId));
-    if (!snap.exists()) return null;
-    return { id: snap.id, ...snap.data() };
-  };
+  const currentPlan = plans[0] || null;
+  const clearPlans = () => { setPlans([]); setAnalysis(null); };
 
-  return { plans, loading, savePlan, updatePlan, getPlan };
+  return { plans, currentPlan, savePlan, analysis, saveAnalysis, clearPlans };
 }
