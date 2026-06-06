@@ -14,7 +14,7 @@ import {
 import toast from 'react-hot-toast';
 
 // ─── Meal swap modal ─────────────────────────────────────────────────────────
-function SwapModal({ meal, dayName, onSwap, onClose, callGemini, profile, analysis }) {
+function SwapModal({ meal, dayName, onSwap, onClose, callAI, profile, analysis }) {
   const [loading, setLoading] = useState(false);
   const [replacement, setReplacement] = useState(null);
 
@@ -41,7 +41,7 @@ Return ONLY a valid JSON object:
   "macros": { "protein": 40, "carbs": 55, "fat": 12 },
   "ingredients": ["150g ingredient with weight", "2 eggs"]
 }`;
-      const text = await callGemini(prompt);
+      const text = await callAI(prompt);
       const clean = text.replace(/```json/i, '').replace(/```/g, '').trim();
       setReplacement(JSON.parse(clean));
     } catch {
@@ -270,7 +270,7 @@ export default function MyPlan() {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const { currentPlan, savePlan, analysis } = usePlans();
-  const { callGemini } = useGemini();
+  const { callAI } = useGemini();
 
   const [activeTab, setActiveTab] = useState('workout');
   const [activeDayIdx, setActiveDayIdx] = useState(0);
@@ -372,7 +372,7 @@ Rules:
 - Return ONLY the JSON. No preamble, no markdown.
 `;
 
-      const responseText = await callGemini(prompt);
+      const responseText = await callAI(prompt);
       const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
       const plan = JSON.parse(cleanJson);
 
@@ -787,7 +787,7 @@ Rules:
           dayIdx={swapMeal.dayIdx}
           onSwap={handleSwapConfirm}
           onClose={() => setSwapMeal(null)}
-          callGemini={callGemini}
+          callAI={callAI}
           profile={profile}
           analysis={analysis}
         />

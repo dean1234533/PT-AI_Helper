@@ -28,7 +28,7 @@ export default function CheckIn() {
   const { profile } = useProfile();
   const { currentPlan, savePlan, analysis } = usePlans();
   const { checkIns, saveCheckIn, latestCheckIn } = useCheckIns();
-  const { callGemini } = useGemini();
+  const { callAI } = useGemini();
 
   const [activeTab, setActiveTab] = useState('new'); // 'new' | 'history'
   const [loading, setLoading] = useState(false);
@@ -164,7 +164,7 @@ Return your response ONLY as a valid JSON object matching this structure:
 Ensure the updatedPlan has the exact structure of the previous plan. Provide no pre-amble or post-amble. Return ONLY the JSON object.
 `;
 
-      const responseText = await callGemini(
+      const responseText = await callAI(
         prompt,
         photoBase64 || null,
         'image/jpeg'

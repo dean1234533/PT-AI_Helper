@@ -25,7 +25,7 @@ export default function BodyAnalysis() {
   const navigate = useNavigate();
   const { profile, saveProfile } = useProfile();
   const { analysis, saveAnalysis } = usePlans();
-  const { callGemini } = useGemini();
+  const { callAI } = useGemini();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [imagePreview, setImagePreview] = useState(profile.photoBase64 ? `data:image/jpeg;base64,${profile.photoBase64}` : null);
@@ -98,7 +98,7 @@ Return your response ONLY as a valid JSON object matching this structure:
 Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Provide no pre-amble or post-amble. Return ONLY the JSON object.
 `;
 
-      const responseText = await callGemini(
+      const responseText = await callAI(
         prompt,
         profile.photoBase64 || null,
         'image/jpeg'

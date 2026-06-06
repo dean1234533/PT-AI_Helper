@@ -90,7 +90,7 @@ export function GeminiProvider({ children }) {
     lsGet(ADMIN_PROVIDER_KEY, 'gemini')
   );
   const [activeModel, setActiveModelState] = useState(() =>
-    lsGet(ADMIN_MODEL_KEY, 'gemini-2.5-pro')
+    lsGet(ADMIN_MODEL_KEY, 'gemini-2.0-flash')
   );
 
   const setGeminiKey = useCallback((key) => {
@@ -130,7 +130,7 @@ export function GeminiProvider({ children }) {
     if (imageBase64) parts.push({ inlineData: { mimeType: imageMimeType || 'image/jpeg', data: imageBase64 } });
     parts.push({ text: prompt });
 
-    const res = await fetch(`${GEMINI_BASE}/${model || 'gemini-2.5-pro'}:generateContent?key=${key}`, {
+    const res = await fetch(`${GEMINI_BASE}/${model || 'gemini-2.0-flash'}:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -257,11 +257,11 @@ export function GeminiProvider({ children }) {
       const isCurrentUserAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
       const useAdminRouting = isAdminOverride || isCurrentUserAdmin;
       const provider = useAdminRouting ? activeProvider : 'gemini';
-      const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.5-pro');
+      const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.0-flash');
 
       // If image is provided but provider doesn't support vision, fall back to Gemini
       if (imageBase64 && provider !== 'gemini') {
-        return callGeminiDirect(prompt, imageBase64, imageMimeType, 'gemini-2.5-pro');
+        return callGeminiDirect(prompt, imageBase64, imageMimeType, 'gemini-2.0-flash');
       }
 
       switch (provider) {
@@ -292,7 +292,7 @@ export function GeminiProvider({ children }) {
     const key = keyToTest 
       || (isCurrentUserAdmin && import.meta.env.VITE_GEMINI_API_KEY)
       || lsGet(GEMINI_KEY_STORAGE, '');
-    const res = await fetch(`${GEMINI_BASE}/gemini-2.5-pro:generateContent?key=${key}`, {
+    const res = await fetch(`${GEMINI_BASE}/gemini-2.0-flash:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Say "OK" only.' }] }] }),

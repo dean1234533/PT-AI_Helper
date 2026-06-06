@@ -52,7 +52,7 @@ export default function AIChat() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const { callGemini } = useGemini();
+  const { callAI } = useGemini();
   const { profile } = useProfile();
   const { currentPlan, analysis } = usePlans();
   const { latestCheckIn } = useCheckIns();
@@ -145,7 +145,7 @@ export default function AIChat() {
 
       const prompt = `${systemContext}\n\nConversation history:\n${history}\n\nUser: ${text}\n\nAssistant:`;
 
-      const reply = await callGemini(prompt);
+      const reply = await callAI(prompt);
       addMessage('assistant', reply.trim());
     } catch (err) {
       addMessage('assistant', 'Sorry, I had trouble connecting. Please check your Gemini API key in Settings.');
