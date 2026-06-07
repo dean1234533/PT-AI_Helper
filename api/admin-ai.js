@@ -1,6 +1,8 @@
 const PROVIDER_CONFIGS = {
   gemini: {
     envKey: 'GEMINI_API_KEY',
+    fallbackEnvKeys: ['VITE_GEMINI_API_KEY'],
+    fallbackModels: ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash'],
     buildRequest: ({ key, prompt, model, imageBase64, imageMimeType }) => {
       const parts = [];
       if (imageBase64) {
@@ -14,10 +16,10 @@ const PROVIDER_CONFIGS = {
       parts.push({ text: prompt });
 
       return {
-        url: `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.0-flash'}:generateContent?key=${key}`,
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.5-flash-lite'}:generateContent`,
         options: {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
           body: JSON.stringify({
             contents: [{ role: 'user', parts }],
             generationConfig: {
@@ -97,6 +99,7 @@ const PROVIDER_CONFIGS = {
   openrouter: {
     envKey: 'OPENROUTER_API_KEY',
     fallbackEnvKeys: ['VITE_OPENROUTER_API_KEY'],
+    fallbackModels: ['openrouter/free', 'deepseek/deepseek-chat-v3.2:free', 'qwen/qwen3-coder:free', 'z-ai/glm-4.7:free'],
     buildRequest: ({ key, prompt, model }) => ({
       url: 'https://openrouter.ai/api/v1/chat/completions',
       options: {
@@ -108,7 +111,7 @@ const PROVIDER_CONFIGS = {
           'X-Title': 'PT AI Helper',
         },
         body: JSON.stringify({
-          model: model || 'meta-llama/llama-3.3-70b-instruct:free',
+          model: model || 'openrouter/free',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
           max_tokens: 8192,
@@ -166,6 +169,21 @@ function getProviderKey(config) {
   return null;
 }
 
+function getModelsToTry(config, requestedModel) {
+  return [...new Set([requestedModel, ...(config.fallbackModels || [])].filter(Boolean))];
+}
+
+async function parseProviderError(config, response) {
+  if (config.parseError) return config.parseError(response);
+  return `${response.status} ${response.statusText}`;
+}
+
+function shouldTryNextModel(response, message = '') {
+  if ([400, 404, 402, 429, 503, 529].includes(response.status)) return true;
+  const lower = message.toLowerCase();
+  return lower.includes('model') || lower.includes('not found') || lower.includes('unavailable') || lower.includes('quota');
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -197,22 +215,36 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'The AI service is not configured on the server. Please contact support.' });
     }
 
-    const requestConfig = config.buildRequest({ key, prompt, model, imageBase64, imageMimeType });
-    const response = await fetch(requestConfig.url, requestConfig.options);
+    const errors = [];
+    for (const modelToTry of getModelsToTry(config, model)) {
+      const requestConfig = config.buildRequest({ key, prompt, model: modelToTry, imageBase64, imageMimeType });
+      const response = await fetch(requestConfig.url, requestConfig.options);
 
-    if (!response.ok) {
-      if (response.status === 429) return res.status(429).json({ error: 'The AI service is busy right now. Please wait a moment and try again.' });
-      if (response.status === 401) return res.status(401).json({ error: 'AI authentication failed. Please check your configuration.' });
-      return res.status(response.status).json({ error: 'The AI service is temporarily unavailable. Please try again in a moment.' });
+      if (!response.ok) {
+        const providerMessage = await parseProviderError(config, response);
+        errors.push(`${modelToTry}: ${providerMessage}`);
+
+        if (response.status === 401 || response.status === 403) {
+          return res.status(response.status).json({ error: providerMessage || 'AI authentication failed. Please check your configuration.' });
+        }
+
+        if (shouldTryNextModel(response, providerMessage)) continue;
+        return res.status(response.status).json({ error: providerMessage || 'The AI service is temporarily unavailable. Please try again in a moment.' });
+      }
+
+      const text = await requestConfig.parseResponse(response);
+      if (text) {
+        return res.status(200).json({ text, provider, model: modelToTry });
+      }
+
+      errors.push(`${modelToTry}: empty response`);
     }
 
-    const text = await requestConfig.parseResponse(response);
-    if (!text) {
-      return res.status(502).json({ error: 'The AI returned an empty response. Please try again.' });
-    }
-
-    return res.status(200).json({ text });
+    return res.status(502).json({
+      error: 'The AI service could not return a response with the available models.',
+      detail: errors.join(' | '),
+    });
   } catch (err) {
-    return res.status(500).json({ error: 'Something went wrong. Please try again in a moment.' });
+    return res.status(500).json({ error: err.message || 'Something went wrong. Please try again in a moment.' });
   }
 }

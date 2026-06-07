@@ -75,10 +75,10 @@ async function generateCheckInQuestions(geminiKey, clientName, planSummary) {
 
   const fullPrompt = `${CHECKIN_SYSTEM_PROMPT}\n\n${lines.join('\n')}`;
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
       body: JSON.stringify({
         contents: [{ parts: [{ text: fullPrompt }] }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },

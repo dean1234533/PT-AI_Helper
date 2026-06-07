@@ -41,7 +41,7 @@ const PROVIDERS = [
     name: 'OpenRouter',
     envKey: 'OPENROUTER_API_KEY',
     url: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'google/gemma-2-9b-it:free',
+    model: 'openrouter/free',
     visionModel: 'meta-llama/llama-3.2-11b-vision-instruct:free',
     maxTokens: 8192,
     jsonMode: false,
@@ -105,7 +105,7 @@ async function callProvider(provider, key, systemPrompt, userText, photoUrl) {
 
   // OpenRouter requires these headers to identify the app
   if (provider.name === 'OpenRouter') {
-    headers['HTTP-Referer'] = 'https://pt-ai-helper.pages.dev';
+    headers['HTTP-Referer'] = env('APP_URL') || 'https://pt-ai-helper.vercel.app';
     headers['X-Title'] = 'PT AI Helper';
   }
 

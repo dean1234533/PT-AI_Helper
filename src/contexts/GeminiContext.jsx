@@ -24,10 +24,10 @@ export const AI_PROVIDERS = {
     badge:    'Google',
     color:    '#4285F4',
     models: [
-      { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (fast)' },
-      { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro (powerful)' },
-      { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-      { id: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro' },
+      { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite (fast)' },
+      { id: 'gemini-2.5-flash',      label: 'Gemini 2.5 Flash' },
+      { id: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash-Lite' },
+      { id: 'gemini-2.0-flash',      label: 'Gemini 2.0 Flash' },
     ],
     supportsVision: true,
   },
@@ -61,10 +61,10 @@ export const AI_PROVIDERS = {
     badge:    '100+ Models',
     color:    '#10B981',
     models: [
-      { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (free)' },
-      { id: 'mistralai/mistral-7b-instruct:free',      label: 'Mistral 7B (free)' },
-      { id: 'google/gemma-2-9b-it:free',               label: 'Gemma 2 9B (free)' },
-      { id: 'microsoft/phi-3-mini-128k-instruct:free', label: 'Phi-3 Mini (free)' },
+      { id: 'openrouter/free', label: 'OpenRouter Free Router' },
+      { id: 'deepseek/deepseek-chat-v3.2:free', label: 'DeepSeek V3.2 (free)' },
+      { id: 'qwen/qwen3-coder:free', label: 'Qwen Coder (free)' },
+      { id: 'z-ai/glm-4.7:free', label: 'GLM 4.7 (free)' },
     ],
     supportsVision: false,
   },
@@ -91,7 +91,7 @@ export function GeminiProvider({ children }) {
     lsGet(ADMIN_PROVIDER_KEY, 'gemini')
   );
   const [activeModel, setActiveModelState] = useState(() =>
-    lsGet(ADMIN_MODEL_KEY, 'gemini-2.0-flash')
+    lsGet(ADMIN_MODEL_KEY, 'gemini-2.5-flash-lite')
   );
 
   const setGeminiKey = useCallback((key) => {
@@ -131,9 +131,9 @@ export function GeminiProvider({ children }) {
     if (imageBase64) parts.push({ inlineData: { mimeType: imageMimeType || 'image/jpeg', data: imageBase64 } });
     parts.push({ text: prompt });
 
-    const res = await fetch(`${GEMINI_BASE}/${model || 'gemini-2.0-flash'}:generateContent?key=${key}`, {
+    const res = await fetch(`${GEMINI_BASE}/${model || 'gemini-2.5-flash-lite'}:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
         generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
@@ -210,9 +210,9 @@ export function GeminiProvider({ children }) {
     const modelsToTry = model
       ? [model]
       : [
-          'meta-llama/llama-3.3-70b-instruct:free',
-          'google/gemma-2-9b-it:free',
-          'mistralai/mistral-7b-instruct:free',
+          'openrouter/free',
+          'deepseek/deepseek-chat-v3.2:free',
+          'qwen/qwen3-coder:free',
         ];
 
     for (const modelId of modelsToTry) {
@@ -288,7 +288,7 @@ export function GeminiProvider({ children }) {
       const isCurrentUserAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
       const useAdminRouting = isAdminOverride || isCurrentUserAdmin;
       const provider = useAdminRouting ? activeProvider : 'gemini';
-      const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.0-flash');
+      const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.5-flash-lite');
 
       if (useAdminRouting) {
         const response = await fetch('/api/admin-ai', {
@@ -296,7 +296,7 @@ export function GeminiProvider({ children }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             provider: imageBase64 && provider !== 'gemini' ? 'gemini' : provider,
-            model: imageBase64 && provider !== 'gemini' ? 'gemini-2.0-flash' : model,
+            model: imageBase64 && provider !== 'gemini' ? 'gemini-2.5-flash-lite' : model,
             prompt,
             imageBase64,
             imageMimeType,
@@ -315,7 +315,7 @@ export function GeminiProvider({ children }) {
 
       // If image is provided but provider doesn't support vision, fall back to Gemini
       if (imageBase64 && provider !== 'gemini') {
-        return callGeminiDirect(prompt, imageBase64, imageMimeType, 'gemini-2.0-flash');
+        return callGeminiDirect(prompt, imageBase64, imageMimeType, 'gemini-2.5-flash-lite');
       }
 
       switch (provider) {
@@ -347,9 +347,9 @@ export function GeminiProvider({ children }) {
     const key = keyToTest 
       || (isCurrentUserAdmin && import.meta.env.VITE_GEMINI_API_KEY)
       || lsGet(GEMINI_KEY_STORAGE, '');
-    const res = await fetch(`${GEMINI_BASE}/gemini-2.0-flash:generateContent?key=${key}`, {
+    const res = await fetch(`${GEMINI_BASE}/gemini-2.5-flash-lite:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Say "OK" only.' }] }] }),
     });
     if (!res.ok) {
