@@ -12,7 +12,7 @@ import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
   Shuffle, ChevronDown, ChevronUp, Leaf, Flame, Zap, Beef,
-  FileText, CheckCircle, ArrowLeft
+  FileText, CheckCircle, ArrowLeft, Moon, Droplets, FlaskConical
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -71,8 +71,8 @@ Return ONLY a valid JSON object:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-        <div className="flex justify-between items-start">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-start shrink-0">
           <div>
             <h3 className="font-extrabold text-slate-100 text-base">Swap Meal</h3>
             <p className="text-slate-500 text-xs mt-0.5">Finding a replacement for <span className="text-blue-400">{meal.name}</span></p>
@@ -86,7 +86,7 @@ Return ONLY a valid JSON object:
             <p className="text-slate-400 text-xs">AI is finding a macro-matched replacement…</p>
           </div>
         ) : replacement ? (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto py-4 pr-2 custom-scrollbar">
             <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className="font-bold text-slate-100 text-sm">{replacement.name}</h4>
@@ -115,7 +115,7 @@ Return ONLY a valid JSON object:
                 <span className="text-amber-400">F: {replacement.macros?.fat}g</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 sticky bottom-0 bg-slate-900 pt-2">
               <button onClick={fetchReplacement} className="flex-1 py-2.5 text-xs font-semibold border border-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors">
                 Try Another
               </button>
@@ -270,7 +270,7 @@ function MealCard({ meal, onSwap }) {
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
           <Beef className="w-3 h-3 text-blue-400 mx-auto mb-0.5" />
-          <p className="text-[9px] text-slate-500 font-semibold">PROTEIN</p>
+          <p className="text-[9px] text-slate-500 font-semibold">PROTE la Protein</p>
           <p className="text-xs font-black text-blue-400">{prot ?? '—'}g</p>
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
@@ -332,6 +332,87 @@ function MealCard({ meal, onSwap }) {
       {fibre != null && (
         <p className="text-[9px] text-slate-600 mt-2">Fat: {fat ?? '—'}g</p>
       )}
+    </div>
+  );
+}
+
+// ─── PT Nutrition Knowledge Base ──────────────────────────────────────────────────
+const KNOWLEDGE_BASE = [
+  {
+    title: 'Training Nutrition',
+    icon: Zap,
+    items: [
+      { label: 'Pre-Training', text: 'Focus on fast-digesting carbs for immediate energy. Example: Banana, rice cakes with honey, or a small bowl of oats 1-2 hours before.' },
+      { label: 'Post-Training', text: 'Prioritise protein for muscle repair and carbs to replenish glycogen. Example: Whey protein shake + fruit, or chicken and rice.' },
+    ]
+  },
+  {
+    title: 'Recovery & Sleep',
+    icon: Moon,
+    items: [
+      { label: 'Sleep Quality', text: 'Aim for 7-9 hours. Growth Hormone (HGH) and muscle repair peak during deep sleep. Poor sleep = slower progress and higher cortisol.' },
+    ]
+  },
+  {
+    title: 'Hydration & Drinks',
+    icon: Droplets,
+    items: [
+      { label: 'The Best', text: 'Water (Gold Standard), Electrolytes during intense sessions to prevent cramping.' },
+      { label: 'The Worst', text: 'Sugary sodas, excessive alcohol, and high-calorie "health" juices. They cause inflammation and empty calorie spikes.' },
+    ]
+  },
+  {
+    title: 'Late Night Hunger',
+    icon: Moon,
+    items: [
+      { label: 'Goal-Friendly Snacks', text: 'Focus on slow-release proteins (Casein). Examples: Low-fat cottage cheese, Greek yogurt, or a casein protein shake. Avoid heavy carbs before bed.' },
+    ]
+  },
+  {
+    title: 'Supplements & Shakes',
+    icon: FlaskConical,
+    items: [
+      { label: 'Lean Mass Shake', text: 'Whey + Water/Almond milk + Handful of spinach + Frozen berries.' },
+      { label: 'Bulk/Recovery Shake', text: 'Whey + Oats + Peanut Butter + Banana + Whole milk.' },
+      { label: 'Creatine', text: 'Increases ATP production for explosive power and strength. 5g daily is the gold standard. Safe and highly researched.' },
+    ]
+  },
+  {
+    title: 'Health Warnings',
+    icon: AlertCircle,
+    items: [
+      { label: 'Smoking & Drugs', text: 'Severely reduces VO2 max (lung capacity), impairs blood flow to muscles, and slows down recovery. It is a direct bottleneck to your genetic potential.' },
+    ]
+  },
+];
+
+function NutritionKnowledgeBase() {
+  return (
+    <div className="space-y-6 mt-8">
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <div className="p-2 bg-emerald-600/10 rounded-xl text-emerald-400">
+          <Apple className="w-5 h-5" />
+        </div>
+        <h3 className="font-extrabold text-slate-100 text-sm uppercase tracking-wider">PT Knowledge Base: Nutrition & Health</h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {KNOWLEDGE_BASE.map((category, idx) => (
+          <div key={idx} className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-5 backdrop-blur-xl shadow-lg space-y-4">
+            <div className="flex items-center gap-2">
+              <category.icon className="w-4 h-4 text-emerald-400" />
+              <h4 className="font-bold text-slate-200 text-xs uppercase tracking-widest">{category.title}</h4>
+            </div>
+            <div className="space-y-3">
+              {category.items.map((item, iIdx) => (
+                <div key={iIdx} className="space-y-1">
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">{item.label}</p>
+                  <p className="text-xs text-slate-400 leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -955,6 +1036,8 @@ Rules:
                 <p className="text-xs text-slate-350 leading-relaxed italic">{nutritionPlan.generalAdvice}</p>
               </div>
             )}
+
+            <NutritionKnowledgeBase />
           </div>
         )}
       </div>
