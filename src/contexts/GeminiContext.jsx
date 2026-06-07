@@ -331,14 +331,15 @@ export function GeminiProvider({ children }) {
   );
 
   /**
-   * Admin-aware call — automatically uses the admin's selected provider.
-   * Use this in pages where you have access to the auth context.
+   * Smart AI call — admins use server-side provider routing,
+   * regular users use their own stored Gemini key directly.
    */
   const callAI = useCallback(
     async (prompt, imageBase64 = null, imageMimeType = 'image/jpeg') => {
-      return callGemini(prompt, imageBase64, imageMimeType, null, true);
+      const isCurrentUserAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+      return callGemini(prompt, imageBase64, imageMimeType, null, isCurrentUserAdmin);
     },
-    [callGemini]
+    [callGemini, user]
   );
 
   const testKey = useCallback(async (keyToTest) => {

@@ -1,437 +1,127 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProfile } from '../hooks/useProfile';
-import { usePlans } from '../hooks/usePlans';
-import { useAuth } from '../contexts/AuthContext';
+import { Key, ArrowRight, CheckCircle, ExternalLink, Loader2, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useGemini } from '../contexts/GeminiContext';
-import {
-  Sparkles,
-  TrendingUp,
-  Target,
-  Utensils,
-  Dumbbell,
-  Clock,
-  ArrowRight,
-  RefreshCw,
-  Loader2,
-  PieChart,
-  Camera,
-  Upload,
-  X,
-  CheckCircle
-} from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function BodyAnalysis() {
+export default function ApiKeySetup() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
-  const { profile, saveProfile } = useProfile();
-  const { analysis, saveAnalysis } = usePlans();
-  const { callAI } = useGemini();
+  const { setGeminiKey, testKey } = useGemini();
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [imagePreview, setImagePreview] = useState(profile.photoBase64 ? `data:image/jpeg;base64,${profile.photoBase64}` : null);
-  const fileInputRef = useRef(null);
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result.split(',')[1];
-      setImagePreview(reader.result);
-      saveProfile({ photoBase64: base64 });
-      toast.success('Photo saved — click Re-Analyse to update your body type assessment');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = () => {
-    setImagePreview(null);
-    saveProfile({ photoBase64: null });
-    toast('Photo removed');
-  };
-
-  const performAnalysis = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = apiKey.trim();
+    if (!trimmed) {
+      toast.error('Please enter your Gemini API key');
+      return;
+    }
     setLoading(true);
-    setError(null);
     try {
-      const hasPhoto = !!profile.photoBase64;
-      
-      const prompt = `
-You are an expert personal trainer and fitness scientist. Analyze the user's details and determine their body type (Ectomorph, Mesomorph, Endomorph, or a Combination).
-
-User Profile:
-- Name: ${profile.name}
-- Age: ${profile.age} years old
-- Gender: ${profile.gender}
-- Weight: ${profile.weight} kg
-- Height: ${profile.height} cm
-- Main Goal: ${profile.goal}
-- Secondary Goal/Timeline: ${profile.secondaryGoal || 'Not specified'}
-- Fitness Level: ${profile.fitnessLevel}
-- Workout preferences: ${profile.preferredWorkoutTypes?.join(', ') || 'Not specified'}
-- Equipment available: ${profile.equipment?.join(', ') || 'Not specified'}
-- Dietary style: ${profile.dietaryStyle || 'Balanced'}
-- Food allergies: ${profile.allergies?.join(', ') || 'None'}
-- Exclude/dislike: ${profile.foodsDisliked || 'None'}
-- Include/like: ${profile.foodsLiked || 'None'}
-- Other dietary restrictions: ${profile.dietaryRestrictions || 'None'}
-
-${hasPhoto ? 'Please analyze the attached full-body photo of the user to confirm their skeletal structure, body composition, and exact body type category.' : 'Based on their physical metrics (height, weight, age) and goals, deduce their most likely body type.'}
-
-Return your response ONLY as a valid JSON object matching this structure:
-{
-  "bodyType": "Ectomorph, Mesomorph, Endomorph, or specific combination like Ecto-Mesomorph",
-  "explanation": "A detailed explanation of their body type, skeletal build, metabolic tendencies, and how it aligns with their stated goals.",
-  "eat": ["Food 1", "Food 2", "Food 3", "Food 4", "Food 5"],
-  "avoid": ["Food 1", "Food 2", "Food 3", "Food 4", "Food 5"],
-  "macros": {
-    "protein": 30,
-    "carbs": 40,
-    "fat": 30
-  },
-  "workoutStyle": "The ideal training style, intensity, and frequency for this body type (e.g., heavy resistance training with minimal cardio, high volume hypertrophy, etc.)",
-  "timeline": "A realistic, science-backed timeline showing expected progress increments (e.g., 2-4kg weight loss in month 1, muscle definitions in weeks 6-8, etc.) to achieve their goal of: ${profile.goal}"
-}
-
-Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Provide no pre-amble or post-amble. Return ONLY the JSON object.
-`;
-
-      const responseText = await callAI(
-        prompt,
-        profile.photoBase64 || null,
-        'image/jpeg'
-      );
-
-      // Clean up response text if Gemini wraps it in markdown blocks
-      const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      const result = JSON.parse(cleanJson);
-      
-      // Validate macros sum to 100
-      const sum = (result.macros?.protein || 0) + (result.macros?.carbs || 0) + (result.macros?.fat || 0);
-      if (sum !== 100 && result.macros) {
-        // Normalize if they don't sum to 100
-        const total = sum || 1;
-        result.macros.protein = Math.round((result.macros.protein / total) * 100);
-        result.macros.carbs = Math.round((result.macros.carbs / total) * 100);
-        result.macros.fat = 100 - result.macros.protein - result.macros.carbs;
-      }
-
-      saveAnalysis(result);
-      toast.success('Body type analysis complete!');
+      await testKey(trimmed);
+      setGeminiKey(trimmed);
+      toast.success('API key verified successfully!');
+      navigate('/setup/profile');
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'An error occurred during body type analysis');
+      toast.error(err.message || 'Invalid API key. Please check and try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!analysis && profile.profileComplete && !isAdmin) {
-      performAnalysis();
-    }
-  }, [profile, analysis, isAdmin]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <div className="max-w-md text-center space-y-6">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-            <Sparkles className="w-8 h-8 text-emerald-400 absolute inset-0 m-auto animate-pulse" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-              Analyzing Body Type & Metrics
-            </h2>
-            <p className="text-slate-400 text-sm mt-2">
-              Gemini AI is examining your height, weight, goals, and photo to formulate your custom bio-blueprint...
-            </p>
-          </div>
-          <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl text-left text-xs text-slate-500">
-            <p className="font-semibold text-slate-400 mb-1">Scientific Tip:</p>
-            Adjusting nutritional ratios to match somatic features (like ectomorph or endomorph skeletal structures) boosts energy levels, accelerates metabolic responses, and keeps strength gains consistent.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <div className="max-w-md text-center space-y-6">
-          <div className="p-4 bg-red-950/20 border border-red-950 rounded-2xl text-red-400 flex flex-col items-center gap-3">
-            <h2 className="font-bold text-lg">Analysis Failed</h2>
-            <p className="text-sm text-red-300/80">{error}</p>
-          </div>
-          <button
-            onClick={performAnalysis}
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-2xl mx-auto transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Retry Analysis
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!analysis) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        {isAdmin ? (
-          <div className="text-center space-y-4">
-            <p className="text-slate-300 font-semibold">Admin Mode — Body Analysis</p>
-            <p className="text-slate-400 text-sm">No profile data yet. Run a test analysis or go to dashboard.</p>
-            <div className="flex gap-3 justify-center">
-              <button onClick={performAnalysis} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors">
-                Run Test Analysis
-              </button>
-              <button onClick={() => navigate('/dashboard')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                Go to Dashboard
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center space-y-4">
-            <p className="text-slate-400 text-sm">Please set up your profile first.</p>
-            <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold">
-              Go to Profile Setup
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const { bodyType, explanation, eat, avoid, macros, workoutStyle, timeline } = analysis;
-
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
-      {/* Glow decorations */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 py-10 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />
+      </div>
 
-      <div className="max-w-4xl mx-auto px-4 pt-12">
-        <div className="border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              Your AI Bio-Blueprint
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Gemini Vision & metrics evaluation: somatic diagnosis and baseline metrics.
-            </p>
+      <div className="relative w-full max-w-md animate-fade-in-up">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
+            <Dumbbell className="w-7 h-7 text-white" />
           </div>
-          <button
-            onClick={performAnalysis}
-            className="self-start sm:self-center flex items-center gap-1.5 px-4 py-2 border border-slate-800 hover:border-slate-700 bg-slate-900/60 rounded-xl text-xs font-semibold hover:text-white text-slate-350 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Re-Analyse
-          </button>
+          <h1 className="text-2xl font-bold text-white">FitAI</h1>
+          <p className="text-white/45 mt-1 text-sm">Step 1 of 2 — Connect AI</p>
         </div>
 
-        {/* Photo Upload Section */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl mb-8">
-          <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wider mb-1 flex items-center gap-2">
-            <Camera className="w-4 h-4 text-blue-400" />
-            Full Body Photo (Recommended)
-          </h3>
-          <p className="text-slate-500 text-xs mb-4">
-            Upload a full body photo so Gemini Vision can visually confirm your body type. A front-facing, full-length photo in fitted clothing gives the most accurate result.
+        <div className="bg-dark-600/80 border border-white/8 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-brand-500/10 rounded-xl text-brand-400">
+              <Key className="w-5 h-5" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Add Your Gemini API Key</h2>
+          </div>
+          <p className="text-white/45 text-sm mb-6">
+            FitAI uses Google Gemini to analyze your body type and generate personalized plans. Your key is stored securely on your device only.
           </p>
-          <div className="flex items-center gap-6">
-            {imagePreview ? (
-              <div className="relative flex-shrink-0">
-                <img
-                  src={imagePreview}
-                  alt="Body analysis photo"
-                  className="w-28 h-36 object-cover rounded-2xl border border-blue-500/30 shadow-lg"
+
+          <div className="bg-white/4 border border-white/8 rounded-xl p-4 mb-6 space-y-2">
+            <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">How to get your free key:</p>
+            <ol className="text-xs text-white/50 space-y-1.5 list-decimal list-inside">
+              <li>Visit Google AI Studio (aistudio.google.com)</li>
+              <li>Sign in with your Google account</li>
+              <li>Click "Get API Key" then "Create API Key"</li>
+              <li>Copy and paste the key below</li>
+            </ol>
+            <a
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-semibold mt-1 transition-colors"
+            >
+              Open Google AI Studio
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-white/70 block mb-1.5">Gemini API Key</label>
+              <div className="relative">
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  required
+                  className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 pr-11 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all font-mono"
                 />
                 <button
-                  onClick={handleRemovePhoto}
-                  className="absolute -top-2 -right-2 p-1.5 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-md transition-colors"
+                  type="button"
+                  onClick={() => setShowKey((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70 transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1 bg-emerald-600/80 rounded-lg py-1">
-                  <CheckCircle className="w-3 h-3 text-white" />
-                  <span className="text-white text-[9px] font-bold">Photo loaded</span>
-                </div>
-              </div>
-            ) : (
-              <label className="w-28 h-36 bg-slate-900 hover:bg-slate-800 border-2 border-dashed border-slate-700 hover:border-blue-500/50 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all group">
-                <Upload className="w-7 h-7 text-slate-600 group-hover:text-blue-400 transition-colors mb-2" />
-                <span className="text-slate-500 group-hover:text-slate-300 text-[10px] font-semibold transition-colors">Upload Photo</span>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-              </label>
-            )}
-            <div className="space-y-2 text-xs text-slate-400">
-              <p>• Stand facing the camera, arms slightly away from body</p>
-              <p>• Use good lighting — natural light works best</p>
-              <p>• Fitted clothing helps the AI assess your build accurately</p>
-              <p>• JPG or PNG, max 5MB</p>
-              <p className="text-blue-400 font-semibold">Your photo is only stored locally on your device — never uploaded to any server.</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Main Body type Diagnosis Card */}
-          <div className="md:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-xl flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="px-3.5 py-1.5 bg-blue-600/10 border border-blue-500/20 rounded-full text-blue-400 text-xs font-extrabold uppercase tracking-wider">
-                  Diagnosis
-                </span>
-                <span className="text-emerald-400 text-xs font-semibold flex items-center gap-1">
-                  <Target className="w-3.5 h-3.5" /> Direct Somatotyping
-                </span>
-              </div>
-              <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tight">{bodyType}</h2>
-              <p className="text-slate-300 text-sm leading-relaxed">{explanation}</p>
-            </div>
-
-            <div className="mt-8 border-t border-slate-800/60 pt-6 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-emerald-600/10 rounded-xl text-emerald-400 mt-0.5">
-                  <Dumbbell className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Workout Approach</h4>
-                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">{workoutStyle}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-600/10 rounded-xl text-blue-400 mt-0.5">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Realistic Timeline</h4>
-                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">{timeline}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Macro Split Chart Card */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <PieChart className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wider">Macro Targets</h3>
-              </div>
-
-              {/* Pure CSS/HTML Macro Pie/Donut Visualization */}
-              <div className="relative w-44 h-44 mx-auto my-6 flex items-center justify-center">
-                {/* Visual donut using CSS gradients */}
-                <div
-                  className="w-full h-full rounded-full transition-all duration-500"
-                  style={{
-                    background: `conic-gradient(
-                      #7c3aed 0% ${macros?.protein || 30}%, 
-                      #10b981 ${macros?.protein || 30}% ${(macros?.protein || 30) + (macros?.carbs || 40)}%, 
-                      #f59e0b ${(macros?.protein || 30) + (macros?.carbs || 40)}% 100%
-                    )`,
-                  }}
-                >
-                  {/* Center cutout */}
-                  <div className="absolute inset-4 bg-slate-950 rounded-full flex flex-col items-center justify-center">
-                    <span className="text-xxs text-slate-500 uppercase font-semibold">TDEE Ratio</span>
-                    <span className="text-base font-black text-white">{macros?.protein}% P</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Legends */}
-              <div className="space-y-2.5 mt-4">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                    <span className="text-slate-400 font-medium">Protein (4 kcal/g)</span>
-                  </div>
-                  <span className="font-bold text-slate-200">{macros?.protein}%</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <span className="text-slate-400 font-medium">Carbohydrates (4 kcal/g)</span>
-                  </div>
-                  <span className="font-bold text-slate-200">{macros?.carbs}%</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-slate-400 font-medium">Fats (9 kcal/g)</span>
-                  </div>
-                  <span className="font-bold text-slate-200">{macros?.fat}%</span>
-                </div>
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-500 text-center mt-6">
-              Optimal baseline distribution for {profile.goal?.toLowerCase()} as an {bodyType?.toLowerCase()}.
-            </p>
-          </div>
-        </div>
+            <button
+              type="submit"
+              disabled={loading || !apiKey.trim()}
+              className="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-glow-violet flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verifying key...
+                </>
+              ) : (
+                <>
+                  Verify & Continue
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
 
-        {/* Nutritional Blueprint */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          {/* Foods to Eat */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl">
-            <h3 className="font-bold text-slate-100 flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
-              <Utensils className="w-5 h-5 text-emerald-400" />
-              Foods to Integrate
-            </h3>
-            <ul className="space-y-3">
-              {eat?.map((food, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                  <span>{food}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Foods to Avoid */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl">
-            <h3 className="font-bold text-slate-100 flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
-              <Utensils className="w-5 h-5 text-red-400" />
-              Foods to Avoid / Minimize
-            </h3>
-            <ul className="space-y-3">
-              {avoid?.map((food, i) => (
-                <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
-                  <span>{food}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Next step prompt */}
-        <div className="mt-12 bg-gradient-to-r from-blue-900/30 to-emerald-950/20 border border-slate-800/80 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <h3 className="font-bold text-slate-150 text-base">Your bio-profile is fully calibrated.</h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Ready to compile your customized workout routines and nutritional scheduling.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/plan')}
-            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-semibold text-sm rounded-2xl shadow-lg transition-all group"
-          >
-            Generate My Plan
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          <p className="text-center text-xs text-white/30 mt-5">
+            Your API key is stored locally on your device and never sent to our servers.
+          </p>
         </div>
       </div>
     </div>

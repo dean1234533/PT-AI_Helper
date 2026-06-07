@@ -14,6 +14,7 @@ import {
   X,
   Plus,
   ArrowRight,
+  ArrowLeft,
   Smile,
   Zap,
   Weight,
@@ -208,6 +209,13 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
         {/* Header */}
         <div className="border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mb-3 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </button>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               Weekly Check-in
             </h1>
