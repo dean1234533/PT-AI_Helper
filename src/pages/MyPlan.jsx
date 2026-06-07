@@ -7,6 +7,7 @@ import { useGemini } from '../contexts/GeminiContext';
 import { enrichMealPlanWithUSDA } from '../utils/usda';
 import { downloadWorkoutPDF, downloadNutritionPDF } from '../utils/pdfExport';
 import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
+import { parseAIJson } from '../utils/json';
 import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
@@ -56,8 +57,7 @@ Return ONLY a valid JSON object:
   "whyThisMeal": "Why this replacement fits the user's goal."
 }`;
       const text = await callAI(prompt);
-      const clean = text.replace(/```json/i, '').replace(/```/g, '').trim();
-      const nextReplacement = JSON.parse(clean);
+      const nextReplacement = parseAIJson(text);
       setReplacement(nextReplacement);
       setAttemptedNames((current) => [...current, nextReplacement.name].filter(Boolean));
     } catch (err) {
@@ -505,8 +505,7 @@ Rules:
 `;
 
       const responseText = await callAI(prompt);
-      const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      let plan = JSON.parse(cleanJson);
+      let plan = parseAIJson(responseText);
 
       const qualityIssues = findPlanQualityIssues(plan);
       if (qualityIssues.length > 0) {

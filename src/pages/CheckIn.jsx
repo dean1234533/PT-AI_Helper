@@ -5,6 +5,7 @@ import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
 import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
+import { parseAIJson } from '../utils/json';
 import {
   ClipboardList,
   Sparkles,
@@ -43,7 +44,56 @@ export default function CheckIn() {
   const [notesChallenging, setNotesChallenging] = useState('');
   const [photoBase64, setPhotoBase64] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [adjustmentSummary, setAdjustmentSummary] = useState(null);
+const [adjustmentSummary, setAdjustmentSummary] = useState(null);
+
+  const applyCheckInPatch = (plan, patch) => {
+    const nextPlan = {
+      ...plan,
+      workoutPlan: {
+        ...(plan?.workoutPlan || {}),
+        focus: patch?.workoutFocus || plan?.workoutPlan?.focus,
+        days: (plan?.workoutPlan?.days || []).map((day) => {
+          const dayPatch = (patch?.workoutDayAdjustments || []).find((item) => item.dayNumber === day.dayNumber || item.dayName === day.dayName);
+          if (!dayPatch || day.isRestDay) return day;
+
+          return {
+            ...day,
+            focus: dayPatch.focus || day.focus,
+            progressiveOverload: dayPatch.progressiveOverload || day.progressiveOverload,
+            warmup: dayPatch.warmup || day.warmup,
+            warmupSteps: dayPatch.warmupSteps || day.warmupSteps,
+            cooldown: dayPatch.cooldown || day.cooldown,
+            cooldownSteps: dayPatch.cooldownSteps || day.cooldownSteps,
+            exercises: (day.exercises || []).map((exercise, index) => ({
+              ...exercise,
+              ...(dayPatch.exerciseAdjustments?.[index] || {}),
+            })),
+          };
+        }),
+      },
+      nutritionPlan: {
+        ...(plan?.nutritionPlan || {}),
+        ...(patch?.nutritionAdjustments || {}),
+      },
+      weeklyMealPlan: plan?.weeklyMealPlan || [],
+    };
+
+    if (patch?.mealAdjustments?.length) {
+      nextPlan.weeklyMealPlan = nextPlan.weeklyMealPlan.map((day) => {
+        const dayPatch = patch.mealAdjustments.find((item) => item.dayNumber === day.dayNumber || item.dayName === day.dayName);
+        if (!dayPatch) return day;
+        return {
+          ...day,
+          meals: (day.meals || []).map((meal, index) => ({
+            ...meal,
+            ...(dayPatch.meals?.[index] || {}),
+          })),
+        };
+      });
+    }
+
+    return nextPlan;
+  };
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
@@ -118,77 +168,42 @@ User Weekly Check-in Stats:
 
 Analyze this check-in. If adherence is low or they face challenges, modify the workout or nutrition to help them stay consistent. If energy is low, maybe lower volume or add rest. If they're crushing it, slightly increase intensity or adjust macro proportions towards their goal.
 
+Return a compact JSON patch, not the full plan. Do NOT resend the whole existing plan.
 Return your response ONLY as a valid JSON object matching this structure:
 {
   "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity) and motivational feedback.",
-  "updatedPlan": {
-    "workoutPlan": {
-      "focus": "Focus of the new week's training split.",
-      "days": [
-        {
-          "dayNumber": 1,
-          "dayName": "Monday - Day Name",
-          "focus": "split focus",
-          "isRestDay": false,
-          "warmup": "Short warm-up summary",
-          "warmupSteps": [
-            { "name": "Exact warm-up movement", "duration": "45 sec", "reps": "10-12 reps", "notes": "How to perform it safely, posture, breathing, and what to avoid." }
-          ],
-          "cooldown": "Short cool-down summary",
-          "cooldownSteps": [
-            { "name": "Exact stretch or breathing drill", "duration": "45 sec each side", "notes": "How to perform it safely, where they should feel it, and what to avoid." }
-          ],
-          "progressiveOverload": "Specific weekly progression for this day.",
-          "exercises": [
-            {
-              "name": "Exercise Name",
-              "sets": "Sets",
-              "reps": "Reps",
-              "rest": "Rest",
-              "tempo": "Exact tempo",
-              "targetMuscles": "Primary muscles",
-              "notes": "Full safety explanation: setup, machine adjustment if relevant, body position, breathing, range of motion, common mistakes, and stop signals.",
-              "progressionNote": "Specific next-week progression for this exercise."
-            }
-          ]
-        }
+  "workoutFocus": "Updated weekly training focus, or null if unchanged",
+  "workoutDayAdjustments": [
+    {
+      "dayNumber": 1,
+      "dayName": "Monday - Day Name",
+      "focus": "Updated day focus, or null if unchanged",
+      "warmup": "Short warm-up summary, or null",
+      "warmupSteps": [{ "name": "Exact warm-up movement", "duration": "45 sec", "reps": "10-12 reps", "notes": "Safe performance cue." }],
+      "cooldown": "Short cool-down summary, or null",
+      "cooldownSteps": [{ "name": "Exact stretch", "duration": "45 sec each side", "notes": "Safe performance cue." }],
+      "progressiveOverload": "Updated progression for this day, or null",
+      "exerciseAdjustments": [
+        { "sets": "4", "reps": "10-12", "rest": "75s", "tempo": "3 sec lower", "notes": "Full safe-performance cue.", "progressionNote": "Specific change next week." }
       ]
-    },
-    "nutritionPlan": {
-      "focus": "Overall nutrition focus",
-      "dailyTargetCalories": 2200,
-      "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
-      "generalAdvice": "Coaching advice for nutrition"
-    },
-    "weeklyMealPlan": [
-      {
-        "dayName": "Monday",
-        "dayNumber": 1,
-        "meals": [
-          {
-            "name": "Meal 1: Breakfast",
-            "time": "7:30 AM",
-            "calories": 500,
-            "macros": { "protein": 40, "carbs": 50, "fat": 15 },
-            "ingredients": ["80g oats", "250ml milk", "30g whey protein"],
-            "prep": "Exact prep method.",
-            "whyThisMeal": "Why this meal supports the goal."
-          }
-        ]
-      }
-    ]
-  }
+    }
+  ],
+  "nutritionAdjustments": {
+    "focus": "Updated nutrition focus, or null",
+    "dailyTargetCalories": 2200,
+    "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
+    "generalAdvice": "Updated advice, or null"
+  },
+  "mealAdjustments": []
 }
 
 Rules:
-- Preserve the current plan's top-level structure: updatedPlan must contain workoutPlan, nutritionPlan, and weeklyMealPlan.
-- workoutPlan.days must contain exactly 7 days.
-- Each non-rest day must have at least 7 exercises.
-- Every non-rest day must have exactly 5 warmupSteps and exactly 5 cooldownSteps.
+- Return only changed fields and compact arrays. Do not include unchanged meals unless necessary.
+- workoutDayAdjustments can be empty if workouts do not need changing.
+- If you adjust a day, include exactly 5 warmupSteps and exactly 5 cooldownSteps for that day.
 - Never write vague text like "5 minutes stretching", "dynamic warmup", "mobility", "core work", or "do cardio". Name exact movements and exact durations/reps.
 - All exercises, stretches, warm-ups, machines, and running/cardio must include full safe-performance explanations.
 - If running is prescribed, include RPE or pace guidance, posture, foot strike/cadence cue, breathing, incline/speed, and when to slow down.
-- weeklyMealPlan must contain exactly 7 days and each meal must include ingredients with gram/ml weights, prep, and whyThisMeal.
 - Keep client allergies, dislikes, injuries, equipment, and goal restrictions.
 - Provide no pre-amble or post-amble. Return ONLY the JSON object.
 `;
@@ -199,9 +214,8 @@ Rules:
         'image/jpeg'
       );
       
-      const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      const result = JSON.parse(cleanJson);
-      let updatedPlan = result.updatedPlan;
+      const result = parseAIJson(responseText);
+      let updatedPlan = applyCheckInPatch(currentPlan, result);
       const qualityIssues = findPlanQualityIssues(updatedPlan);
       if (qualityIssues.length > 0) {
         toast('Updated plan was too brief - expanding it properly...');

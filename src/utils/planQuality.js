@@ -1,3 +1,5 @@
+import { parseAIJson } from './json';
+
 export function findPlanQualityIssues(plan) {
   const issues = [];
   const trainingDays = plan?.workoutPlan?.days?.filter((day) => !day.isRestDay) || [];
@@ -56,6 +58,5 @@ ${JSON.stringify(plan)}
 `;
 
   const responseText = await callAI(repairPrompt);
-  const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-  return JSON.parse(cleanJson);
+  return parseAIJson(responseText);
 }
