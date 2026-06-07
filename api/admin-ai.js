@@ -242,6 +242,29 @@ export default async function handler(req, res) {
       errors.push(`${modelToTry}: ${responseError || 'empty response'}`);
     }
 
+    if (provider !== 'gemini') {
+      const geminiConfig = PROVIDER_CONFIGS.gemini;
+      const geminiKey = getProviderKey(geminiConfig);
+      if (geminiKey) {
+        for (const modelToTry of getModelsToTry(geminiConfig, 'gemini-2.5-flash-lite')) {
+          const requestConfig = geminiConfig.buildRequest({ key: geminiKey, prompt, model: modelToTry, imageBase64, imageMimeType });
+          const response = await fetch(requestConfig.url, requestConfig.options);
+          if (!response.ok) {
+            const providerMessage = await parseProviderError(geminiConfig, response);
+            errors.push(`Gemini fallback ${modelToTry}: ${providerMessage}`);
+            continue;
+          }
+
+          const parsed = await geminiConfig.parseResponse(response);
+          const text = typeof parsed === 'string' ? parsed : parsed?.text;
+          if (text) {
+            return res.status(200).json({ text, provider: 'gemini', model: modelToTry, fallbackFrom: provider });
+          }
+          errors.push(`Gemini fallback ${modelToTry}: empty response`);
+        }
+      }
+    }
+
     return res.status(502).json({
       error: 'The AI service could not return a response with the available models.',
       detail: errors.join(' | '),

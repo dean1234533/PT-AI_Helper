@@ -295,18 +295,30 @@ export function GeminiProvider({ children }) {
       const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.5-flash-lite');
 
       if (useAdminRouting) {
-        const response = await fetch('/api/admin-ai', {
+        const callAdminAI = (providerId, modelId) => fetch('/api/admin-ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            provider: imageBase64 && provider !== 'gemini' ? 'gemini' : provider,
-            model: imageBase64 && provider !== 'gemini' ? 'gemini-2.5-flash-lite' : model,
+            provider: providerId,
+            model: modelId,
             prompt,
             imageBase64,
             imageMimeType,
           }),
         });
+
+        const routedProvider = imageBase64 && provider !== 'gemini' ? 'gemini' : provider;
+        const routedModel = imageBase64 && provider !== 'gemini' ? 'gemini-2.5-flash-lite' : model;
+        let response = await callAdminAI(routedProvider, routedModel);
         const data = await response.json().catch(() => ({}));
+
+        if (!response.ok && routedProvider !== 'gemini' && (response.status === 429 || response.status === 502)) {
+          response = await callAdminAI('gemini', 'gemini-2.5-flash-lite');
+          const fallbackData = await response.json().catch(() => ({}));
+          if (response.ok && fallbackData?.text) return fallbackData.text;
+          throw new Error(fallbackData.detail || fallbackData.error || data.detail || data.error || 'The AI service is temporarily unavailable. Please try again in a moment.');
+        }
+
         if (!response.ok) {
           if (response.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
           throw new Error(data.detail || data.error || 'The AI service is temporarily unavailable. Please try again in a moment.');

@@ -6,11 +6,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
 import { enrichMealPlanWithUSDA } from '../utils/usda';
 import { downloadWorkoutPDF, downloadNutritionPDF } from '../utils/pdfExport';
+import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
 import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
   Shuffle, ChevronDown, ChevronUp, Leaf, Flame, Zap, Beef,
-  FileText, CheckCircle
+  FileText, CheckCircle, ArrowLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -18,10 +19,12 @@ import toast from 'react-hot-toast';
 function SwapModal({ meal, dayName, onSwap, onClose, callAI, profile, analysis }) {
   const [loading, setLoading] = useState(false);
   const [replacement, setReplacement] = useState(null);
+  const [attemptedNames, setAttemptedNames] = useState([]);
 
   const fetchReplacement = async () => {
     setLoading(true);
     try {
+      const avoidNames = [meal.name, ...attemptedNames].filter(Boolean);
       const prompt = `
 You are a sports dietitian. Suggest a single meal replacement for "${meal.name}" that matches these macros:
 - Calories: ~${meal.usdaCalories ?? meal.calories} kcal
@@ -33,6 +36,14 @@ You are a sports dietitian. Suggest a single meal replacement for "${meal.name}"
 - Dietary restrictions: ${profile.dietaryRestrictions || 'none'}
 - Allergies: ${profile.allergies?.join(', ') || 'none'}
 - Dislikes: ${profile.foodsDisliked || 'none'}
+- Do not suggest any of these meals again: ${avoidNames.join(', ') || 'none'}
+
+Rules:
+- Keep calories within 15% of the target.
+- Keep protein within 10g of the target.
+- Use realistic UK-friendly foods.
+- Include gram/ml weights for every ingredient.
+- Include prep and whyThisMeal.
 
 Return ONLY a valid JSON object:
 {
@@ -40,13 +51,17 @@ Return ONLY a valid JSON object:
   "time": "${meal.time || 'Same time'}",
   "calories": 500,
   "macros": { "protein": 40, "carbs": 55, "fat": 12 },
-  "ingredients": ["150g ingredient with weight", "2 eggs"]
+  "ingredients": ["150g ingredient with weight", "2 eggs"],
+  "prep": "How to prepare this meal.",
+  "whyThisMeal": "Why this replacement fits the user's goal."
 }`;
       const text = await callAI(prompt);
       const clean = text.replace(/```json/i, '').replace(/```/g, '').trim();
-      setReplacement(JSON.parse(clean));
-    } catch {
-      toast.error('Could not fetch a replacement — try again');
+      const nextReplacement = JSON.parse(clean);
+      setReplacement(nextReplacement);
+      setAttemptedNames((current) => [...current, nextReplacement.name].filter(Boolean));
+    } catch (err) {
+      toast.error(err.message || 'Could not fetch a replacement. Keeping the current option.');
     } finally {
       setLoading(false);
     }
@@ -85,6 +100,14 @@ Return ONLY a valid JSON object:
                   </li>
                 ))}
               </ul>
+              {replacement.prep && (
+                <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2">
+                  {replacement.prep}
+                </p>
+              )}
+              {replacement.whyThisMeal && (
+                <p className="text-[10px] text-emerald-400 leading-relaxed">{replacement.whyThisMeal}</p>
+              )}
               <div className="flex gap-3 text-[10px] font-bold bg-slate-950/60 px-3 py-2 rounded-xl border border-slate-800">
                 <span className="text-white">{replacement.calories} kcal</span>
                 <span className="text-blue-400">P: {replacement.macros?.protein}g</span>
@@ -316,57 +339,6 @@ function MealCard({ meal, onSwap }) {
 // ─── Main page ───────────────────────────────────────────────────────────────
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-function findPlanQualityIssues(plan) {
-  const issues = [];
-  const trainingDays = plan?.workoutPlan?.days?.filter((day) => !day.isRestDay) || [];
-
-  trainingDays.forEach((day) => {
-    const label = day.dayName || `Day ${day.dayNumber || ''}`.trim();
-    if ((day.exercises || []).length < 7) {
-      issues.push(`${label} has fewer than 7 exercises`);
-    }
-    if (!Array.isArray(day.warmupSteps) || day.warmupSteps.length < 5) {
-      issues.push(`${label} needs 5 detailed warm-up steps`);
-    }
-    if (!Array.isArray(day.cooldownSteps) || day.cooldownSteps.length < 5) {
-      issues.push(`${label} needs 5 detailed cool-down steps`);
-    }
-  });
-
-  (plan?.weeklyMealPlan || []).forEach((day) => {
-    (day.meals || []).forEach((meal) => {
-      if (!meal.ingredients?.length) issues.push(`${day.dayName || 'A day'} ${meal.name || 'meal'} needs weighed ingredients`);
-      if (!meal.prep) issues.push(`${day.dayName || 'A day'} ${meal.name || 'meal'} needs prep instructions`);
-    });
-  });
-
-  return issues;
-}
-
-async function repairThinPlan(plan, issues, callAI) {
-  const repairPrompt = `
-You are fixing a fitness and nutrition plan that is too thin.
-
-Problems to fix:
-${issues.map((issue) => `- ${issue}`).join('\n')}
-
-Return ONLY the corrected full JSON object. Keep the same top-level structure, but expand it so:
-- Every training day has at least 7 exercises.
-- Every training day has warmupSteps with exactly 5 timed named movements.
-- Every training day has cooldownSteps with exactly 5 timed named stretches/breathing drills.
-- Every exercise has sets, reps, rest, tempo, targetMuscles, notes, and progressionNote.
-- Every meal has ingredients with gram/ml weights, prep, and whyThisMeal.
-- Do not remove any existing client-specific restrictions.
-
-Current JSON:
-${JSON.stringify(plan)}
-`;
-
-  const responseText = await callAI(repairPrompt);
-  const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-  return JSON.parse(cleanJson);
-}
-
 export default function MyPlan() {
   const navigate = useNavigate();
   const { profile } = useProfile();
@@ -573,12 +545,12 @@ Rules:
 
   // ── Meal swap ───────────────────────────────────────────────────────────────
   const handleSwapConfirm = async (replacement) => {
-    const { dayIdx, meal } = swapMeal;
+    const { dayIdx, mealIdx } = swapMeal;
     const updatedDays = (currentPlan.weeklyMealPlan || []).map((day, dIdx) => {
       if (dIdx !== dayIdx) return day;
       return {
         ...day,
-        meals: day.meals.map(m => m.name === meal.name ? { ...replacement, dataSource: 'ai-swap' } : m),
+        meals: day.meals.map((m, idx) => idx === mealIdx ? { ...replacement, dataSource: 'ai-swap' } : m),
       };
     });
     savePlan({ ...currentPlan, weeklyMealPlan: updatedDays });
@@ -691,6 +663,13 @@ Rules:
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-800 pb-6 mb-8 gap-4">
           <div>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mb-3 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </button>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               My Fitness Plan
             </h1>
@@ -913,7 +892,7 @@ Rules:
                     <MealCard
                       key={mIdx}
                       meal={meal}
-                      onSwap={(m) => setSwapMeal({ meal: m, dayIdx: activeNutDayIdx })}
+                      onSwap={(m) => setSwapMeal({ meal: m, dayIdx: activeNutDayIdx, mealIdx: mIdx })}
                     />
                   ))}
                 </div>

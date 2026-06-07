@@ -4,6 +4,7 @@ import { useProfile } from '../hooks/useProfile';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
+import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
 import {
   ClipboardList,
   Sparkles,
@@ -121,7 +122,6 @@ Return your response ONLY as a valid JSON object matching this structure:
 {
   "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity) and motivational feedback.",
   "updatedPlan": {
-    "focus": "Focus of training for the new week.",
     "workoutPlan": {
       "focus": "Focus of the new week's training split.",
       "days": [
@@ -130,15 +130,25 @@ Return your response ONLY as a valid JSON object matching this structure:
           "dayName": "Monday - Day Name",
           "focus": "split focus",
           "isRestDay": false,
-          "warmup": "warm-up routine",
-          "cooldown": "cool-down routine",
+          "warmup": "Short warm-up summary",
+          "warmupSteps": [
+            { "name": "Exact warm-up movement", "duration": "45 sec", "reps": "10-12 reps", "notes": "How to perform it safely, posture, breathing, and what to avoid." }
+          ],
+          "cooldown": "Short cool-down summary",
+          "cooldownSteps": [
+            { "name": "Exact stretch or breathing drill", "duration": "45 sec each side", "notes": "How to perform it safely, where they should feel it, and what to avoid." }
+          ],
+          "progressiveOverload": "Specific weekly progression for this day.",
           "exercises": [
             {
               "name": "Exercise Name",
               "sets": "Sets",
               "reps": "Reps",
               "rest": "Rest",
-              "notes": "Coaching note"
+              "tempo": "Exact tempo",
+              "targetMuscles": "Primary muscles",
+              "notes": "Full safety explanation: setup, machine adjustment if relevant, body position, breathing, range of motion, common mistakes, and stop signals.",
+              "progressionNote": "Specific next-week progression for this exercise."
             }
           ]
         }
@@ -148,21 +158,39 @@ Return your response ONLY as a valid JSON object matching this structure:
       "focus": "Overall nutrition focus",
       "dailyTargetCalories": 2200,
       "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
-      "meals": [
-        {
-          "name": "Meal name",
-          "time": "Meal time",
-          "calories": 500,
-          "macros": { "protein": 40, "carbs": 50, "fat": 15 },
-          "ingredients": ["Ingredient 1", "Ingredient 2"]
-        }
-      ],
       "generalAdvice": "Coaching advice for nutrition"
-    }
+    },
+    "weeklyMealPlan": [
+      {
+        "dayName": "Monday",
+        "dayNumber": 1,
+        "meals": [
+          {
+            "name": "Meal 1: Breakfast",
+            "time": "7:30 AM",
+            "calories": 500,
+            "macros": { "protein": 40, "carbs": 50, "fat": 15 },
+            "ingredients": ["80g oats", "250ml milk", "30g whey protein"],
+            "prep": "Exact prep method.",
+            "whyThisMeal": "Why this meal supports the goal."
+          }
+        ]
+      }
+    ]
   }
 }
 
-Ensure the updatedPlan has the exact structure of the previous plan. Provide no pre-amble or post-amble. Return ONLY the JSON object.
+Rules:
+- Preserve the current plan's top-level structure: updatedPlan must contain workoutPlan, nutritionPlan, and weeklyMealPlan.
+- workoutPlan.days must contain exactly 7 days.
+- Each non-rest day must have at least 7 exercises.
+- Every non-rest day must have exactly 5 warmupSteps and exactly 5 cooldownSteps.
+- Never write vague text like "5 minutes stretching", "dynamic warmup", "mobility", "core work", or "do cardio". Name exact movements and exact durations/reps.
+- All exercises, stretches, warm-ups, machines, and running/cardio must include full safe-performance explanations.
+- If running is prescribed, include RPE or pace guidance, posture, foot strike/cadence cue, breathing, incline/speed, and when to slow down.
+- weeklyMealPlan must contain exactly 7 days and each meal must include ingredients with gram/ml weights, prep, and whyThisMeal.
+- Keep client allergies, dislikes, injuries, equipment, and goal restrictions.
+- Provide no pre-amble or post-amble. Return ONLY the JSON object.
 `;
 
       const responseText = await callAI(
@@ -173,6 +201,12 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
       
       const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
       const result = JSON.parse(cleanJson);
+      let updatedPlan = result.updatedPlan;
+      const qualityIssues = findPlanQualityIssues(updatedPlan);
+      if (qualityIssues.length > 0) {
+        toast('Updated plan was too brief - expanding it properly...');
+        updatedPlan = await repairThinPlan(updatedPlan, qualityIssues, callAI);
+      }
 
       // Save checkin alongside adjustments
       saveCheckIn({
@@ -181,7 +215,7 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
       });
 
       // Save the new updated plan
-      savePlan(result.updatedPlan);
+      savePlan(updatedPlan);
 
       setAdjustmentSummary(result.adjustments);
       toast.success('Check-in submitted & plan updated!');
@@ -262,12 +296,20 @@ Ensure the updatedPlan has the exact structure of the previous plan. Provide no 
                 <div className="text-xs text-slate-350 leading-relaxed whitespace-pre-line">
                   {adjustmentSummary}
                 </div>
-                <button
-                  onClick={() => navigate('/plan')}
-                  className="mt-2 flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-colors"
-                >
-                  View Updated Plan <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <button
+                    onClick={() => navigate('/plan')}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-colors"
+                  >
+                    View Updated Plan <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-colors"
+                  >
+                    Return to Dashboard
+                  </button>
+                </div>
               </div>
             )}
 
