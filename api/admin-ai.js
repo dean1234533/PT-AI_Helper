@@ -114,14 +114,14 @@ const PROVIDER_CONFIGS = {
           model: model || 'openrouter/free',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 8192,
+          max_tokens: 4096,
         }),
       },
       parseResponse: async (response) => {
         const data = await response.json();
         // OpenRouter returns 200 with error body when model has no endpoints
-        if (data?.error) return '';
-        return data?.choices?.[0]?.message?.content || '';
+        if (data?.error) return { text: '', error: data.error.message || data.error.code || 'OpenRouter returned an error.' };
+        return { text: data?.choices?.[0]?.message?.content || '', error: '' };
       },
       parseError: async (response) => {
         const data = await response.json().catch(() => ({}));
@@ -232,12 +232,14 @@ export default async function handler(req, res) {
         return res.status(response.status).json({ error: providerMessage || 'The AI service is temporarily unavailable. Please try again in a moment.' });
       }
 
-      const text = await requestConfig.parseResponse(response);
+      const parsed = await requestConfig.parseResponse(response);
+      const text = typeof parsed === 'string' ? parsed : parsed?.text;
+      const responseError = typeof parsed === 'string' ? '' : parsed?.error;
       if (text) {
         return res.status(200).json({ text, provider, model: modelToTry });
       }
 
-      errors.push(`${modelToTry}: empty response`);
+      errors.push(`${modelToTry}: ${responseError || 'empty response'}`);
     }
 
     return res.status(502).json({

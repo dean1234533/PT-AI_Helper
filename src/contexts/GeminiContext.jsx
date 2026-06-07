@@ -207,13 +207,14 @@ export function GeminiProvider({ children }) {
     if (!key) throw new Error('AI service is not configured. Please contact support.');
 
     // Try models in order — free-tier models can go offline
-    const modelsToTry = model
-      ? [model]
-      : [
-          'openrouter/free',
-          'deepseek/deepseek-chat-v3.2:free',
-          'qwen/qwen3-coder:free',
-        ];
+    const modelsToTry = [...new Set([
+      model,
+      'openrouter/free',
+      'deepseek/deepseek-chat-v3.2:free',
+      'qwen/qwen3-coder:free',
+      'z-ai/glm-4.7:free',
+    ].filter(Boolean))];
+    const errors = [];
 
     for (const modelId of modelsToTry) {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -228,26 +229,29 @@ export function GeminiProvider({ children }) {
           model: modelId,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
-          max_tokens: 8192,
+          max_tokens: 4096,
         }),
       });
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        errors.push(`${modelId}: ${data?.error?.message || data?.message || res.statusText}`);
         if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
-        if (res.status === 402) continue; // try next model
         continue;
       }
 
-      const data = await res.json();
-
       // OpenRouter returns 200 but with an error body when a model has no endpoints
-      if (data?.error) continue;
+      if (data?.error) {
+        errors.push(`${modelId}: ${data.error.message || data.error.code || 'OpenRouter returned an error.'}`);
+        continue;
+      }
 
       const text = data.choices?.[0]?.message?.content;
       if (text) return text;
+      errors.push(`${modelId}: empty response`);
     }
 
-    throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
+    throw new Error(errors[0] || 'OpenRouter is temporarily unavailable. Please try again in a moment.');
   }, []);
 
   // ── Mistral call ────────────────────────────────────────────────────────────
@@ -305,7 +309,7 @@ export function GeminiProvider({ children }) {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (response.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
-          throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
+          throw new Error(data.detail || data.error || 'The AI service is temporarily unavailable. Please try again in a moment.');
         }
         if (!data?.text) {
           throw new Error('The AI returned an empty response. Please try again.');
