@@ -28,17 +28,20 @@ export default async function handler(req, res) {
     if (!sessionId) {
       return res.status(400).json({ error: 'session_id required' });
     }
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ error: 'Stripe is not configured on the server.' });
+    }
 
-    const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?expand[]=subscription&expand[]=customer`, {
+    const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?expand[]=subscription&expand[]=customer`, {
       headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
     });
 
-    if (!res.ok) {
-      const err = await res.text();
+    if (!stripeRes.ok) {
+      const err = await stripeRes.text();
       return res.status(502).json({ error: 'Stripe lookup failed', detail: err });
     }
 
-    const session = await res.json();
+    const session = await stripeRes.json();
 
     if (session.payment_status !== 'paid' && session.status !== 'complete') {
       return res.status(200).json({ paid: false });

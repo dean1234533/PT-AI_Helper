@@ -19,6 +19,10 @@ Format your response in plain text (no markdown headings, no bullet points — j
 
 Keep it under 250 words. Be direct and practical — this is a prep note for the trainer, not a report for the client.`;
 
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -35,14 +39,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { clientName, questions, answers } = req.body;
+    const { clientName, questions = [], answers = [] } = req.body || {};
+
+    if (!questions.length || !answers.length) {
+      return res.status(400).json({ error: 'questions and answers are required' });
+    }
 
     const qa = questions.map((q, i) => `Q: ${q}\nA: ${answers?.[i]?.answer || '(no answer)'}`).join('\n\n');
     const prompt = `Client: ${clientName}\n\nCheck-in responses:\n\n${qa}`;
 
     const fullPrompt = `${INSIGHTS_SYSTEM}\n\n${prompt}`;
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    const geminiKey = env('GEMINI_API_KEY');
+    if (!geminiKey) {
+      return res.status(500).json({ error: 'Gemini API is not configured on the server.' });
+    }
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,8 +66,8 @@ export default async function handler(req, res) {
       }
     );
 
-    if (!res.ok) throw new Error(`Gemini API failed: ${res.status}`);
-    const data = await res.json();
+    if (!geminiRes.ok) throw new Error(`Gemini API failed: ${geminiRes.status}`);
+    const data = await geminiRes.json();
     const insights = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
     return res.status(200).json({ success: true, insights });

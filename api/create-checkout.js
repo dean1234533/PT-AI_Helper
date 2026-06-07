@@ -26,6 +26,12 @@ export default async function handler(req, res) {
     if (!userId || !userEmail) {
       return res.status(400).json({ error: 'userId and userEmail required' });
     }
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
+      return res.status(500).json({ error: 'Stripe is not configured on the server.' });
+    }
+    if (!process.env.STRIPE_PRICE_ID.startsWith('price_')) {
+      return res.status(500).json({ error: 'STRIPE_PRICE_ID must be a Stripe price ID that starts with price_.' });
+    }
 
     const base = returnUrl || process.env.STRIPE_PORTAL_RETURN_URL || 'https://yourptaihelper.com';
 
@@ -44,7 +50,7 @@ export default async function handler(req, res) {
       'allow_promotion_codes': 'true',
     });
 
-    const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
@@ -53,13 +59,13 @@ export default async function handler(req, res) {
       body: params.toString(),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
+    if (!stripeRes.ok) {
+      const err = await stripeRes.text();
       console.error('Stripe error:', err);
       return res.status(502).json({ error: 'Stripe checkout failed', detail: err });
     }
 
-    const session = await res.json();
+    const session = await stripeRes.json();
     return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (err) {
     console.error('create-checkout error:', err);

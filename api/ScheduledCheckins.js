@@ -38,6 +38,10 @@ function generateCheckInId() {
   return id;
 }
 
+function envVar(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
 async function getFirestoreCollection(projectId, apiKey, collection) {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}?key=${apiKey}&pageSize=100`;
   const res = await fetch(url);
@@ -127,17 +131,21 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
 </html>`;
 }
 
-async function sendCheckInToClient(env, client) {
+async function sendCheckInToClient(client) {
   const { name, email, trainerId, trainerName, trainerEmail, planSummary } = client;
+  if (!envVar('GEMINI_API_KEY')) throw new Error('Gemini API is not configured on the server.');
+  if (!envVar('RESEND_API_KEY')) throw new Error('Email service is not configured on the server.');
+  if (!envVar('FIREBASE_PROJECT_ID') || !envVar('FIREBASE_API_KEY')) throw new Error('Firebase REST API is not configured on the server.');
+
   const checkInId = generateCheckInId();
-  const appUrl = process.env.APP_URL || 'https://pt-ai-helper.vercel.app';
+  const appUrl = envVar('APP_URL') || 'https://pt-ai-helper.vercel.app';
   const checkInUrl = `${appUrl}/checkin/${checkInId}`;
 
   // Generate AI questions
-  const { greeting, questions } = await generateCheckInQuestions(process.env.GEMINI_API_KEY, name, planSummary);
+  const { greeting, questions } = await generateCheckInQuestions(envVar('GEMINI_API_KEY'), name, planSummary);
 
   // Save check-in doc to Firestore
-  await createFirestoreDoc(process.env.FIREBASE_PROJECT_ID, process.env.FIREBASE_API_KEY, 'checkIns', checkInId, {
+  await createFirestoreDoc(envVar('FIREBASE_PROJECT_ID'), envVar('FIREBASE_API_KEY'), 'checkIns', checkInId, {
     checkInId: { stringValue: checkInId },
     clientName: { stringValue: name },
     clientEmail: { stringValue: email },
@@ -155,9 +163,9 @@ async function sendCheckInToClient(env, client) {
   const html = buildCheckInEmail({ clientName: name, trainerName: trainerName || 'Your Trainer', greeting, questions, checkInUrl });
   const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${envVar('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+      from: envVar('RESEND_FROM_EMAIL') || 'PT AI Helper <onboarding@resend.dev>',
       to: [email],
       reply_to: trainerEmail,
       subject: `Your weekly check-in from ${trainerName || 'your trainer'} 💪`,
@@ -174,7 +182,7 @@ async function runScheduledCheckins() {
   console.log('Running scheduled check-ins:', new Date().toISOString());
 
   try {
-    const clients = await getFirestoreCollection(process.env.FIREBASE_PROJECT_ID, process.env.FIREBASE_API_KEY, 'clients');
+    const clients = await getFirestoreCollection(envVar('FIREBASE_PROJECT_ID'), envVar('FIREBASE_API_KEY'), 'clients');
     if (!clients.length) {
       console.log('No clients found');
       return { sent: [], failed: [] };
@@ -203,7 +211,7 @@ async function runScheduledCheckins() {
       if (!client.email || !client.autoCheckIn) continue;
 
       try {
-        const result = await sendCheckInToClient(process.env, client);
+        const result = await sendCheckInToClient(client);
         results.sent.push(result);
         console.log(`Check-in sent to ${client.name} (${client.email})`);
       } catch (err) {
@@ -250,7 +258,7 @@ export default async function handler(req, res) {
     const { clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary } = req.body;
     if (!clientEmail) return res.status(400).json({ error: 'clientEmail required' });
 
-    const result = await sendCheckInToClient(process.env, {
+    const result = await sendCheckInToClient({
       name: clientName || 'Client',
       email: clientEmail,
       trainerId,

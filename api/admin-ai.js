@@ -158,8 +158,9 @@ const PROVIDER_CONFIGS = {
 function getProviderKey(config) {
   const envNames = [config.envKey, ...(config.fallbackEnvKeys || [])];
   for (const envName of envNames) {
-    if (process.env[envName]) {
-      return process.env[envName];
+    const value = process.env[envName] || process.env[`VITE_${envName}`];
+    if (value) {
+      return value;
     }
   }
   return null;

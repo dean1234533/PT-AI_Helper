@@ -26,12 +26,12 @@ export default async function handler(req, res) {
     if (!id) return res.status(400).json({ error: 'id is required' });
 
     const url = `https://firestore.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/checkIns/${id}?key=${process.env.FIREBASE_API_KEY}`;
-    const res = await fetch(url);
+    const firestoreRes = await fetch(url);
 
-    if (res.status === 404) return res.status(404).json({ error: 'Check-in not found or link has expired.' });
-    if (!res.ok) throw new Error(`Firestore error: ${res.status}`);
+    if (firestoreRes.status === 404) return res.status(404).json({ error: 'Check-in not found or link has expired.' });
+    if (!firestoreRes.ok) throw new Error(`Firestore error: ${firestoreRes.status}`);
 
-    const doc = await res.json();
+    const doc = await firestoreRes.json();
     if (!doc.fields) return res.status(404).json({ error: 'Check-in not found.' });
 
     const f = (key, type = 'stringValue') => doc.fields?.[key]?.[type] ?? null;

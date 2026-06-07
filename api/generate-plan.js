@@ -69,6 +69,10 @@ const PROVIDERS = [
 // Fall through to the next provider on these status codes
 const FALLTHROUGH_CODES = new Set([429, 402, 503, 529]);
 
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
 async function callProvider(provider, key, systemPrompt, userText, photoUrl) {
   const useVision = !!(photoUrl && provider.visionModel);
   const model = useVision ? provider.visionModel : provider.model;
@@ -450,7 +454,7 @@ export default async function handler(req, res) {
 
     // Fetch real food and exercise data in parallel — failures are non-fatal
     const [usdaFoods, wgerExercises] = await Promise.all([
-      fetchUSDAFoods(questionnaire.dietaryStyle, process.env.USDA_API_KEY).catch(() => []),
+      fetchUSDAFoods(questionnaire.dietaryStyle, env('USDA_API_KEY')).catch(() => []),
       fetchWgerExercises(questionnaire.equipment, questionnaire.preferredWorkoutTypes).catch(() => []),
     ]);
 
@@ -464,7 +468,7 @@ export default async function handler(req, res) {
     const errors = [];
 
     for (const provider of PROVIDERS) {
-      const key = process.env[provider.envKey];
+      const key = env(provider.envKey);
       if (!key) {
         console.log(`Skipping ${provider.name} — ${provider.envKey} not configured`);
         continue;

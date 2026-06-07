@@ -15,6 +15,10 @@ function toFirestoreMap(obj) {
   };
 }
 
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
 function buildNotificationEmail({ trainerName, trainerEmail, clientName, questions, answers }) {
   const qaRows = questions.map((q, i) => {
     const ans = answers[i]?.answer || '(no answer)';
@@ -109,12 +113,18 @@ export default async function handler(req, res) {
 
     // 3. Notify trainer via email
     if (trainerEmail) {
+      const resendKey = env('RESEND_API_KEY');
+      if (!resendKey) {
+        console.warn('Skipping trainer notification because Resend is not configured.');
+        return res.status(200).json({ success: true, emailSkipped: true });
+      }
+
       const html = buildNotificationEmail({ trainerName, trainerEmail, clientName, questions, answers });
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+          from: env('RESEND_FROM_EMAIL') || 'PT AI Helper <onboarding@resend.dev>',
           to: [trainerEmail],
           subject: `${clientName} has completed their check-in 📬`,
           html,

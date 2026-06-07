@@ -8,6 +8,10 @@
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
 function buildEmailHtml({ clientName, trainerNotes, plan }) {
   const n = plan?.nutritionPlan;
   const w = plan?.workoutPlan;
@@ -213,15 +217,19 @@ export default async function handler(req, res) {
     }
 
     const html = buildEmailHtml({ clientName, trainerNotes, plan });
+    const resendKey = env('RESEND_API_KEY');
+    if (!resendKey) {
+      return res.status(500).json({ error: 'Email service is not configured on the server.' });
+    }
 
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${resendKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+        from: env('RESEND_FROM_EMAIL') || 'PT AI Helper <onboarding@resend.dev>',
         to: [clientEmail],
         subject: `Your Personalised Fitness & Nutrition Plan — ${clientName}`,
         html,

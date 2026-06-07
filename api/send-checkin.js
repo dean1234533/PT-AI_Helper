@@ -106,6 +106,55 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
 </html>`;
 }
 
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
+async function generateCheckInQuestions(userPrompt) {
+  const anthropicKey = env('ANTHROPIC_API_KEY');
+  if (anthropicKey) {
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: CHECKIN_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!claudeRes.ok) throw new Error(`Claude API failed: ${claudeRes.status}`);
+    const claudeData = await claudeRes.json();
+    return claudeData.content?.[0]?.text || '';
+  }
+
+  const geminiKey = env('GEMINI_API_KEY');
+  if (!geminiKey) {
+    throw new Error('AI service is not configured on the server.');
+  }
+
+  const geminiRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${CHECKIN_SYSTEM_PROMPT}\n\n${userPrompt}` }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      }),
+    }
+  );
+
+  if (!geminiRes.ok) throw new Error(`Gemini API failed: ${geminiRes.status}`);
+  const geminiData = await geminiRes.json();
+  return geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -129,24 +178,7 @@ export default async function handler(req, res) {
 
     const userPrompt = buildCheckInPrompt(clientName, planSummary, extraContext);
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        system: CHECKIN_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-    });
-
-    if (!claudeRes.ok) throw new Error('Claude API failed');
-    const claudeData = await claudeRes.json();
-    const raw = claudeData.content?.[0]?.text || '';
+    const raw = await generateCheckInQuestions(userPrompt);
 
     let parsed;
     try {
@@ -159,15 +191,19 @@ export default async function handler(req, res) {
     const { greeting, questions } = parsed;
     const checkInUrl = `${appUrl || 'https://yourptaihelper.com'}/checkin/${checkInId}`;
     const html = buildCheckInEmail({ clientName, trainerName, greeting, questions, checkInUrl });
+    const resendKey = env('RESEND_API_KEY');
+    if (!resendKey) {
+      return res.status(500).json({ error: 'Email service is not configured on the server.' });
+    }
 
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${resendKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+        from: env('RESEND_FROM_EMAIL') || 'PT AI Helper <onboarding@resend.dev>',
         to: [clientEmail],
         reply_to: trainerEmail,
         subject: `Quick check-in from ${trainerName} — how are you getting on? 💪`,
