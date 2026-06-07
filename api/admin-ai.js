@@ -255,7 +255,7 @@ export default async function handler(req, res) {
             continue;
           }
 
-          const parsed = await geminiConfig.parseResponse(response);
+          const parsed = await requestConfig.parseResponse(response);
           const text = typeof parsed === 'string' ? parsed : parsed?.text;
           if (text) {
             return res.status(200).json({ text, provider: 'gemini', model: modelToTry, fallbackFrom: provider });
