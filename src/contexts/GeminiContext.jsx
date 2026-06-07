@@ -265,6 +265,28 @@ export function GeminiProvider({ children }) {
       const provider = useAdminRouting ? activeProvider : 'gemini';
       const model    = modelOverride || (useAdminRouting ? activeModel : 'gemini-2.0-flash');
 
+      if (useAdminRouting) {
+        const response = await fetch('/api/admin-ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: imageBase64 && provider !== 'gemini' ? 'gemini' : provider,
+            model: imageBase64 && provider !== 'gemini' ? 'gemini-2.0-flash' : model,
+            prompt,
+            imageBase64,
+            imageMimeType,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data?.error || `AI error ${response.status}`);
+        }
+        if (!data?.text) {
+          throw new Error('Empty AI response');
+        }
+        return data.text;
+      }
+
       // If image is provided but provider doesn't support vision, fall back to Gemini
       if (imageBase64 && provider !== 'gemini') {
         return callGeminiDirect(prompt, imageBase64, imageMimeType, 'gemini-2.0-flash');

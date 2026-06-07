@@ -103,6 +103,7 @@ function Sidebar({ onClose }) {
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -131,6 +132,18 @@ export default function Layout({ children }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="hidden lg:flex items-center justify-between px-6 py-4 bg-dark-800 border-b border-white/8 shrink-0">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/8 transition-colors text-white/60 hover:text-white"
+            title="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+          <div />
+        </div>
+
         {/* Mobile top bar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-dark-800 border-b border-white/8 shrink-0">
           <button

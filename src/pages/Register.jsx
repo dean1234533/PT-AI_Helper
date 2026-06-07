@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Dumbbell, Eye, EyeOff, ShieldAlert, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Dumbbell, Eye, EyeOff, ShieldAlert, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { verifyInviteToken } from '../utils/invite';
 import toast from 'react-hot-toast';
@@ -108,6 +108,14 @@ export default function Register() {
       </div>
 
       <div className="relative w-full max-w-md animate-fade-in-up">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
             <Dumbbell className="w-7 h-7 text-white" />

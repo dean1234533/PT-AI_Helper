@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PublicCheckIn() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -122,6 +124,13 @@ export default function PublicCheckIn() {
   return (
     <div className="min-h-screen bg-slate-950 text-white px-4 py-10">
       <div className="max-w-3xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
         <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8">
           <h1 className="text-3xl font-bold mb-2">Weekly Check-in</h1>
           <p className="text-slate-400 text-sm mb-6">
