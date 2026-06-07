@@ -151,6 +151,22 @@ function ExerciseRow({ ex, idx }) {
               <p className="text-xs text-slate-300 leading-relaxed">{ex.notes}</p>
             </div>
           )}
+          {(ex.tempo || ex.targetMuscles) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {ex.tempo && (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tempo</p>
+                  <p className="text-slate-300">{ex.tempo}</p>
+                </div>
+              )}
+              {ex.targetMuscles && (
+                <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Target</p>
+                  <p className="text-slate-300">{ex.targetMuscles}</p>
+                </div>
+              )}
+            </div>
+          )}
           {ex.progressionNote && (
             <div className="bg-emerald-950/20 border border-emerald-900/40 rounded-xl px-4 py-3">
               <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Progressive Overload</p>
@@ -161,6 +177,30 @@ function ExerciseRow({ ex, idx }) {
       )}
     </div>
   );
+}
+
+function TimedSteps({ steps, fallback }) {
+  if (Array.isArray(steps) && steps.length > 0) {
+    return (
+      <ol className="mt-2 space-y-2">
+        {steps.map((step, i) => (
+          <li key={i} className="flex gap-2 text-slate-300 leading-relaxed">
+            <span className="w-5 h-5 rounded-lg bg-slate-800 border border-slate-700 text-[9px] font-black text-slate-400 flex items-center justify-center shrink-0 mt-0.5">
+              {i + 1}
+            </span>
+            <span>
+              <span className="font-semibold text-slate-200">{step.name || step.exercise}</span>
+              {step.duration && <span className="text-blue-400"> · {step.duration}</span>}
+              {step.reps && <span className="text-blue-400"> · {step.reps}</span>}
+              {step.notes && <span className="block text-slate-500 mt-0.5">{step.notes}</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
+  return <p className="text-slate-300 mt-1 leading-relaxed">{fallback}</p>;
 }
 
 // ─── Meal card ───────────────────────────────────────────────────────────────
@@ -223,6 +263,15 @@ function MealCard({ meal, onSwap }) {
       </div>
 
       {/* Ingredients toggle */}
+      {(meal.prep || meal.instructions || meal.whyThisMeal) && (
+        <div className="bg-slate-950/40 border border-slate-850 rounded-2xl px-3 py-2 mb-2">
+          {meal.prep && <p className="text-xs text-slate-300 leading-relaxed">{meal.prep}</p>}
+          {meal.instructions && <p className="text-xs text-slate-400 leading-relaxed mt-1">{meal.instructions}</p>}
+          {meal.whyThisMeal && <p className="text-[10px] text-emerald-400 leading-relaxed mt-2">{meal.whyThisMeal}</p>}
+        </div>
+      )}
+
+      {/* Ingredients toggle */}
       <button
         onClick={() => setShowIngredients(s => !s)}
         className="flex items-center justify-between w-full text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-colors py-1"
@@ -266,6 +315,57 @@ function MealCard({ meal, onSwap }) {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function findPlanQualityIssues(plan) {
+  const issues = [];
+  const trainingDays = plan?.workoutPlan?.days?.filter((day) => !day.isRestDay) || [];
+
+  trainingDays.forEach((day) => {
+    const label = day.dayName || `Day ${day.dayNumber || ''}`.trim();
+    if ((day.exercises || []).length < 7) {
+      issues.push(`${label} has fewer than 7 exercises`);
+    }
+    if (!Array.isArray(day.warmupSteps) || day.warmupSteps.length < 5) {
+      issues.push(`${label} needs 5 detailed warm-up steps`);
+    }
+    if (!Array.isArray(day.cooldownSteps) || day.cooldownSteps.length < 5) {
+      issues.push(`${label} needs 5 detailed cool-down steps`);
+    }
+  });
+
+  (plan?.weeklyMealPlan || []).forEach((day) => {
+    (day.meals || []).forEach((meal) => {
+      if (!meal.ingredients?.length) issues.push(`${day.dayName || 'A day'} ${meal.name || 'meal'} needs weighed ingredients`);
+      if (!meal.prep) issues.push(`${day.dayName || 'A day'} ${meal.name || 'meal'} needs prep instructions`);
+    });
+  });
+
+  return issues;
+}
+
+async function repairThinPlan(plan, issues, callAI) {
+  const repairPrompt = `
+You are fixing a fitness and nutrition plan that is too thin.
+
+Problems to fix:
+${issues.map((issue) => `- ${issue}`).join('\n')}
+
+Return ONLY the corrected full JSON object. Keep the same top-level structure, but expand it so:
+- Every training day has at least 7 exercises.
+- Every training day has warmupSteps with exactly 5 timed named movements.
+- Every training day has cooldownSteps with exactly 5 timed named stretches/breathing drills.
+- Every exercise has sets, reps, rest, tempo, targetMuscles, notes, and progressionNote.
+- Every meal has ingredients with gram/ml weights, prep, and whyThisMeal.
+- Do not remove any existing client-specific restrictions.
+
+Current JSON:
+${JSON.stringify(plan)}
+`;
+
+  const responseText = await callAI(repairPrompt);
+  const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
+  return JSON.parse(cleanJson);
+}
 
 export default function MyPlan() {
   const navigate = useNavigate();
@@ -316,15 +416,20 @@ User Profile:
 - Dietary restrictions: ${profile.dietaryRestrictions || 'None'}
 
 CRITICAL WORKOUT RULES — READ CAREFULLY:
-1. Every training day MUST have a MINIMUM of 6 exercises, ideally 7-8. A 2 or 3 exercise session is NOT acceptable. A real PT would never write a session with fewer than 6 movements.
-2. WARM UP must be detailed and specific to the muscle groups being trained that day — minimum 3-4 specific movements with duration. Example for a leg day: "5 min bike or brisk walk, leg swings x10 each leg, bodyweight squats x15, hip circles x10 each direction, walking lunges x10". NOT just "5 min dynamic warmup".
-3. COOL DOWN must be detailed and specific — minimum 4-5 stretches targeting the muscles worked, each held 30-45 seconds. Example for chest day: "Doorframe chest stretch 45s each side, cross-body shoulder stretch 30s each, tricep overhead stretch 30s each, child's pose 45s, cat-cow 10 reps". NOT just "pec stretch, child's pose".
-4. Session duration is ${profile.sessionDuration} mins — plan exercises, sets, reps and rest times accordingly so the session actually fills that time.
-5. Exercise selection must match the equipment available: ${profile.equipment?.join(', ') || 'bodyweight only'}.
-6. Progressive overload note must be SPECIFIC per exercise — what exact weight/rep change happens each week.
+1. Every training day MUST be a FULL PT SESSION, not a summary. Minimum per training day:
+   - warmupSteps: exactly 5 timed steps totalling 8-12 minutes
+   - exercises: 7-9 exercises or timed circuits that fill the requested ${profile.sessionDuration} minute session
+   - cooldownSteps: exactly 5 timed stretches/breathing steps totalling 5-8 minutes
+2. NEVER write vague text like "5 minutes stretching", "dynamic warmup", "do cardio", "core work", "mobility", or "stretch". Name the exact movement and exact duration/reps.
+3. Timed examples: "Bodyweight squats — 30 sec", "Dead bug — 20 sec each side", "Hip flexor stretch — 45 sec each side", "Incline treadmill walk — 5 min at RPE 4".
+4. Strength examples must include sets, reps, rest, tempo, targetMuscles, notes, and progressionNote.
+5. Session duration is ${profile.sessionDuration} mins — the warm-up, main session, finisher, and cool-down must plausibly fill that time.
+6. Exercise selection must match the equipment available: ${profile.equipment?.join(', ') || 'bodyweight only'}.
+7. Progressive overload note must be SPECIFIC per exercise — what exact weight/rep/time/rest change happens next week.
 
 CRITICAL MEAL PLAN RULES — READ CAREFULLY:
-1. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
+1. Every meal must include name, time, calories, macros, ingredients with grams/ml, and prep instructions.
+2. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
 2. LUNCH should be a proper midday meal: sandwiches, wraps, salads, soups, pasta, jacket potato, stir fry, sushi bowls.
 3. DINNER should be a proper evening meal: grilled fish/chicken/meat with vegetables and a carb source, pasta dishes, curry with rice, stir fry, burgers, steak, salmon.
 4. SNACKS should be realistic: protein bar, fruit, Greek yogurt, nuts, rice cakes with peanut butter, cottage cheese, protein shake.
@@ -342,8 +447,22 @@ Return ONLY a valid JSON object with this exact structure:
         "dayName": "Monday - Push (Chest/Shoulders/Triceps)",
         "focus": "Chest, anterior deltoid, triceps — hypertrophy focus",
         "isRestDay": false,
-        "warmup": "5 min treadmill + dynamic chest openers + shoulder circles",
-        "cooldown": "Pec stretch, doorframe chest stretch, child's pose 5 min",
+        "warmup": "Short summary of the warm-up",
+        "warmupSteps": [
+          { "name": "Incline treadmill walk", "duration": "5 min", "notes": "RPE 4, nasal breathing, gradually raise body temperature" },
+          { "name": "Band pull-aparts", "duration": "45 sec", "reps": "15-20 reps", "notes": "Squeeze shoulder blades together" },
+          { "name": "Scapular push-ups", "duration": "45 sec", "reps": "10-12 reps", "notes": "Keep elbows locked, move only shoulder blades" },
+          { "name": "Push-up to downward dog", "duration": "60 sec", "reps": "6-8 reps", "notes": "Open chest and shoulders" },
+          { "name": "Light dumbbell press warm-up set", "duration": "2 min", "reps": "2 sets x 10 reps", "notes": "Use very light load before work sets" }
+        ],
+        "cooldown": "Short summary of the cool-down",
+        "cooldownSteps": [
+          { "name": "Doorframe chest stretch", "duration": "45 sec each side", "notes": "Elbow at shoulder height, breathe slowly" },
+          { "name": "Cross-body shoulder stretch", "duration": "30 sec each side", "notes": "Keep shoulder down away from ear" },
+          { "name": "Overhead triceps stretch", "duration": "30 sec each side", "notes": "Do not arch lower back" },
+          { "name": "Child's pose with side reach", "duration": "45 sec each side", "notes": "Reach hands to each corner" },
+          { "name": "Box breathing", "duration": "90 sec", "notes": "4 sec inhale, 4 hold, 4 exhale, 4 hold" }
+        ],
         "progressiveOverload": "Week 1 baseline. Next week: add 2.5kg to compound lifts if all reps completed with good form.",
         "exercises": [
           {
@@ -351,8 +470,20 @@ Return ONLY a valid JSON object with this exact structure:
             "sets": "4",
             "reps": "8-10",
             "rest": "90s",
+            "tempo": "3 sec lower, 1 sec pause, drive up",
+            "targetMuscles": "Chest, anterior delts, triceps",
             "notes": "Retract scapula into bench. Lower bar to mid-chest with 3s eccentric. Drive through heels. Exhale on press.",
             "progressionNote": "Week 1: 60% 1RM. Week 2: +2.5kg if form is solid. Week 3: +2.5kg or increase to 4x10."
+          },
+          {
+            "name": "Incline Dumbbell Press",
+            "sets": "3",
+            "reps": "10-12",
+            "rest": "75s",
+            "tempo": "2 sec lower, controlled press",
+            "targetMuscles": "Upper chest, shoulders",
+            "notes": "Bench at 30 degrees. Keep wrists stacked over elbows.",
+            "progressionNote": "Add 1-2 reps per set before increasing dumbbells by 2kg."
           }
         ]
       }
@@ -374,7 +505,9 @@ Return ONLY a valid JSON object with this exact structure:
           "time": "7:30 AM",
           "calories": 550,
           "macros": { "protein": 40, "carbs": 60, "fat": 15 },
-          "ingredients": ["80g rolled oats", "250ml semi-skimmed milk", "1 medium banana", "30g whey protein powder", "1 tbsp honey"]
+          "ingredients": ["80g rolled oats", "250ml semi-skimmed milk", "1 medium banana", "30g whey protein powder", "15g honey"],
+          "prep": "Cook oats with milk for 3-4 minutes, stir in whey after cooking, top with sliced banana and honey.",
+          "whyThisMeal": "High-carbohydrate breakfast to fuel training and high protein to support recovery."
         }
       ]
     }
@@ -384,11 +517,12 @@ Return ONLY a valid JSON object with this exact structure:
 Rules:
 - workoutPlan.days: provide exactly 7 days. Mark rest days with isRestDay: true and empty exercises array.
 - Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
-- Each training day MUST have a MINIMUM of 6 exercises — 7-8 is ideal. NEVER generate a session with fewer than 6 exercises.
-- Warm up must be specific to the muscle groups trained that day — list 3-4 named movements with reps/duration.
-- Cool down must list 4-5 specific stretches with hold times targeting muscles worked.
+- Each training day MUST have a MINIMUM of 7 exercises — 8-9 is ideal. NEVER generate a session with fewer than 7 exercises.
+- warmupSteps must contain exactly 5 named timed movements. cooldownSteps must contain exactly 5 named timed stretches/breathing drills.
+- If the user's session duration is under 45 minutes, use supersets or timed circuits, but still include at least 7 named work items.
 - weeklyMealPlan: provide exactly 7 days, each with ${profile.mealsPerDay} meals (breakfast, ${Number(profile.mealsPerDay) >= 4 ? 'morning snack, ' : ''}lunch, ${Number(profile.mealsPerDay) >= 5 ? 'afternoon snack, ' : ''}dinner${Number(profile.mealsPerDay) >= 3 ? ', snack' : ''}).
 - Include ingredient gram weights in every ingredient string (e.g. "150g salmon fillet").
+- Every meal needs prep and whyThisMeal fields.
 - BREAKFAST MUST contain breakfast foods — oats, eggs, yogurt, toast, fruit, smoothies. NEVER chicken or rice at breakfast.
 - Vary meals across the week — no two identical breakfasts, lunches, or dinners.
 - exercises.notes: write like a qualified PT coaching cue — form, tempo, breathing.
@@ -400,7 +534,13 @@ Rules:
 
       const responseText = await callAI(prompt);
       const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      const plan = JSON.parse(cleanJson);
+      let plan = JSON.parse(cleanJson);
+
+      const qualityIssues = findPlanQualityIssues(plan);
+      if (qualityIssues.length > 0) {
+        toast('Plan was too brief - asking AI to expand it properly...');
+        plan = await repairThinPlan(plan, qualityIssues, callAI);
+      }
 
       const saved = savePlan(plan);
       toast.success('Plan generated! Running USDA nutrition lookup…');
@@ -672,11 +812,11 @@ Rules:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-850 text-xs">
                       <div>
                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Warm Up</span>
-                        <p className="text-slate-300 mt-1 leading-relaxed">{todayWorkoutDay.warmup}</p>
+                        <TimedSteps steps={todayWorkoutDay.warmupSteps} fallback={todayWorkoutDay.warmup} />
                       </div>
                       <div>
                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Cool Down</span>
-                        <p className="text-slate-300 mt-1 leading-relaxed">{todayWorkoutDay.cooldown}</p>
+                        <TimedSteps steps={todayWorkoutDay.cooldownSteps} fallback={todayWorkoutDay.cooldown} />
                       </div>
                     </div>
 

@@ -126,6 +126,17 @@ function addPageBackground(doc) {
   doc.rect(0, 0, W, H, 'F');
 }
 
+function formatTimedSteps(steps, fallback) {
+  if (!Array.isArray(steps) || steps.length === 0) return fallback || '';
+  return steps
+    .map((step, idx) => {
+      const label = step.name || step.exercise || '';
+      const detail = [step.duration, step.reps].filter(Boolean).join(' / ');
+      return `${idx + 1}. ${label}${detail ? ` - ${detail}` : ''}`;
+    })
+    .join('\n');
+}
+
 // ─── WORKOUT PDF ──────────────────────────────────────────────────────────
 
 export function downloadWorkoutPDF(plan, profile) {
@@ -175,10 +186,14 @@ export function downloadWorkoutPDF(plan, profile) {
     }
 
     // Warm-up / Cool-down
-    if (day.warmup || day.cooldown) {
+    if (day.warmup || day.cooldown || day.warmupSteps || day.cooldownSteps) {
+      const warmupText = formatTimedSteps(day.warmupSteps, day.warmup);
+      const cooldownText = formatTimedSteps(day.cooldownSteps, day.cooldown);
+      const cardH = 36;
+
       setFill(doc, COLORS.cardBg);
-      doc.roundedRect(10, y, (W - 25) / 2, 22, 2, 2, 'F');
-      doc.roundedRect(17 + (W - 25) / 2, y, (W - 25) / 2, 22, 2, 2, 'F');
+      doc.roundedRect(10, y, (W - 25) / 2, cardH, 2, 2, 'F');
+      doc.roundedRect(17 + (W - 25) / 2, y, (W - 25) / 2, cardH, 2, 2, 'F');
 
       doc.setFontSize(7);
       doc.setFont('helvetica', 'bold');
@@ -189,12 +204,12 @@ export function downloadWorkoutPDF(plan, profile) {
       doc.setFont('helvetica', 'normal');
       setTextColor(doc, COLORS.lightGrey);
       doc.setFontSize(7);
-      const wuLines = doc.splitTextToSize(day.warmup || '', (W - 25) / 2 - 8);
-      const cdLines = doc.splitTextToSize(day.cooldown || '', (W - 25) / 2 - 8);
-      doc.text(wuLines.slice(0, 2), 14, y + 12);
-      doc.text(cdLines.slice(0, 2), 21 + (W - 25) / 2, y + 12);
+      const wuLines = doc.splitTextToSize(warmupText, (W - 25) / 2 - 8);
+      const cdLines = doc.splitTextToSize(cooldownText, (W - 25) / 2 - 8);
+      doc.text(wuLines.slice(0, 7), 14, y + 12);
+      doc.text(cdLines.slice(0, 7), 21 + (W - 25) / 2, y + 12);
 
-      y += 28;
+      y += cardH + 6;
     }
 
     // Exercise table header

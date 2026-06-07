@@ -403,11 +403,15 @@ CRITICAL: You MUST respond with a single valid JSON object ONLY. No markdown, no
         "day": "string",
         "name": "string",
         "duration": number,
-        "warmup": [{ "exercise": "string", "duration": "string", "notes": "string" }],
-        "mainWorkout": [
-          { "exercise": "string", "sets": number, "reps": "string", "rest": "string", "tempo": "string", "notes": "string" }
+        "warmup": [
+          { "exercise": "string — exact movement, never vague", "duration": "string — exact time", "reps": "string — reps if relevant", "notes": "string — coaching cue" }
         ],
-        "cooldown": [{ "exercise": "string", "duration": "string" }],
+        "mainWorkout": [
+          { "exercise": "string", "sets": number, "reps": "string", "rest": "string", "tempo": "string", "targetMuscles": "string", "notes": "string", "progressionNote": "string" }
+        ],
+        "cooldown": [
+          { "exercise": "string — exact stretch/drill, never vague", "duration": "string — exact time", "notes": "string — coaching cue" }
+        ],
         "cardio": "string or null"
       }
     ],
@@ -426,7 +430,14 @@ Rules:
 - Every meal and exercise MUST respect dietary restrictions, allergies, injuries, and available equipment
 - For beginners, start conservatively with weights and volume
 - Provide realistic meal options that match their cooking skill and time availability
-- All 7 days of the meal plan must be complete and varied`;
+- All 7 days of the meal plan must be complete and varied
+- Every training day must be a complete session, not a summary
+- Every training day requires at least 7 mainWorkout items unless it is a rest day
+- Every warmup must contain exactly 5 specific timed movements totalling 8-12 minutes
+- Every cooldown must contain exactly 5 specific timed stretches or breathing drills totalling 5-8 minutes
+- Never write vague items such as "5 minutes stretching", "dynamic warmup", "mobility", "core work", or "do cardio"; name the exact movement and exact duration/reps
+- Timed bodyweight/circuit work is valid and should be written precisely, e.g. "Bodyweight squats — 30 sec", "Sit-ups — 20 sec", "Mountain climbers — 30 sec", "Hip flexor stretch — 45 sec each side"
+- Meal descriptions must include specific portions, cooking/prep guidance, and why the meal supports the goal`;
 
 // ─── Main handler ────────────────────────────────────────────────────────────
 
