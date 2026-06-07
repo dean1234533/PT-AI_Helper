@@ -41,7 +41,7 @@ const PROVIDERS = [
     name: 'OpenRouter',
     envKey: 'OPENROUTER_API_KEY',
     url: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'meta-llama/llama-3.3-70b-instruct:free',
+    model: 'google/gemma-2-9b-it:free',
     visionModel: 'meta-llama/llama-3.2-11b-vision-instruct:free',
     maxTokens: 8192,
     jsonMode: false,
@@ -489,7 +489,17 @@ export default async function handler(req, res) {
         }
 
         const data = await res.json();
+        // OpenRouter returns HTTP 200 with an error body when a model has no endpoints
+        if (data?.error) {
+          console.warn(`${providerName} responded with error body:`, JSON.stringify(data.error).slice(0, 200));
+          errors.push(`${providerName}: model unavailable`);
+          continue;
+        }
         rawText = data.choices?.[0]?.message?.content || '';
+        if (!rawText) {
+          errors.push(`${providerName}: empty response`);
+          continue;
+        }
         usedProvider = `${providerName} / ${model}`;
         console.log(`Generated with ${usedProvider} (${rawText.length} chars)`);
         break;
@@ -502,8 +512,7 @@ export default async function handler(req, res) {
 
     if (!rawText) {
       return res.status(502).json({
-        error: 'All AI providers failed or are rate-limited. Add API keys in Vercel project settings environment variables.',
-        providers: errors,
+        error: 'Our AI service is currently unavailable. Please try again in a few minutes.',
       });
     }
 
@@ -513,7 +522,7 @@ export default async function handler(req, res) {
       plan = JSON.parse(jsonMatch ? jsonMatch[1] : rawText);
     } catch {
       console.error('JSON parse error. Raw response:', rawText.slice(0, 500));
-      return res.status(500).json({ error: 'Failed to parse AI response', raw: rawText.slice(0, 500) });
+      return res.status(500).json({ error: 'Something went wrong while generating your plan. Please try again.' });
     }
 
     plan._meta = {
@@ -526,6 +535,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, plan });
   } catch (err) {
     console.error('generate-plan error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Something went wrong. Please try again in a moment.' });
   }
 }

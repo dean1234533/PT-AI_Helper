@@ -418,7 +418,14 @@ Rules:
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to generate plan.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('settings')) {
+        setError('Your AI key needs to be set up. Please go to Settings and add your API key.');
+      } else if (msg.toLowerCase().includes('busy') || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('unavailable')) {
+        setError('The AI service is busy right now. Please wait a moment and try again.');
+      } else {
+        setError('We couldn\'t generate your plan right now. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

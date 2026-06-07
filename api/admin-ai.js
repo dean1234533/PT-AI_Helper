@@ -116,6 +116,8 @@ const PROVIDER_CONFIGS = {
       },
       parseResponse: async (response) => {
         const data = await response.json();
+        // OpenRouter returns 200 with error body when model has no endpoints
+        if (data?.error) return '';
         return data?.choices?.[0]?.message?.content || '';
       },
       parseError: async (response) => {
@@ -186,30 +188,30 @@ export default async function handler(req, res) {
 
     const config = PROVIDER_CONFIGS[provider];
     if (!config) {
-      return res.status(400).json({ error: 'Unsupported provider' });
+      return res.status(400).json({ error: 'The selected AI provider is not supported.' });
     }
 
     const key = getProviderKey(config);
     if (!key) {
-      const names = [config.envKey, ...(config.fallbackEnvKeys || [])].join(' or ');
-      return res.status(500).json({ error: `${names} is not configured` });
+      return res.status(500).json({ error: 'The AI service is not configured on the server. Please contact support.' });
     }
 
     const requestConfig = config.buildRequest({ key, prompt, model, imageBase64, imageMimeType });
     const response = await fetch(requestConfig.url, requestConfig.options);
 
     if (!response.ok) {
-      const message = await requestConfig.parseError(response);
-      return res.status(response.status).json({ error: message });
+      if (response.status === 429) return res.status(429).json({ error: 'The AI service is busy right now. Please wait a moment and try again.' });
+      if (response.status === 401) return res.status(401).json({ error: 'AI authentication failed. Please check your configuration.' });
+      return res.status(response.status).json({ error: 'The AI service is temporarily unavailable. Please try again in a moment.' });
     }
 
     const text = await requestConfig.parseResponse(response);
     if (!text) {
-      return res.status(502).json({ error: `Empty response from ${provider}` });
+      return res.status(502).json({ error: 'The AI returned an empty response. Please try again.' });
     }
 
     return res.status(200).json({ text });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Something went wrong. Please try again in a moment.' });
   }
 }

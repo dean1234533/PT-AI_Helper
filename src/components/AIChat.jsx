@@ -148,7 +148,10 @@ export default function AIChat() {
       const reply = await callAI(prompt);
       addMessage('assistant', reply.trim());
     } catch (err) {
-      addMessage('assistant', 'Sorry, I had trouble connecting. Please check your Gemini API key in Settings.');
+      const isKeyError = err.message?.toLowerCase().includes('api key') || err.message?.toLowerCase().includes('settings');
+      addMessage('assistant', isKeyError
+        ? 'I need an API key to work. Please add your Gemini API key in Settings.'
+        : 'Sorry, I had trouble connecting right now. Please try again in a moment.');
     } finally {
       setThinking(false);
     }

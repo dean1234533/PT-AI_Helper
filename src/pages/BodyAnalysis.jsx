@@ -122,7 +122,14 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
       toast.success('Body type analysis complete!');
     } catch (err) {
       console.error(err);
-      setError(err.message || 'An error occurred during body type analysis');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('settings')) {
+        setError('Your AI key needs to be set up. Please go to Settings and add your API key.');
+      } else if (msg.toLowerCase().includes('busy') || msg.toLowerCase().includes('rate')) {
+        setError('The AI service is busy right now. Please wait a moment and try again.');
+      } else {
+        setError('We couldn\'t complete the analysis right now. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

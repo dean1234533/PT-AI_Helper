@@ -125,7 +125,7 @@ export function GeminiProvider({ children }) {
     const key = (isCurrentUserAdmin && import.meta.env.VITE_GEMINI_API_KEY)
       || lsGet(GEMINI_KEY_STORAGE, '');
     
-    if (!key) throw new Error('No Gemini API key set. Please add your key in Settings.');
+    if (!key) throw new Error('AI is not set up yet. Please add your API key in Settings.');
 
     const parts = [];
     if (imageBase64) parts.push({ inlineData: { mimeType: imageMimeType || 'image/jpeg', data: imageBase64 } });
@@ -141,18 +141,22 @@ export function GeminiProvider({ children }) {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Gemini error ${res.status}`);
+      const msg = err?.error?.message || '';
+      if (res.status === 401 || msg.toLowerCase().includes('api key')) throw new Error('Your API key appears to be invalid. Please check your key in Settings.');
+      if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+      if (res.status === 403) throw new Error('Access denied. Please check your API key has the correct permissions.');
+      throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
     }
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Empty response from Gemini');
+    if (!text) throw new Error('The AI returned an empty response. Please try again.');
     return text;
   }, [user]);
 
   // ── Groq call ───────────────────────────────────────────────────────────────
   const callGroq = useCallback(async (prompt, model) => {
     const key = import.meta.env.VITE_GROQ_API_KEY;
-    if (!key) throw new Error('Groq API key not configured');
+    if (!key) throw new Error('AI service is not configured. Please contact support.');
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -164,8 +168,8 @@ export function GeminiProvider({ children }) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Groq error ${res.status}`);
+      if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+      throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
@@ -174,7 +178,7 @@ export function GeminiProvider({ children }) {
   // ── Cerebras call ───────────────────────────────────────────────────────────
   const callCerebras = useCallback(async (prompt, model) => {
     const key = import.meta.env.VITE_CEREBRAS_API_KEY;
-    if (!key) throw new Error('Cerebras API key not configured');
+    if (!key) throw new Error('AI service is not configured. Please contact support.');
     const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -190,9 +194,8 @@ export function GeminiProvider({ children }) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = err?.error?.message || err?.message || `Cerebras error ${res.status}`;
-      throw new Error(msg);
+      if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+      throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
@@ -201,34 +204,56 @@ export function GeminiProvider({ children }) {
   // ── OpenRouter call ─────────────────────────────────────────────────────────
   const callOpenRouter = useCallback(async (prompt, model) => {
     const key = import.meta.env.VITE_OPENROUTER_API_KEY;
-    if (!key) throw new Error('OpenRouter API key not configured');
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'PT AI Helper',
-      },
-      body: JSON.stringify({
-        model: model || 'meta-llama/llama-3.3-70b-instruct:free',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 8192,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `OpenRouter error ${res.status}`);
+    if (!key) throw new Error('AI service is not configured. Please contact support.');
+
+    // Try models in order — free-tier models can go offline
+    const modelsToTry = model
+      ? [model]
+      : [
+          'meta-llama/llama-3.3-70b-instruct:free',
+          'google/gemma-2-9b-it:free',
+          'mistralai/mistral-7b-instruct:free',
+        ];
+
+    for (const modelId of modelsToTry) {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'PT AI Helper',
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 8192,
+        }),
+      });
+
+      if (!res.ok) {
+        if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+        if (res.status === 402) continue; // try next model
+        continue;
+      }
+
+      const data = await res.json();
+
+      // OpenRouter returns 200 but with an error body when a model has no endpoints
+      if (data?.error) continue;
+
+      const text = data.choices?.[0]?.message?.content;
+      if (text) return text;
     }
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || '';
+
+    throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
   }, []);
 
   // ── Mistral call ────────────────────────────────────────────────────────────
   const callMistral = useCallback(async (prompt, model) => {
     const key = import.meta.env.VITE_MISTRAL_API_KEY;
-    if (!key) throw new Error('Mistral API key not configured');
+    if (!key) throw new Error('AI service is not configured. Please contact support.');
     const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -240,8 +265,8 @@ export function GeminiProvider({ children }) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Mistral error ${res.status}`);
+      if (res.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+      throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
     }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
@@ -279,10 +304,11 @@ export function GeminiProvider({ children }) {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(data?.error || `AI error ${response.status}`);
+          if (response.status === 429) throw new Error('The AI service is busy right now. Please wait a moment and try again.');
+          throw new Error('The AI service is temporarily unavailable. Please try again in a moment.');
         }
         if (!data?.text) {
-          throw new Error('Empty AI response');
+          throw new Error('The AI returned an empty response. Please try again.');
         }
         return data.text;
       }
