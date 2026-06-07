@@ -96,6 +96,7 @@ const PROVIDER_CONFIGS = {
   },
   openrouter: {
     envKey: 'OPENROUTER_API_KEY',
+    fallbackEnvKeys: ['VITE_OPENROUTER_API_KEY'],
     buildRequest: ({ key, prompt, model }) => ({
       url: 'https://openrouter.ai/api/v1/chat/completions',
       options: {
@@ -152,6 +153,16 @@ const PROVIDER_CONFIGS = {
   },
 };
 
+function getProviderKey(config) {
+  const envNames = [config.envKey, ...(config.fallbackEnvKeys || [])];
+  for (const envName of envNames) {
+    if (process.env[envName]) {
+      return process.env[envName];
+    }
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -178,9 +189,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Unsupported provider' });
     }
 
-    const key = process.env[config.envKey];
+    const key = getProviderKey(config);
     if (!key) {
-      return res.status(500).json({ error: `${config.envKey} is not configured` });
+      const names = [config.envKey, ...(config.fallbackEnvKeys || [])].join(' or ');
+      return res.status(500).json({ error: `${names} is not configured` });
     }
 
     const requestConfig = config.buildRequest({ key, prompt, model, imageBase64, imageMimeType });
