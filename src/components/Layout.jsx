@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, CheckSquare, User, Users,
-  LogOut, Dumbbell, Menu, X, MessageCircle, Settings,
+  LogOut, Dumbbell, Menu, X, MessageCircle, Settings, ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -40,7 +40,7 @@ function Sidebar({ onClose }) {
       {/* Logo */}
       <div className="p-5 border-b border-white/8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-blue-brand shrink-0">
             <Dumbbell className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -145,7 +145,13 @@ export default function Layout({ children }) {
             </div>
             <span className="font-bold text-white text-sm">FitAI</span>
           </div>
-          <div className="w-9" />
+          <button
+            onClick={() => window.history.back()}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white/50 hover:text-white"
+            title="Go back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
         </div>
 
         <main className="flex-1 overflow-y-auto">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { usePlans } from '../hooks/usePlans';
+import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
 import { enrichMealPlanWithUSDA } from '../utils/usda';
 import { downloadWorkoutPDF, downloadNutritionPDF } from '../utils/pdfExport';
@@ -271,6 +272,8 @@ export default function MyPlan() {
   const { profile } = useProfile();
   const { currentPlan, savePlan, analysis } = usePlans();
   const { callAI } = useGemini();
+  const { user } = useAuth();
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
   const [activeTab, setActiveTab] = useState('workout');
   const [activeDayIdx, setActiveDayIdx] = useState(0);
@@ -464,8 +467,8 @@ Rules:
   };
 
   useEffect(() => {
-    if (!currentPlan && profile.profileComplete) generatePlan();
-  }, [profile, currentPlan]);
+    if (!currentPlan && (profile.profileComplete || isAdmin)) generatePlan();
+  }, [profile, currentPlan, isAdmin]);
 
   // ── Loading states ──────────────────────────────────────────────────────────
   if (loading) {
@@ -508,10 +511,21 @@ Rules:
   if (!currentPlan) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <p className="text-slate-400 text-sm">Please complete your profile and body analysis first.</p>
-        <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold">
-          Go to Profile Setup
-        </button>
+        {isAdmin ? (
+          <div className="text-center space-y-4">
+            <p className="text-slate-400 text-sm">No plan generated yet.</p>
+            <button onClick={generatePlan} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl">
+              Generate Test Plan
+            </button>
+          </div>
+        ) : (
+          <div className="text-center space-y-4">
+            <p className="text-slate-400 text-sm">Please complete your profile and body analysis first.</p>
+            <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold">
+              Go to Profile Setup
+            </button>
+          </div>
+        )}
       </div>
     );
   }
