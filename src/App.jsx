@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
+import PublicCheckIn from './pages/PublicCheckIn';
 
 function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/checkin/:id" element={<PublicCheckIn />} />
 
       {/* Protected Setup/Onboarding Routes */}
       <Route
