@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { usePlans } from '../hooks/usePlans';
+import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
 import {
   Sparkles,
@@ -23,6 +24,8 @@ import toast from 'react-hot-toast';
 
 export default function BodyAnalysis() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
   const { profile, saveProfile } = useProfile();
   const { analysis, saveAnalysis } = usePlans();
   const { callAI } = useGemini();
@@ -129,10 +132,10 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
   };
 
   useEffect(() => {
-    if (!analysis && profile.profileComplete) {
+    if (!analysis && profile.profileComplete && !isAdmin) {
       performAnalysis();
     }
-  }, [profile, analysis]);
+  }, [profile, analysis, isAdmin]);
 
   if (loading) {
     return (
@@ -182,13 +185,27 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
   if (!analysis) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <p className="text-slate-400 text-sm">Please set up your profile first.</p>
-        <button
-          onClick={() => navigate('/setup/profile')}
-          className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold"
-        >
-          Go to Profile Setup
-        </button>
+        {isAdmin ? (
+          <div className="text-center space-y-4">
+            <p className="text-slate-300 font-semibold">Admin Mode — Body Analysis</p>
+            <p className="text-slate-400 text-sm">No profile data yet. Run a test analysis or go to dashboard.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={performAnalysis} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors">
+                Run Test Analysis
+              </button>
+              <button onClick={() => navigate('/dashboard')} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center space-y-4">
+            <p className="text-slate-400 text-sm">Please set up your profile first.</p>
+            <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold">
+              Go to Profile Setup
+            </button>
+          </div>
+        )}
       </div>
     );
   }

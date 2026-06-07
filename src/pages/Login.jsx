@@ -19,7 +19,8 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      const result = await login(form.email, form.password);
+      // Admin goes straight to dashboard, regular users check setup flow
       navigate('/dashboard');
     } catch (err) {
       toast.error(err.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Login failed. Try again.');
