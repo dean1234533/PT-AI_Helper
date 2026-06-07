@@ -4,7 +4,6 @@ import { useProfile } from '../hooks/useProfile';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
-import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
 import { parseAIJson } from '../utils/json';
 import {
   ClipboardList,
@@ -320,19 +319,28 @@ Rules:
         'image/jpeg'
       );
       
-      const result = parseAIJson(responseText);
-      let updatedPlan = planHasRenderableContent(currentPlan)
-        ? applyCheckInPatch(currentPlan, result)
-        : await generateCompleteCheckInPlan(checkInData, result.adjustments);
-
-      if (!planHasRenderableContent(updatedPlan)) {
-        updatedPlan = await generateCompleteCheckInPlan(checkInData, result.adjustments);
+      let result;
+      try {
+        result = parseAIJson(responseText);
+      } catch {
+        result = {
+          adjustments: 'Check-in saved. The AI plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.',
+          workoutDayAdjustments: [],
+          mealAdjustments: [],
+        };
       }
 
-      const qualityIssues = findPlanQualityIssues(updatedPlan);
-      if (qualityIssues.length > 0) {
-        toast('Updated plan was too brief - expanding it properly...');
-        updatedPlan = await repairThinPlan(updatedPlan, qualityIssues, callAI);
+      let updatedPlan = currentPlan;
+      if (result.updatedPlan) {
+        updatedPlan = result.updatedPlan;
+      } else if (planHasRenderableContent(currentPlan)) {
+        updatedPlan = applyCheckInPatch(currentPlan, result);
+      } else {
+        try {
+          updatedPlan = await generateCompleteCheckInPlan(checkInData, result.adjustments);
+        } catch {
+          updatedPlan = currentPlan;
+        }
       }
 
       // Save checkin alongside adjustments
@@ -341,8 +349,10 @@ Rules:
         planAdjustments: result.adjustments,
       });
 
-      // Save the new updated plan
-      savePlan(updatedPlan);
+      // Save the new updated plan only when there is a renderable plan to save.
+      if (updatedPlan && planHasRenderableContent(updatedPlan)) {
+        savePlan(updatedPlan);
+      }
 
       setAdjustmentSummary(result.adjustments);
       toast.success('Check-in submitted & plan updated!');
