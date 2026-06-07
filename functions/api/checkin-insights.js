@@ -3,7 +3,7 @@
  * Generates AI analysis of a client's check-in answers to help the PT
  * prepare for the video call.
  *
- * Env vars: ANTHROPIC_API_KEY
+ * Env vars: GEMINI_API_KEY
  */
 
 const INSIGHTS_SYSTEM = `You are an expert personal trainer reviewing a client's check-in responses.
@@ -29,20 +29,22 @@ export async function onRequestPost(context) {
     const qa = questions.map((q, i) => `Q: ${q}\nA: ${answers?.[i]?.answer || '(no answer)'}`).join('\n\n');
     const prompt = `Client: ${clientName}\n\nCheck-in responses:\n\n${qa}`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        system: INSIGHTS_SYSTEM,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
+    const fullPrompt = `${INSIGHTS_SYSTEM}\n\n${prompt}`;
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: fullPrompt }] }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 512 },
+        }),
+      }
+    );
 
-    if (!res.ok) throw new Error('Claude API failed');
+    if (!res.ok) throw new Error(`Gemini API failed: ${res.status}`);
     const data = await res.json();
-    const insights = data.content?.[0]?.text?.trim() || '';
+    const insights = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
     return new Response(JSON.stringify({ success: true, insights }), { headers: corsHeaders });
   } catch (err) {

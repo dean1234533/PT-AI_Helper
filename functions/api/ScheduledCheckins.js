@@ -5,7 +5,7 @@
  *
  * Cron schedule: 0 8 * * 1
  *
- * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, ANTHROPIC_API_KEY,
+ * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, GEMINI_API_KEY,
  *           RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL
  */
 
@@ -57,7 +57,7 @@ async function createFirestoreDoc(projectId, apiKey, collection, docId, fields) 
   return res.json();
 }
 
-async function generateCheckInQuestions(anthropicKey, clientName, planSummary) {
+async function generateCheckInQuestions(geminiKey, clientName, planSummary) {
   const lines = [`Client name: ${clientName}`, ''];
   if (planSummary) {
     lines.push('=== THEIR PLAN DETAILS ===');
@@ -69,24 +69,22 @@ async function generateCheckInQuestions(anthropicKey, clientName, planSummary) {
   }
   lines.push('\nGenerate the personalised check-in greeting and 6 questions for this client.');
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': anthropicKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: CHECKIN_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: lines.join('\n') }],
-    }),
-  });
+  const fullPrompt = `${CHECKIN_SYSTEM_PROMPT}\n\n${lines.join('\n')}`;
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      }),
+    }
+  );
 
-  if (!res.ok) throw new Error('Claude API failed');
+  if (!res.ok) throw new Error(`Gemini API failed: ${res.status}`);
   const data = await res.json();
-  const raw = data.content?.[0]?.text || '';
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   const match = raw.match(/```(?:json)?\n?([\s\S]*?)\n?```/) || raw.match(/(\{[\s\S]*\})/);
   return JSON.parse(match ? match[1] : raw);
 }
@@ -136,7 +134,7 @@ async function sendCheckInToClient(env, client) {
   const checkInUrl = `${appUrl}/checkin/${checkInId}`;
 
   // Generate AI questions
-  const { greeting, questions } = await generateCheckInQuestions(env.ANTHROPIC_API_KEY, name, planSummary);
+  const { greeting, questions } = await generateCheckInQuestions(env.GEMINI_API_KEY, name, planSummary);
 
   // Save check-in doc to Firestore
   await createFirestoreDoc(env.FIREBASE_PROJECT_ID, env.FIREBASE_API_KEY, 'checkIns', checkInId, {

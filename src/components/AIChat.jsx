@@ -167,7 +167,7 @@ export default function AIChat() {
       <button
         id="ai-chat-toggle"
         onClick={() => setOpen((o) => !o)}
-        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-glow-violet flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-glow-blue-brand flex items-center justify-center transition-all duration-300 ${
           open
             ? 'bg-gray-700 rotate-0 scale-90'
             : 'bg-gradient-to-br from-brand-500 to-brand-700 hover:scale-110'
