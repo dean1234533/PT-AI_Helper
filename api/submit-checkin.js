@@ -1,0 +1,140 @@
+/**
+ * Cloudflare Pages Function — POST /api/submit-checkin
+ * Public endpoint — client submits answers. Updates Firestore, notifies PT via email.
+ *
+ * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, RESEND_API_KEY, RESEND_FROM_EMAIL
+ */
+
+function toFirestoreMap(obj) {
+  return {
+    mapValue: {
+      fields: Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [k, { stringValue: String(v ?? '') }])
+      ),
+    },
+  };
+}
+
+function env(name) {
+  return process.env[name] || process.env[`VITE_${name}`];
+}
+
+function buildNotificationEmail({ trainerName, trainerEmail, clientName, questions, answers }) {
+  const qaRows = questions.map((q, i) => {
+    const ans = answers[i]?.answer || '(no answer)';
+    return `<div style="margin-bottom:16px;padding:14px;background:#f9fafb;border-radius:10px;border-left:3px solid #4f46e5">
+      <p style="font-size:13px;font-weight:700;color:#4f46e5;margin:0 0 6px">${i + 1}. ${q}</p>
+      <p style="font-size:14px;color:#374151;margin:0;line-height:1.6">${ans}</p>
+    </div>`;
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:24px">
+  <div style="background:linear-gradient(135deg,#1e1b4b,#4338ca);border-radius:16px;padding:24px;margin-bottom:20px;text-align:center">
+    <p style="font-size:22px;margin:0 0 6px">📬</p>
+    <h1 style="color:white;font-size:20px;font-weight:800;margin:0 0 4px">${clientName} has responded</h1>
+    <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0">Read their answers before scheduling a video call</p>
+  </div>
+  <div style="background:white;border-radius:16px;padding:24px">
+    <p style="font-size:14px;color:#4b5563;margin:0 0 20px">Hi ${trainerName}, your client <strong>${clientName}</strong> has completed their check-in. Here are their answers:</p>
+    ${qaRows}
+    <div style="margin-top:24px;background:#eef2ff;border-radius:12px;padding:16px;text-align:center">
+      <p style="font-size:14px;color:#4338ca;font-weight:600;margin:0">Review their answers and schedule a video call once you're ready.</p>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:16px">PT AI Helper — Check-in System</p>
+</div>
+</body></html>`;
+}
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { checkInId, answers } = req.body;
+    if (!checkInId || !answers?.length) {
+      return res.status(400).json({ error: 'checkInId and answers are required' });
+    }
+
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/checkIns/${checkInId}`;
+
+    // 1. Read current check-in to get trainer email + questions
+    const getRes = await fetch(`${baseUrl}?key=${process.env.FIREBASE_API_KEY}`);
+    if (!getRes.ok) throw new Error('Check-in not found');
+    const currentDoc = await getRes.json();
+    const f = (key) => currentDoc.fields?.[key]?.stringValue ?? '';
+    const questions = currentDoc.fields?.questions?.arrayValue?.values?.map((v) => v.stringValue || '') ?? [];
+    const trainerEmail = f('trainerEmail');
+    const trainerName = f('trainerName');
+    const clientName = f('clientName');
+
+    if (f('status') !== 'sent') {
+      return res.status(409).json({ error: 'This check-in has already been answered.' });
+    }
+
+    // 2. Update Firestore: set answers + status = answered
+    const patchBody = {
+      fields: {
+        status: { stringValue: 'answered' },
+        answeredAt: { timestampValue: new Date().toISOString() },
+        answers: {
+          arrayValue: {
+            values: answers.map((a) => toFirestoreMap({ question: a.question || '', answer: a.answer || '' })),
+          },
+        },
+      },
+    };
+
+    const updateMask = 'updateMask.fieldPaths=status&updateMask.fieldPaths=answeredAt&updateMask.fieldPaths=answers';
+    const patchRes = await fetch(`${baseUrl}?key=${process.env.FIREBASE_API_KEY}&${updateMask}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patchBody),
+    });
+
+    if (!patchRes.ok) {
+      const err = await patchRes.text();
+      throw new Error(`Firestore update failed: ${err}`);
+    }
+
+    // 3. Notify trainer via email
+    if (trainerEmail) {
+      const resendKey = env('RESEND_API_KEY');
+      if (!resendKey) {
+        console.warn('Skipping trainer notification because Resend is not configured.');
+        return res.status(200).json({ success: true, emailSkipped: true });
+      }
+
+      const html = buildNotificationEmail({ trainerName, trainerEmail, clientName, questions, answers });
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: env('RESEND_FROM_EMAIL') || 'PT AI Helper <onboarding@resend.dev>',
+          to: [trainerEmail],
+          subject: `${clientName} has completed their check-in 📬`,
+          html,
+        }),
+      });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('submit-checkin error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+}
