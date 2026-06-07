@@ -651,6 +651,8 @@ Rules:
   const { workoutPlan, nutritionPlan, weeklyMealPlan } = currentPlan;
   const todayWorkoutDay = workoutPlan?.days?.[activeDayIdx];
   const todayMealDay   = weeklyMealPlan?.[activeNutDayIdx];
+  const hasRenderableWorkout = (workoutPlan?.days || []).some((day) => !day.isRestDay && (day.exercises || []).length > 0);
+  const hasRenderableMeals = (weeklyMealPlan || []).some((day) => (day.meals || []).length > 0);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-24 relative overflow-hidden">
@@ -740,8 +742,18 @@ Rules:
               </div>
             </div>
 
+            {!hasRenderableWorkout && (
+              <div className="bg-yellow-950/20 border border-yellow-900/50 rounded-3xl p-6 text-center">
+                <p className="text-yellow-300 font-bold text-sm">This saved plan is missing workout sessions.</p>
+                <p className="text-slate-400 text-xs mt-2">Regenerate to create the full detailed workout plan.</p>
+                <button onClick={generatePlan} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold">
+                  Regenerate Full Plan
+                </button>
+              </div>
+            )}
+
             {/* Day selector */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {hasRenderableWorkout && <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {workoutPlan?.days?.map((day, idx) => (
                 <button
                   key={idx}
@@ -758,10 +770,10 @@ Rules:
                   {day.isRestDay && <span className="block text-[8px] opacity-70">Rest</span>}
                 </button>
               ))}
-            </div>
+            </div>}
 
             {/* Active day card */}
-            {todayWorkoutDay && (
+            {hasRenderableWorkout && todayWorkoutDay && (
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
@@ -864,7 +876,7 @@ Rules:
             </div>
 
             {/* 7-day selector */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {hasRenderableMeals && <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {(weeklyMealPlan || []).map((day, idx) => (
                 <button
                   key={idx}
@@ -878,10 +890,10 @@ Rules:
                   {(day.dayName || DAYS[idx]).slice(0, 3)}
                 </button>
               ))}
-            </div>
+            </div>}
 
             {/* Meals for selected day */}
-            {todayMealDay ? (
+            {hasRenderableMeals && todayMealDay ? (
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
                   {todayMealDay.dayName} — {(todayMealDay.meals || []).length} Meals
@@ -925,7 +937,7 @@ Rules:
               </div>
             ) : (
               <div className="text-center py-16 text-slate-500 text-sm">
-                No meal data found. <button onClick={generatePlan} className="text-blue-400 underline ml-1">Generate Plan</button>
+                No meal data found. <button onClick={generatePlan} className="text-blue-400 underline ml-1">Regenerate Full Plan</button>
               </div>
             )}
 

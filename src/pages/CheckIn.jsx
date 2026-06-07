@@ -95,6 +95,112 @@ const [adjustmentSummary, setAdjustmentSummary] = useState(null);
     return nextPlan;
   };
 
+  const planHasRenderableContent = (plan) => {
+    const hasTrainingDays = (plan?.workoutPlan?.days || []).some((day) => !day.isRestDay && (day.exercises || []).length > 0);
+    const hasMealDays = (plan?.weeklyMealPlan || []).some((day) => (day.meals || []).length > 0);
+    return hasTrainingDays && hasMealDays;
+  };
+
+  const generateCompleteCheckInPlan = async (checkInData, adjustments) => {
+    const fullPlanPrompt = `
+You are an elite Personal Trainer and Sports Dietitian. Generate a COMPLETE replacement 7-day plan after this weekly check-in.
+
+User:
+- Name: ${profile.name}
+- Goal: ${profile.goal}
+- Fitness level: ${profile.fitnessLevel}
+- Equipment: ${profile.equipment?.join(', ') || 'Not specified'}
+- Injuries/exercises to avoid: ${profile.exercisesToAvoid || 'None'}
+- Dietary style: ${profile.dietaryStyle || 'Balanced'}
+- Allergies: ${profile.allergies?.join(', ') || 'None'}
+- Dislikes: ${profile.foodsDisliked || 'None'}
+- Meals per day: ${profile.mealsPerDay || 3}
+- Training days/week: ${profile.trainingDaysPerWeek || 4}
+- Session duration: ${profile.sessionDuration || 45} mins
+
+Check-in:
+- Current weight: ${checkInData.weight} kg
+- Energy: ${checkInData.energy}/10
+- Mood: ${checkInData.mood}/10
+- Workout adherence: ${checkInData.adherenceWorkout}
+- Nutrition adherence: ${checkInData.adherenceNutrition}
+- What went well: ${checkInData.notesWell || 'None'}
+- Challenges: ${checkInData.notesChallenging || 'None'}
+- Adjustment summary to honour: ${adjustments || 'Adjust sensibly based on the check-in.'}
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "workoutPlan": {
+    "focus": "Specific weekly training focus",
+    "days": [
+      {
+        "dayNumber": 1,
+        "dayName": "Monday - Full Body Strength",
+        "focus": "Specific muscles and intent",
+        "isRestDay": false,
+        "warmup": "Short summary",
+        "warmupSteps": [
+          { "name": "Exact movement", "duration": "45 sec", "reps": "10 reps", "notes": "Safe setup, posture, breathing, and mistakes to avoid." }
+        ],
+        "cooldown": "Short summary",
+        "cooldownSteps": [
+          { "name": "Exact stretch", "duration": "45 sec each side", "notes": "How to perform safely and where to feel it." }
+        ],
+        "progressiveOverload": "Specific progression for this day",
+        "exercises": [
+          {
+            "name": "Exercise name",
+            "sets": "3",
+            "reps": "10-12",
+            "rest": "60-90s",
+            "tempo": "3 sec lower, 1 sec pause, controlled lift",
+            "targetMuscles": "Main muscles",
+            "notes": "Full safety explanation including setup, body position, breathing, range of motion, common mistakes, and when to stop.",
+            "progressionNote": "Specific next-week progression."
+          }
+        ]
+      }
+    ]
+  },
+  "nutritionPlan": {
+    "focus": "Specific nutrition strategy",
+    "dailyTargetCalories": 2200,
+    "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
+    "generalAdvice": "Detailed practical guidance"
+  },
+  "weeklyMealPlan": [
+    {
+      "dayName": "Monday",
+      "dayNumber": 1,
+      "meals": [
+        {
+          "name": "Meal 1: Breakfast",
+          "time": "7:30 AM",
+          "calories": 500,
+          "macros": { "protein": 40, "carbs": 50, "fat": 15 },
+          "ingredients": ["80g oats", "250ml milk", "30g whey protein"],
+          "prep": "Exact prep method.",
+          "whyThisMeal": "Why this supports the goal."
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- workoutPlan.days must contain exactly 7 days.
+- Non-rest days must match the requested training days/week and each have at least 7 exercises.
+- Each non-rest day must have exactly 5 warmupSteps and exactly 5 cooldownSteps.
+- weeklyMealPlan must contain exactly 7 days.
+- Each day must have ${profile.mealsPerDay || 3} meals.
+- Every meal must have weighed ingredients, prep, and whyThisMeal.
+- No vague exercise or stretch instructions.
+- Return JSON only.
+`;
+
+    return parseAIJson(await callAI(fullPlanPrompt, photoBase64 || null, 'image/jpeg'));
+  };
+
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -215,7 +321,14 @@ Rules:
       );
       
       const result = parseAIJson(responseText);
-      let updatedPlan = applyCheckInPatch(currentPlan, result);
+      let updatedPlan = planHasRenderableContent(currentPlan)
+        ? applyCheckInPatch(currentPlan, result)
+        : await generateCompleteCheckInPlan(checkInData, result.adjustments);
+
+      if (!planHasRenderableContent(updatedPlan)) {
+        updatedPlan = await generateCompleteCheckInPlan(checkInData, result.adjustments);
+      }
+
       const qualityIssues = findPlanQualityIssues(updatedPlan);
       if (qualityIssues.length > 0) {
         toast('Updated plan was too brief - expanding it properly...');
