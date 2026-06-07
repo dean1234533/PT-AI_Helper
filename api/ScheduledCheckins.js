@@ -130,14 +130,14 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
 async function sendCheckInToClient(env, client) {
   const { name, email, trainerId, trainerName, trainerEmail, planSummary } = client;
   const checkInId = generateCheckInId();
-  const appUrl = env.APP_URL || 'https://pt-ai-helper.vercel.app';
+  const appUrl = process.env.APP_URL || 'https://pt-ai-helper.vercel.app';
   const checkInUrl = `${appUrl}/checkin/${checkInId}`;
 
   // Generate AI questions
-  const { greeting, questions } = await generateCheckInQuestions(env.GEMINI_API_KEY, name, planSummary);
+  const { greeting, questions } = await generateCheckInQuestions(process.env.GEMINI_API_KEY, name, planSummary);
 
   // Save check-in doc to Firestore
-  await createFirestoreDoc(env.FIREBASE_PROJECT_ID, env.FIREBASE_API_KEY, 'checkIns', checkInId, {
+  await createFirestoreDoc(process.env.FIREBASE_PROJECT_ID, process.env.FIREBASE_API_KEY, 'checkIns', checkInId, {
     checkInId: { stringValue: checkInId },
     clientName: { stringValue: name },
     clientEmail: { stringValue: email },
@@ -155,9 +155,9 @@ async function sendCheckInToClient(env, client) {
   const html = buildCheckInEmail({ clientName: name, trainerName: trainerName || 'Your Trainer', greeting, questions, checkInUrl });
   const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+      from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
       to: [email],
       reply_to: trainerEmail,
       subject: `Your weekly check-in from ${trainerName || 'your trainer'} 💪`,
@@ -170,12 +170,15 @@ async function sendCheckInToClient(env, client) {
 }
 
 // ── Scheduled handler (Cloudflare Cron) ──────────────────────────────────────
-export async function scheduled(event, env, ctx) {
+async function runScheduledCheckins() {
   console.log('Running scheduled check-ins:', new Date().toISOString());
 
   try {
-    const clients = await getFirestoreCollection(env.FIREBASE_PROJECT_ID, env.FIREBASE_API_KEY, 'clients');
-    if (!clients.length) { console.log('No clients found'); return; }
+    const clients = await getFirestoreCollection(process.env.FIREBASE_PROJECT_ID, process.env.FIREBASE_API_KEY, 'clients');
+    if (!clients.length) {
+      console.log('No clients found');
+      return { sent: [], failed: [] };
+    }
 
     const results = { sent: [], failed: [] };
 
@@ -194,13 +197,13 @@ export async function scheduled(event, env, ctx) {
           workoutDays: f.planSummary.mapValue.fields.workoutDays?.integerValue,
           bodyType: f.planSummary.mapValue.fields.bodyType?.stringValue,
         } : null,
-        autoCheckIn: f.autoCheckIn?.booleanValue !== false, // default true
+        autoCheckIn: f.autoCheckIn?.booleanValue !== false,
       };
 
       if (!client.email || !client.autoCheckIn) continue;
 
       try {
-        const result = await sendCheckInToClient(env, client);
+        const result = await sendCheckInToClient(process.env, client);
         results.sent.push(result);
         console.log(`Check-in sent to ${client.name} (${client.email})`);
       } catch (err) {
@@ -208,26 +211,46 @@ export async function scheduled(event, env, ctx) {
         results.failed.push({ email: client.email, error: err.message });
       }
 
-      // Stagger sends to avoid rate limits
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     console.log(`Done. Sent: ${results.sent.length}, Failed: ${results.failed.length}`);
+    return results;
   } catch (err) {
     console.error('Scheduled check-in error:', err);
+    throw err;
   }
 }
 
-// ── HTTP handler — manual trigger from dashboard ──────────────────────────────
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
+  if (req.headers['x-vercel-cron']) {
+    try {
+      const results = await runScheduledCheckins();
+      return res.status(200).json({ success: true, ...results });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const { clientId, clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary } = await request.json();
-    if (!clientEmail) return new Response(JSON.stringify({ error: 'clientEmail required' }), { status: 400, headers: corsHeaders });
+    const { clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary } = req.body;
+    if (!clientEmail) return res.status(400).json({ error: 'clientEmail required' });
 
-    const result = await sendCheckInToClient(env, {
+    const result = await sendCheckInToClient(process.env, {
       name: clientName || 'Client',
       email: clientEmail,
       trainerId,
@@ -236,13 +259,9 @@ export async function onRequestPost(context) {
       planSummary,
     });
 
-    return new Response(JSON.stringify({ success: true, ...result }), { headers: corsHeaders });
+    return res.status(200).json({ success: true, ...result });
   } catch (err) {
     console.error('Manual check-in error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
 }

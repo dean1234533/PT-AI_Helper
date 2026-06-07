@@ -45,20 +45,31 @@ function buildNotificationEmail({ trainerName, trainerEmail, clientName, questio
 </body></html>`;
 }
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const { checkInId, answers } = await request.json();
+    const { checkInId, answers } = req.body;
     if (!checkInId || !answers?.length) {
-      return new Response(JSON.stringify({ error: 'checkInId and answers are required' }), { status: 400, headers: corsHeaders });
+      return res.status(400).json({ error: 'checkInId and answers are required' });
     }
 
-    const baseUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/checkIns/${checkInId}`;
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/checkIns/${checkInId}`;
 
     // 1. Read current check-in to get trainer email + questions
-    const getRes = await fetch(`${baseUrl}?key=${env.FIREBASE_API_KEY}`);
+    const getRes = await fetch(`${baseUrl}?key=${process.env.FIREBASE_API_KEY}`);
     if (!getRes.ok) throw new Error('Check-in not found');
     const currentDoc = await getRes.json();
     const f = (key) => currentDoc.fields?.[key]?.stringValue ?? '';
@@ -68,7 +79,7 @@ export async function onRequestPost(context) {
     const clientName = f('clientName');
 
     if (f('status') !== 'sent') {
-      return new Response(JSON.stringify({ error: 'This check-in has already been answered.' }), { status: 409, headers: corsHeaders });
+      return res.status(409).json({ error: 'This check-in has already been answered.' });
     }
 
     // 2. Update Firestore: set answers + status = answered
@@ -85,7 +96,7 @@ export async function onRequestPost(context) {
     };
 
     const updateMask = 'updateMask.fieldPaths=status&updateMask.fieldPaths=answeredAt&updateMask.fieldPaths=answers';
-    const patchRes = await fetch(`${baseUrl}?key=${env.FIREBASE_API_KEY}&${updateMask}`, {
+    const patchRes = await fetch(`${baseUrl}?key=${process.env.FIREBASE_API_KEY}&${updateMask}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patchBody),
@@ -101,9 +112,9 @@ export async function onRequestPost(context) {
       const html = buildNotificationEmail({ trainerName, trainerEmail, clientName, questions, answers });
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
           to: [trainerEmail],
           subject: `${clientName} has completed their check-in 📬`,
           html,
@@ -111,13 +122,9 @@ export async function onRequestPost(context) {
       });
     }
 
-    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+    return res.status(200).json({ success: true });
   } catch (err) {
     console.error('submit-checkin error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
 }

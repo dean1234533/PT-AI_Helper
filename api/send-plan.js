@@ -189,19 +189,27 @@ function buildEmailHtml({ clientName, trainerNotes, plan }) {
 </html>`;
 }
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
 
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-  };
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
 
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  
   try {
-    const { clientEmail, clientName, trainerNotes, plan } = await request.json();
+    const { clientEmail, clientName, trainerNotes, plan } = req.body;
 
     if (!clientEmail || !plan) {
-      return new Response(JSON.stringify({ error: 'clientEmail and plan are required' }), { status: 400, headers: corsHeaders });
+      return res.status(400).json({ error: 'clientEmail and plan are required' });
     }
 
     const html = buildEmailHtml({ clientName, trainerNotes, plan });
@@ -209,11 +217,11 @@ export async function onRequestPost(context) {
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
         to: [clientEmail],
         subject: `Your Personalised Fitness & Nutrition Plan — ${clientName}`,
         html,
@@ -223,23 +231,13 @@ export async function onRequestPost(context) {
     if (!resendRes.ok) {
       const err = await resendRes.text();
       console.error('Resend error:', err);
-      return new Response(JSON.stringify({ error: 'Email send failed', detail: err }), { status: 502, headers: corsHeaders });
+      return res.status(502).json({ error: 'Email send failed', detail: err });
     }
 
     const result = await resendRes.json();
-    return new Response(JSON.stringify({ success: true, id: result.id }), { headers: corsHeaders });
+    return res.status(200).json({ success: true, id: result.id });
   } catch (err) {
     console.error('send-plan error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }

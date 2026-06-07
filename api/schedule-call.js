@@ -51,23 +51,34 @@ function buildCallInviteEmail({ clientName, trainerName, videoCallLink, callNote
 </body></html>`;
 }
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
 
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+    
   try {
-    const { clientEmail, clientName, trainerName, videoCallLink, callNotes } = await request.json();
+    const { clientEmail, clientName, trainerName, videoCallLink, callNotes } = req.body;
     if (!clientEmail || !videoCallLink) {
-      return new Response(JSON.stringify({ error: 'clientEmail and videoCallLink are required' }), { status: 400, headers: corsHeaders });
+      return res.status(400).json({ error: 'clientEmail and videoCallLink are required' });
     }
 
     const html = buildCallInviteEmail({ clientName, trainerName, videoCallLink, callNotes });
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM_EMAIL || 'PT AI Helper <onboarding@resend.dev>',
         to: [clientEmail],
         subject: `${trainerName} wants to jump on a video call with you 📹`,
         html,
@@ -75,13 +86,9 @@ export async function onRequestPost(context) {
     });
 
     if (!res.ok) throw new Error(await res.text());
-    return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+    return res.status(200).json({ success: true });
   } catch (err) {
     console.error('schedule-call error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
 }

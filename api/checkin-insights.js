@@ -19,19 +19,30 @@ Format your response in plain text (no markdown headings, no bullet points — j
 
 Keep it under 250 words. Be direct and practical — this is a prep note for the trainer, not a report for the client.`;
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
-  const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const { clientName, questions, answers } = await request.json();
+    const { clientName, questions, answers } = req.body;
 
     const qa = questions.map((q, i) => `Q: ${q}\nA: ${answers?.[i]?.answer || '(no answer)'}`).join('\n\n');
     const prompt = `Client: ${clientName}\n\nCheck-in responses:\n\n${qa}`;
 
     const fullPrompt = `${INSIGHTS_SYSTEM}\n\n${prompt}`;
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,12 +57,8 @@ export async function onRequestPost(context) {
     const data = await res.json();
     const insights = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
-    return new Response(JSON.stringify({ success: true, insights }), { headers: corsHeaders });
+    return res.status(200).json({ success: true, insights });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
 }

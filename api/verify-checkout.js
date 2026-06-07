@@ -6,54 +6,52 @@
  * Env vars: STRIPE_SECRET_KEY
  */
 
-export async function onRequestGet(context) {
-  const { request, env } = context;
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
 
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-  };
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
 
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET, OPTIONS');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  
   try {
-    const url = new URL(request.url);
+    const url = new URL(req.url, `http://${req.headers.host}`);
     const sessionId = url.searchParams.get('session_id');
     if (!sessionId) {
-      return new Response(JSON.stringify({ error: 'session_id required' }), { status: 400, headers: corsHeaders });
+      return res.status(400).json({ error: 'session_id required' });
     }
 
     const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}?expand[]=subscription&expand[]=customer`, {
-      headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
     });
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Stripe lookup failed', detail: err }), { status: 502, headers: corsHeaders });
+      return res.status(502).json({ error: 'Stripe lookup failed', detail: err });
     }
 
     const session = await res.json();
 
     if (session.payment_status !== 'paid' && session.status !== 'complete') {
-      return new Response(JSON.stringify({ paid: false }), { headers: corsHeaders });
+      return res.status(200).json({ paid: false });
     }
 
-    return new Response(JSON.stringify({
+    return res.status(200).json({
       paid: true,
       userId: session.client_reference_id || session.metadata?.userId,
       stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
       stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
-    }), { headers: corsHeaders });
+    });
   } catch (err) {
     console.error('verify-checkout error:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+    return res.status(500).json({ error: err.message });
   }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }
