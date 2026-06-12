@@ -16,7 +16,7 @@ const PROVIDERS = [
         options: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 } }),
+          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 65536 } }),
         },
         parseResponse: async (res) => { const d = await res.json(); return d?.candidates?.[0]?.content?.parts?.[0]?.text || ''; },
         parseError: async (res) => { const d = await res.json().catch(() => ({})); return d?.error?.message || `Gemini ${res.status}`; },
@@ -34,7 +34,7 @@ const PROVIDERS = [
         options: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 8192 }),
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 32768 }),
         },
         parseResponse: async (res) => { const d = await res.json(); return d?.choices?.[0]?.message?.content || ''; },
         parseError: async (res) => { const d = await res.json().catch(() => ({})); return d?.error?.message || `Groq ${res.status}`; },
@@ -52,7 +52,7 @@ const PROVIDERS = [
         options: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, Accept: 'application/json' },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 8192 }),
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 16384 }),
         },
         parseResponse: async (res) => { const d = await res.json(); return d?.choices?.[0]?.message?.content || ''; },
         parseError: async (res) => { const d = await res.json().catch(() => ({})); return d?.error?.message || d?.message || `Cerebras ${res.status}`; },
@@ -88,7 +88,7 @@ const PROVIDERS = [
         options: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 8192 }),
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 32768 }),
         },
         parseResponse: async (res) => { const d = await res.json(); return d?.choices?.[0]?.message?.content || ''; },
         parseError: async (res) => { const d = await res.json().catch(() => ({})); return d?.error?.message || `Mistral ${res.status}`; },
