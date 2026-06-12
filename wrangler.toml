@@ -1,0 +1,31 @@
+# Cloudflare Pages config
+# Deploy via: wrangler pages deploy dist --project-name=dbs-ai
+# Or connect to GitHub in the Cloudflare Pages dashboard (recommended).
+
+name = "dbs-ai"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+# ── Environment variables ────────────────────────────────────────────────────
+# Add these in Cloudflare Pages dashboard → Settings → Environment variables:
+#
+#   GEMINI_API_KEY
+#   GROQ_API_KEY
+#   CEREBRAS_API_KEY
+#   OPENROUTER_API_KEY
+#   MISTRAL_API_KEY
+#   FIREBASE_PROJECT_ID
+#   FIREBASE_API_KEY
+#   RESEND_API_KEY
+#   RESEND_FROM_EMAIL
+#   STRIPE_SECRET_KEY
+#   STRIPE_PRICE_ID
+#   STRIPE_PORTAL_RETURN_URL
+#   APP_URL                    (e.g. https://dbsai.com)
+#   USDA_API_KEY               (optional — uses DEMO_KEY if absent)
+
+# ── Cron trigger ─────────────────────────────────────────────────────────────
+# Weekly check-ins run every Monday at 8:00 AM UTC.
+# Configure in Cloudflare Pages dashboard → Settings → Functions → Cron Triggers
+# Cron expression: 0 8 * * 1
+# Function: /functions/api/ScheduledCheckins.js → scheduled()
