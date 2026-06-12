@@ -11,11 +11,17 @@ export const THEMES = [
 
 const STORAGE_KEY = 'dbsai_bg_theme';
 
+function applyTheme(theme) {
+  document.documentElement.style.setProperty('--bg-page', theme.color);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme.color);
+}
+
 // Apply immediately on module load to avoid flash of unstyled background
 ;(function () {
   const saved = localStorage.getItem(STORAGE_KEY) || 'slate';
   const theme = THEMES.find(t => t.id === saved) || THEMES[0];
-  document.documentElement.style.setProperty('--bg-page', theme.color);
+  applyTheme(theme);
 })();
 
 export function useTheme() {
@@ -25,7 +31,7 @@ export function useTheme() {
 
   useEffect(() => {
     const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
-    document.documentElement.style.setProperty('--bg-page', theme.color);
+    applyTheme(theme);
   }, [themeId]);
 
   const setTheme = useCallback((id) => {
