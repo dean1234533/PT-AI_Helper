@@ -100,6 +100,12 @@
   to   { transform: rotate(360deg); }
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down  { animation: slideDown 0.4s cubic-bezier(.22,1,.36,1) both; }
 .animate-fade-in-up  { animation: fadeInUp 0.45s cubic-bezier(.22,1,.36,1) both; }
 .animate-fade-in     { animation: fadeIn 0.35s ease both; }
 .animate-slide-right { animation: slideInRight 0.4s cubic-bezier(.22,1,.36,1) both; }
