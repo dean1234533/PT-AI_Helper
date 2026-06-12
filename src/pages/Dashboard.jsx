@@ -40,7 +40,7 @@ export default function Dashboard() {
   const handleTestAI = async () => {
     setTestingAI(true);
     try {
-      const reply = await callAI('Reply with exactly: "DB's AI is online and ready."');
+      const reply = await callAI("Reply with exactly: \"DB's AI is online and ready.\"");
       toast.success(`✅ ${reply.trim()}`);
     } catch (err) {
       toast.error(`AI test failed: ${err.message}`);
