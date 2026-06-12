@@ -604,14 +604,14 @@ Rules:
         plan = await repairThinPlan(plan, qualityIssues, callAI);
       }
 
-      const saved = savePlan(plan);
+      await savePlan(plan);
       toast.success('Plan generated!');
 
       // Enrich with USDA
       setUsdaLoading(true);
       try {
         const enriched = await enrichMealPlanWithUSDA(plan.weeklyMealPlan || []);
-        savePlan({ ...plan, weeklyMealPlan: enriched });
+        await savePlan({ ...plan, weeklyMealPlan: enriched });
       } catch {
       } finally {
         setUsdaLoading(false);
@@ -641,7 +641,7 @@ Rules:
         meals: day.meals.map((m, idx) => idx === mealIdx ? { ...replacement, dataSource: 'ai-swap' } : m),
       };
     });
-    savePlan({ ...currentPlan, weeklyMealPlan: updatedDays });
+    await savePlan({ ...currentPlan, weeklyMealPlan: updatedDays });
     setSwapMeal(null);
     toast.success('Meal swapped!');
   };
