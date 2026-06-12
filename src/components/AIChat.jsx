@@ -282,9 +282,10 @@ export default function AIChat() {
                       <p className="text-[10px] text-gray-400 mt-2">{new Date(note.savedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                       <button
                         onClick={() => deleteNote(note.id)}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+                        className="absolute top-2 right-2 text-gray-300 hover:text-red-400 md:opacity-0 md:group-hover:opacity-100 transition-all"
+                        aria-label="Delete note"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
