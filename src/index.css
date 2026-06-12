@@ -52,6 +52,13 @@
   }
 }
 
+/* ── Theme background ──────────────────────────────────── */
+:root { --bg-page: #020617; }
+
+.bg-slate-950 {
+  background-color: var(--bg-page) !important;
+}
+
 /* ── Page transitions ──────────────────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }
