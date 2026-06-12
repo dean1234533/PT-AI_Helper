@@ -31,19 +31,6 @@ function normalizeExercise(exercise) {
   };
 }
 
-// Flatten any circuit-style entries (no sets/reps but has sub-exercises) into individual exercises
-function flattenExercises(exercises = []) {
-  const result = [];
-  for (const ex of exercises) {
-    const subExercises = ex.exercises || ex.circuitExercises || ex.movements;
-    if (Array.isArray(subExercises) && subExercises.length) {
-      subExercises.forEach((sub) => result.push(normalizeExercise(sub)));
-    } else {
-      result.push(normalizeExercise(ex));
-    }
-  }
-  return result;
-}
 
 function normalizeWorkoutDay(item, index = 0) {
   const exercises = item.exercises || item.mainWorkout || [];
@@ -58,7 +45,7 @@ function normalizeWorkoutDay(item, index = 0) {
     cooldown: Array.isArray(item.cooldown) ? 'Complete the cool-down steps below.' : (item.cooldown || item.cooldownSummary || ''),
     cooldownSteps: (item.cooldownSteps || (Array.isArray(item.cooldown) ? item.cooldown : [])).map(normalizeStep),
     progressiveOverload: item.progressiveOverload || item.progressionGuide || '',
-    exercises: flattenExercises(exercises),
+    exercises: exercises.map(normalizeExercise),
   };
 }
 
