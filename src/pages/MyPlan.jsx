@@ -442,7 +442,6 @@ export default function MyPlan() {
   const [activeDayIdx, setActiveDayIdx] = useState(0);
   const [activeNutDayIdx, setActiveNutDayIdx] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [usdaLoading, setUsdaLoading] = useState(false);
   const [exporting, setExporting] = useState('');
   const [error, setError] = useState(null);
   const [swapMeal, setSwapMeal] = useState(null); // { meal, dayIdx }
@@ -606,16 +605,12 @@ Rules:
 
       await savePlan(plan);
       toast.success('Plan generated!');
+      setLoading(false);
 
-      // Enrich with USDA
-      setUsdaLoading(true);
-      try {
-        const enriched = await enrichMealPlanWithUSDA(plan.weeklyMealPlan || []);
-        await savePlan({ ...plan, weeklyMealPlan: enriched });
-      } catch {
-      } finally {
-        setUsdaLoading(false);
-      }
+      // Enrich nutrition with USDA silently in the background — does not block UI
+      enrichMealPlanWithUSDA(plan.weeklyMealPlan || [])
+        .then(enriched => savePlan({ ...plan, weeklyMealPlan: enriched }))
+        .catch(() => {});
     } catch (err) {
       console.error(err);
       const msg = err.message || '';
@@ -626,7 +621,6 @@ Rules:
       } else {
         setError('We couldn\'t generate your plan right now. Please try again.');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -770,7 +764,6 @@ Rules:
             </h1>
             <p className="text-slate-400 text-sm mt-1">
               Week {currentPlan.weekNumber} · Tailored to your somatotype & goals
-              {usdaLoading && <span className="ml-2 text-emerald-400 animate-pulse">· Verifying nutrition with USDA…</span>}
             </p>
           </div>
 

@@ -277,7 +277,7 @@ Analyze this check-in. If adherence is low or they face challenges, modify the w
 Return a compact JSON patch, not the full plan. Do NOT resend the whole existing plan.
 Return your response ONLY as a valid JSON object matching this structure:
 {
-  "motivationalMessage": "A warm, personal message from coach to client. Tone and content must match their week: if mood or adherence is low (≤5), be genuinely encouraging — tell them you believe in them, that one tough week doesn't define them, and to take it one step at a time. If they are doing well (mood and adherence ≥8), celebrate them — tell them they're smashing it and to keep up the hard work. If they are somewhere in the middle, acknowledge their effort and give them a motivating push to go the extra mile. Keep it 2-3 sentences, warm, human, and personal — use their name.",
+  "motivationalMessage": "A warm, personal message addressed directly to ${profile?.name || 'the client'} — you MUST use that exact name, never substitute another. Tone must match their week: if mood or adherence is low (≤5), be genuinely encouraging — tell them you believe in them, that one tough week doesn't define them, and to take it one step at a time. If they are doing well (mood and adherence ≥8), celebrate them — tell them they're smashing it and to keep up the hard work. If they are in the middle, acknowledge their effort with a motivating push to go the extra mile. Keep it 2-3 sentences, warm and human.",
   "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity).",
   "workoutFocus": "Updated weekly training focus, or null if unchanged",
   "workoutDayAdjustments": [
