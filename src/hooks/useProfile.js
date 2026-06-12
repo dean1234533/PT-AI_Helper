@@ -1,6 +1,7 @@
-import { useLocalStorage } from './useLocalStorage';
-
-export const PROFILE_KEY = 'fitai_profile';
+import { useState, useEffect } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 
 const defaultProfile = {
   name: '',
@@ -28,24 +29,33 @@ const defaultProfile = {
 };
 
 export function useProfile() {
-  const [profile, setProfile] = useLocalStorage(PROFILE_KEY, defaultProfile);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(defaultProfile);
+  const [loading, setLoading] = useState(true);
 
-  const saveProfile = (data) => {
-    const updated = {
-      ...profile,
-      ...data,
-      profileComplete: true,
-      updatedAt: new Date().toISOString(),
-    };
-    setProfile(updated);
+  useEffect(() => {
+    if (!user) { setProfile(defaultProfile); setLoading(false); return; }
+    const ref = doc(db, 'users', user.uid, 'data', 'profile');
+    const unsub = onSnapshot(ref, (snap) => {
+      setProfile(snap.exists() ? { ...defaultProfile, ...snap.data() } : defaultProfile);
+      setLoading(false);
+    });
+    return unsub;
+  }, [user]);
+
+  const saveProfile = async (data) => {
+    if (!user) return;
+    const updated = { ...profile, ...data, profileComplete: true, updatedAt: new Date().toISOString() };
+    await setDoc(doc(db, 'users', user.uid, 'data', 'profile'), updated);
     return updated;
   };
 
-  const clearProfile = () => setProfile(defaultProfile);
+  const clearProfile = async () => {
+    if (!user) return;
+    await setDoc(doc(db, 'users', user.uid, 'data', 'profile'), defaultProfile);
+  };
 
-  const isProfileComplete = Boolean(
-    profile?.name && profile?.age && profile?.goal && profile?.fitnessLevel
-  );
+  const isProfileComplete = Boolean(profile?.name && profile?.age && profile?.goal && profile?.fitnessLevel);
 
-  return { profile, saveProfile, clearProfile, isProfileComplete };
+  return { profile, saveProfile, clearProfile, isProfileComplete, loading };
 }

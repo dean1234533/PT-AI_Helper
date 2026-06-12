@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-const SITE_NAME = 'PT AI Helper';
+const SITE_NAME = "DB's AI";
 const DEFAULT_DESC = 'AI-powered nutrition and workout plans for personal trainers. Generate personalised client plans in seconds using Claude AI, real USDA food data, and verified exercise databases.';
 const DEFAULT_IMAGE = '/og-image.png';
 

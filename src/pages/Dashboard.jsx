@@ -13,12 +13,7 @@ import {
   Award,
   Calendar,
   Weight,
-  Copy,
-  Link,
-  Plus,
-  Bot,
   Cpu,
-  CheckCircle,
   Loader2,
   Radio
 } from 'lucide-react';
@@ -27,7 +22,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
-import { generateInviteToken } from '../utils/invite';
 import { useGemini } from '../contexts/GeminiContext';
 import toast from 'react-hot-toast';
 
@@ -36,49 +30,23 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { currentPlan, analysis } = usePlans();
   const { checkIns, latestCheckIn } = useCheckIns();
-  const { activeProvider, activeModel, setAdminProvider, setAdminModel, AI_PROVIDERS, callAI } = useGemini();
+  const { callAI } = useGemini();
   const navigate = useNavigate();
 
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [generatedLink, setGeneratedLink] = useState('');
   const [testingAI, setTestingAI] = useState(false);
 
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
-  const handleGenerateInvite = async (e) => {
-    e.preventDefault();
-    const cleanEmail = inviteEmail.trim();
-    if (!cleanEmail) {
-      toast.error('Please enter an email address');
-      return;
-    }
-    try {
-      const token = await generateInviteToken(cleanEmail);
-      const base = window.location.origin;
-      const link = `${base}/register?email=${encodeURIComponent(cleanEmail)}&token=${token}`;
-      setGeneratedLink(link);
-      toast.success('Invite link generated!');
-    } catch (err) {
-      toast.error('Failed to generate invite link');
-    }
-  };
-
   const handleTestAI = async () => {
     setTestingAI(true);
     try {
-      const reply = await callAI('Reply with exactly: "PT AI Helper is online and ready."');
+      const reply = await callAI('Reply with exactly: "DB's AI is online and ready."');
       toast.success(`✅ ${reply.trim()}`);
     } catch (err) {
       toast.error(`AI test failed: ${err.message}`);
     } finally {
       setTestingAI(false);
     }
-  };
-
-  const handleCopyLink = () => {
-    if (!generatedLink) return;
-    navigator.clipboard.writeText(generatedLink);
-    toast.success('Invite link copied to clipboard!');
   };
 
   const greeting = useMemo(() => {
@@ -381,147 +349,25 @@ export default function Dashboard() {
           </div>
 
           {isAdmin && (
-            <>
-              {/* ── Admin: AI Provider Switcher ── */}
-              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <Cpu className="w-4.5 h-4.5 text-blue-400" />
-                    AI Engine (Admin Only)
-                  </h3>
-                  <button
-                    onClick={handleTestAI}
-                    disabled={testingAI}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
-                  >
-                    {testingAI ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Radio className="w-3.5 h-3.5" />}
-                    Test Active Provider
-                  </button>
-                </div>
-                <p className="text-xs text-slate-400">
-                  Switch the AI engine powering your plan generation and chat. All providers use your built-in API keys — no user setup needed.
-                </p>
-
-                {/* Provider cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {Object.values(AI_PROVIDERS).map((p) => {
-                    const isActive = activeProvider === p.id;
-                    return (
-                      <button
-                        key={p.id}
-                        onClick={() => { setAdminProvider(p.id); toast.success(`Switched to ${p.label}`); }}
-                        className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border text-center transition-all ${
-                          isActive
-                            ? 'border-blue-500/60 bg-blue-600/10 shadow-lg shadow-blue-900/20'
-                            : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/60'
-                        }`}
-                      >
-                        {isActive && (
-                          <CheckCircle className="absolute top-2 right-2 w-3.5 h-3.5 text-emerald-400" />
-                        )}
-                        <div
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-xs"
-                          style={{ backgroundColor: p.color + '33', border: `1px solid ${p.color}55` }}
-                        >
-                          <span style={{ color: p.color }}>{p.label.slice(0, 2)}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-200 text-xs">{p.label}</p>
-                          <p className="text-[9px] text-slate-500 mt-0.5">{p.badge}</p>
-                          {p.supportsVision && (
-                            <p className="text-[8px] text-emerald-400 mt-0.5 font-semibold">📷 Vision</p>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Model selector for active provider */}
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Bot className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-semibold text-slate-300">Active Model:</span>
-                  </div>
-                  <select
-                    value={activeModel}
-                    onChange={(e) => { setAdminModel(e.target.value); toast.success('Model updated'); }}
-                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-blue-500 rounded-xl py-2 px-3 text-slate-200 text-xs outline-none transition-all"
-                  >
-                    {AI_PROVIDERS[activeProvider]?.models.map((m) => (
-                      <option key={m.id} value={m.id}>{m.label}</option>
-                    ))}
-                  </select>
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-[10px] text-slate-400 whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {AI_PROVIDERS[activeProvider]?.label} active
-                  </div>
-                </div>
-
-                {/* Key status strip */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {[
-                    { label: 'Gemini',     key: import.meta.env.VITE_GEMINI_API_KEY },
-                    { label: 'Groq',       key: import.meta.env.VITE_GROQ_API_KEY },
-                    { label: 'Cerebras',   key: import.meta.env.VITE_CEREBRAS_API_KEY },
-                    { label: 'OpenRouter', key: import.meta.env.VITE_OPENROUTER_API_KEY },
-                    { label: 'Mistral',    key: import.meta.env.VITE_MISTRAL_API_KEY },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2 bg-slate-950/60 border border-slate-850 rounded-xl px-3 py-2">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.key ? 'bg-emerald-400' : 'bg-red-500'}`} />
-                      <span className="text-[10px] text-slate-400 font-semibold">{item.label}</span>
-                      <span className={`text-[9px] ml-auto ${item.key ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {item.key ? '✓ Loaded' : '✗ Missing'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Admin: Invite Link Generator ── */}
-              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md space-y-4">
+            <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                  <Link className="w-4.5 h-4.5 text-blue-400" />
-                  Invite Link Generator (Admin Only)
+                  <Cpu className="w-4.5 h-4.5 text-blue-400" />
+                  AI Engine (Admin)
                 </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Generate a secure, email-locked registration link to invite a new client. This prevents public registrations and locks the link to the client's email address.
-                </p>
-
-                <form onSubmit={handleGenerateInvite} className="flex flex-col sm:flex-row gap-3 max-w-xl">
-                  <input
-                    type="email"
-                    required
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="client@example.com"
-                    className="flex-1 bg-slate-950/80 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-2xl py-3 px-4 text-slate-100 text-sm outline-none transition-all"
-                  />
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Generate Link
-                  </button>
-                </form>
-
-                {generatedLink && (
-                  <div className="mt-4 bg-slate-950/60 p-4 border border-slate-850 rounded-2xl flex items-center justify-between gap-4 max-w-xl">
-                    <span className="text-xxs text-blue-400 font-mono break-all select-all">
-                      {generatedLink}
-                    </span>
-                    <button
-                      onClick={handleCopyLink}
-                      className="p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-xl transition-all shrink-0"
-                      title="Copy Link"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <button
+                  onClick={handleTestAI}
+                  disabled={testingAI}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+                >
+                  {testingAI ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Radio className="w-3.5 h-3.5" />}
+                  Test AI
+                </button>
               </div>
-            </>
+              <p className="text-xs text-slate-400 mt-2">
+                Auto-rotates through all configured providers (Gemini → Groq → Cerebras → OpenRouter → Mistral) and picks the first one that works.
+              </p>
+            </div>
           )}
         </div>
       </div>

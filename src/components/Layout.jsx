@@ -46,7 +46,7 @@ function Sidebar({ onClose }) {
             <Dumbbell className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">FitAI</p>
+            <p className="text-white font-bold text-sm leading-tight">DB's AI</p>
             <p className="text-white/40 text-xs">Personal Trainer</p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function Layout({ children }) {
             <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
               <Dumbbell className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="font-bold text-white text-sm">FitAI</span>
+            <span className="font-bold text-white text-sm">DB's AI</span>
           </div>
           <button
             onClick={() => window.history.back()}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -61,7 +61,7 @@ export default function Login() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
             <Dumbbell className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">FitAI</h1>
+          <h1 className="text-2xl font-bold text-white">DB's AI</h1>
           <p className="text-white/45 mt-1 text-sm">Your personal AI fitness coach</p>
         </div>
 
@@ -163,6 +163,10 @@ export default function Login() {
                   ) : 'Sign in'}
                 </button>
               </form>
+              <p className="text-center text-sm text-white/40 mt-6">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">Sign up</Link>
+              </p>
             </>
           )}
         </div>

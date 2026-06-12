@@ -193,7 +193,7 @@ export default function AIChat() {
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-white font-semibold text-sm">FitAI Coach</p>
+                <p className="text-white font-semibold text-sm">DB's AI Coach</p>
                 <p className="text-brand-200 text-xs">Ask me anything about your plan</p>
               </div>
             </div>

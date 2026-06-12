@@ -1,7 +1,9 @@
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useEffect } from 'react';
+import { collection, addDoc, doc, onSnapshot, query, orderBy, writeBatch, getDocs, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
 
-export const PLANS_KEY = 'fitai_plans';
-export const ANALYSIS_KEY = 'fitai_analysis';
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 const PLAN_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const PLAN_DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -13,12 +15,7 @@ function titleDay(value, fallbackIndex = 0) {
 
 function normalizeStep(step) {
   if (typeof step === 'string') return { name: step, duration: '', notes: '' };
-  return {
-    name: step?.name || step?.exercise || 'Movement',
-    duration: step?.duration || '',
-    reps: step?.reps || '',
-    notes: step?.notes || '',
-  };
+  return { name: step?.name || step?.exercise || 'Movement', duration: step?.duration || '', reps: step?.reps || '', notes: step?.notes || '' };
 }
 
 function normalizeExercise(exercise) {
@@ -53,143 +50,112 @@ function normalizeWorkoutDay(item, index = 0) {
 
 function normalizeWorkoutPlan(workoutPlan = {}) {
   if (Array.isArray(workoutPlan.days) && workoutPlan.days.length) {
-    return {
-      ...workoutPlan,
-      days: workoutPlan.days.map(normalizeWorkoutDay),
-    };
+    return { ...workoutPlan, days: workoutPlan.days.map(normalizeWorkoutDay) };
   }
-
   if (!Array.isArray(workoutPlan.workouts) || !workoutPlan.workouts.length) return workoutPlan;
-
   const workoutByDay = new Map();
   workoutPlan.workouts.forEach((workout, index) => {
     workoutByDay.set(titleDay(workout.day, index).toLowerCase(), normalizeWorkoutDay(workout, index));
   });
-
   return {
     ...workoutPlan,
     days: PLAN_DAY_NAMES.map((day, index) => {
       const workout = workoutByDay.get(day.toLowerCase());
       if (workout) return { ...workout, dayNumber: index + 1 };
       const scheduled = workoutPlan.weeklySchedule?.[PLAN_DAYS[index]];
-      return {
-        dayNumber: index + 1,
-        dayName: scheduled ? `${day} - ${scheduled}` : day,
-        focus: scheduled || 'Rest and recovery',
-        isRestDay: !scheduled,
-        warmup: '',
-        warmupSteps: [],
-        cooldown: '',
-        cooldownSteps: [],
-        progressiveOverload: '',
-        exercises: [],
-      };
+      return { dayNumber: index + 1, dayName: scheduled ? `${day} - ${scheduled}` : day, focus: scheduled || 'Rest and recovery', isRestDay: !scheduled, warmup: '', warmupSteps: [], cooldown: '', cooldownSteps: [], progressiveOverload: '', exercises: [] };
     }),
   };
 }
 
 function normalizeMeal(meal, label) {
   if (!meal) return null;
-  return {
-    name: meal.name || label,
-    time: meal.time || '',
-    calories: meal.calories,
-    macros: meal.macros || {
-      protein: meal.protein,
-      carbs: meal.carbs,
-      fat: meal.fat,
-    },
-    ingredients: meal.ingredients || [],
-    prep: meal.prep || meal.description || meal.instructions || '',
-    whyThisMeal: meal.whyThisMeal || '',
-    ...meal,
-  };
+  return { name: meal.name || label, time: meal.time || '', calories: meal.calories, macros: meal.macros || { protein: meal.protein, carbs: meal.carbs, fat: meal.fat }, ingredients: meal.ingredients || [], prep: meal.prep || meal.description || meal.instructions || '', whyThisMeal: meal.whyThisMeal || '', ...meal };
 }
 
 function normalizeWeeklyMealPlan(plan = {}) {
   if (Array.isArray(plan.weeklyMealPlan) && plan.weeklyMealPlan.length) {
-    return plan.weeklyMealPlan.map((day, index) => ({
-      dayName: day.dayName || PLAN_DAY_NAMES[index],
-      dayNumber: day.dayNumber || index + 1,
-      meals: (day.meals || []).map((meal, mealIndex) => normalizeMeal(meal, meal.name || `Meal ${mealIndex + 1}`)).filter(Boolean),
-    }));
+    return plan.weeklyMealPlan.map((day, index) => ({ dayName: day.dayName || PLAN_DAY_NAMES[index], dayNumber: day.dayNumber || index + 1, meals: (day.meals || []).map((meal, mealIndex) => normalizeMeal(meal, meal.name || `Meal ${mealIndex + 1}`)).filter(Boolean) }));
   }
-
   const nested = plan.nutritionPlan?.weeklyMealPlan;
   if (!nested || typeof nested !== 'object') return plan.weeklyMealPlan || [];
-
   return PLAN_DAYS.map((day, index) => {
     const source = nested[day] || {};
-    const meals = [
-      normalizeMeal(source.breakfast, 'Breakfast'),
-      normalizeMeal(source.lunch, 'Lunch'),
-      normalizeMeal(source.dinner, 'Dinner'),
-      ...(source.snacks || []).map((snack, snackIndex) => normalizeMeal(snack, `Snack ${snackIndex + 1}`)),
-    ].filter(Boolean);
-
-    return {
-      dayName: PLAN_DAY_NAMES[index],
-      dayNumber: index + 1,
-      meals,
-    };
+    const meals = [normalizeMeal(source.breakfast, 'Breakfast'), normalizeMeal(source.lunch, 'Lunch'), normalizeMeal(source.dinner, 'Dinner'), ...(source.snacks || []).map((snack, snackIndex) => normalizeMeal(snack, `Snack ${snackIndex + 1}`))].filter(Boolean);
+    return { dayName: PLAN_DAY_NAMES[index], dayNumber: index + 1, meals };
   });
 }
 
 function normalizeNutritionPlan(plan = {}) {
   const nutrition = plan.nutritionPlan || {};
   if (nutrition.dailyTargetCalories || nutrition.dailyMacros) return nutrition;
-
-  return {
-    ...nutrition,
-    focus: nutrition.focus || nutrition.notes || nutrition.mealTiming || '',
-    dailyTargetCalories: nutrition.dailyCalories,
-    dailyMacros: nutrition.macros ? {
-      protein: nutrition.macros.protein?.grams,
-      carbs: nutrition.macros.carbs?.grams,
-      fat: nutrition.macros.fats?.grams,
-    } : nutrition.dailyMacros,
-    generalAdvice: nutrition.generalAdvice || nutrition.notes || nutrition.mealTiming || '',
-  };
+  return { ...nutrition, focus: nutrition.focus || nutrition.notes || nutrition.mealTiming || '', dailyTargetCalories: nutrition.dailyCalories, dailyMacros: nutrition.macros ? { protein: nutrition.macros.protein?.grams, carbs: nutrition.macros.carbs?.grams, fat: nutrition.macros.fats?.grams } : nutrition.dailyMacros, generalAdvice: nutrition.generalAdvice || nutrition.notes || nutrition.mealTiming || '' };
 }
 
 function normalizePlan(plan) {
   if (!plan) return plan;
-  return {
-    ...plan,
-    workoutPlan: normalizeWorkoutPlan(plan.workoutPlan || {}),
-    nutritionPlan: normalizeNutritionPlan(plan),
-    weeklyMealPlan: normalizeWeeklyMealPlan(plan),
-  };
+  return { ...plan, workoutPlan: normalizeWorkoutPlan(plan.workoutPlan || {}), nutritionPlan: normalizeNutritionPlan(plan), weeklyMealPlan: normalizeWeeklyMealPlan(plan) };
 }
 
 export function usePlans() {
-  const [plans, setPlans] = useLocalStorage(PLANS_KEY, []);
-  const [analysis, setAnalysis] = useLocalStorage(ANALYSIS_KEY, null);
-  const normalizedPlans = plans.map(normalizePlan);
+  const { user } = useAuth();
+  const [plans, setPlans] = useState([]);
+  const [analysis, setAnalysisState] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const savePlan = (planData) => {
-    const newPlan = {
-      id: `plan_${Date.now()}`,
-      generatedAt: new Date().toISOString(),
-      weekNumber: plans.length + 1,
-      ...normalizePlan(planData),
-    };
-    const updated = [newPlan, ...plans];
-    setPlans(updated);
-    return newPlan;
+  useEffect(() => {
+    if (!user) { setPlans([]); setAnalysisState(null); setLoading(false); return; }
+
+    const plansCol = collection(db, 'users', user.uid, 'plans');
+    const q = query(plansCol, orderBy('generatedAt', 'desc'));
+    const unsubPlans = onSnapshot(q, (snap) => {
+      setPlans(snap.docs.map((d) => normalizePlan({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+
+    const analysisRef = doc(db, 'users', user.uid, 'data', 'analysis');
+    const unsubAnalysis = onSnapshot(analysisRef, (snap) => {
+      setAnalysisState(snap.exists() ? snap.data() : null);
+    });
+
+    return () => { unsubPlans(); unsubAnalysis(); };
+  }, [user]);
+
+  const savePlan = async (planData) => {
+    if (!user) return;
+    const normalized = normalizePlan(planData);
+    const newPlan = { generatedAt: new Date().toISOString(), weekNumber: plans.length + 1, ...normalized };
+
+    // Mark old plans to expire in 90 days
+    if (plans.length > 0) {
+      const expiresAt = Timestamp.fromMillis(Date.now() + NINETY_DAYS_MS);
+      const batch = writeBatch(db);
+      plans.forEach((p) => {
+        if (!p.expiresAt) batch.update(doc(db, 'users', user.uid, 'plans', p.id), { expiresAt });
+      });
+      await batch.commit();
+    }
+
+    const ref = await addDoc(collection(db, 'users', user.uid, 'plans'), newPlan);
+    return { id: ref.id, ...newPlan };
   };
 
-  const saveAnalysis = (analysisData) => {
-    const updated = {
-      ...analysisData,
-      generatedAt: new Date().toISOString(),
-    };
-    setAnalysis(updated);
+  const saveAnalysis = async (analysisData) => {
+    if (!user) return;
+    const updated = { ...analysisData, generatedAt: new Date().toISOString() };
+    await setDoc(doc(db, 'users', user.uid, 'data', 'analysis'), updated);
     return updated;
   };
 
-  const currentPlan = normalizedPlans[0] || null;
-  const clearPlans = () => { setPlans([]); setAnalysis(null); };
+  const clearPlans = async () => {
+    if (!user) return;
+    const col = collection(db, 'users', user.uid, 'plans');
+    const snap = await getDocs(col);
+    const batch = writeBatch(db);
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    batch.delete(doc(db, 'users', user.uid, 'data', 'analysis'));
+    await batch.commit();
+  };
 
-  return { plans: normalizedPlans, currentPlan, savePlan, analysis, saveAnalysis, clearPlans };
+  return { plans, currentPlan: plans[0] || null, savePlan, analysis, saveAnalysis, clearPlans, loading };
 }

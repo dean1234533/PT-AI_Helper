@@ -6,6 +6,7 @@ import { GeminiProvider } from './contexts/GeminiContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import ApiKeySetup from './pages/ApiKeySetup';
 import ProfileSetup from './pages/ProfileSetup';
 import BodyAnalysis from './pages/BodyAnalysis';
@@ -22,6 +23,7 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkin/:id" element={<PublicCheckIn />} />
 
       {/* Protected Setup/Onboarding Routes */}
