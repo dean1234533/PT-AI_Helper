@@ -90,7 +90,6 @@ Return ONLY a valid JSON object:
             <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className="font-bold text-slate-100 text-sm">{replacement.name}</h4>
-                <span className="text-slate-500 text-xs">{replacement.time}</span>
               </div>
               <ul className="space-y-1">
                 {replacement.ingredients?.map((ing, i) => (
@@ -270,7 +269,7 @@ function MealCard({ meal, onSwap }) {
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
           <Beef className="w-3 h-3 text-blue-400 mx-auto mb-0.5" />
-          <p className="text-[9px] text-slate-500 font-semibold">PROTE la Protein</p>
+          <p className="text-[9px] text-slate-500 font-semibold">Protein</p>
           <p className="text-xs font-black text-blue-400">{prot ?? '—'}g</p>
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
@@ -295,38 +294,49 @@ function MealCard({ meal, onSwap }) {
       )}
 
       {/* Ingredients toggle */}
-      <button
-        onClick={() => setShowIngredients(s => !s)}
-        className="flex items-center justify-between w-full text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-colors py-1"
-      >
-        <span>Ingredients ({(meal.enrichedIngredients || meal.ingredients || []).length} items)</span>
-        {showIngredients ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-      </button>
+      {(() => {
+        const ingList = meal.enrichedIngredients?.length
+          ? meal.enrichedIngredients
+          : (meal.ingredients ?? []);
+        return (
+          <>
+            <button
+              onClick={() => setShowIngredients(s => !s)}
+              className="flex items-center justify-between w-full text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-colors py-1"
+            >
+              <span>Ingredients ({ingList.length} items)</span>
+              {showIngredients ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
 
-      {showIngredients && (
-        <ul className="mt-2 space-y-1.5">
-          {(meal.enrichedIngredients || meal.ingredients || []).map((ing, i) => {
-            const isEnriched = typeof ing === 'object';
-            const label = isEnriched ? ing.ingredient : ing;
-            const verified = isEnriched && ing.source === 'usda';
-            return (
-              <li key={i} className="text-xs text-slate-300 bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2">
-                <div className="flex items-start gap-2">
-                  <ChevronRight className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
-                  <div className="min-w-0">
-                    <span>{label}</span>
-                    {verified && (
-                      <span className="ml-2 text-[9px] text-emerald-400">
-                        {ing.calories}kcal · P{ing.protein}g · C{ing.carbs}g · F{ing.fat}g{ing.fibre ? ` · Fibre${ing.fibre}g` : ''}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+            {showIngredients && (
+              <ul className="mt-2 space-y-1.5">
+                {ingList.map((ing, i) => {
+                  const isEnriched = typeof ing === 'object' && ing !== null;
+                  const label = isEnriched
+                    ? (ing.ingredient || ing.name || ing.item || ing.food || ing.description || '')
+                    : (typeof ing === 'string' ? ing : '');
+                  const verified = isEnriched && ing.source === 'usda';
+                  return (
+                    <li key={i} className="text-xs text-slate-300 bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2">
+                      <div className="flex items-start gap-2">
+                        <ChevronRight className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span>{label}</span>
+                          {verified && (
+                            <span className="ml-2 text-[9px] text-emerald-400">
+                              {ing.calories}kcal · P{ing.protein}g · C{ing.carbs}g · F{ing.fat}g{ing.fibre ? ` · Fibre${ing.fibre}g` : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        );
+      })()}
 
       {/* Fat (shown separately if fibre shown above) */}
       {fibre != null && (
@@ -590,21 +600,19 @@ Rules:
 
       const qualityIssues = findPlanQualityIssues(plan);
       if (qualityIssues.length > 0) {
-        toast('Plan was too brief - asking AI to expand it properly...');
+
         plan = await repairThinPlan(plan, qualityIssues, callAI);
       }
 
       const saved = savePlan(plan);
-      toast.success('Plan generated! Running USDA nutrition lookup…');
+      toast.success('Plan generated!');
 
       // Enrich with USDA
       setUsdaLoading(true);
       try {
         const enriched = await enrichMealPlanWithUSDA(plan.weeklyMealPlan || []);
         savePlan({ ...plan, weeklyMealPlan: enriched });
-        toast.success('Nutrition data verified with USDA FoodData Central!');
       } catch {
-        toast('Plan saved — USDA lookup partially failed', { icon: '⚠️' });
       } finally {
         setUsdaLoading(false);
       }
