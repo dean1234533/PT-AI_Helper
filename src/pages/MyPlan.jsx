@@ -572,7 +572,7 @@ Rules:
 - Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
 - Each training day MUST have a MINIMUM of 7 exercises — 8-9 is ideal. NEVER generate a session with fewer than 7 exercises.
 - warmupSteps must contain exactly 5 named timed movements. cooldownSteps must contain exactly 5 named timed stretches/breathing drills.
-- If the user's session duration is under 45 minutes, use supersets or timed circuits, but still include at least 7 named work items.
+- Each exercise MUST be a single named movement with its own sets, reps, rest, tempo, targetMuscles, notes, and progressionNote. NEVER group exercises into circuits or supersets — list every exercise individually.
 - weeklyMealPlan: provide exactly 7 days, each with ${profile.mealsPerDay} meals (breakfast, ${Number(profile.mealsPerDay) >= 4 ? 'morning snack, ' : ''}lunch, ${Number(profile.mealsPerDay) >= 5 ? 'afternoon snack, ' : ''}dinner${Number(profile.mealsPerDay) >= 3 ? ', snack' : ''}).
 - Include ingredient gram weights in every ingredient string (e.g. "150g salmon fillet").
 - Every meal needs prep and whyThisMeal fields.

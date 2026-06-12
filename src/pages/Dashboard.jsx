@@ -265,7 +265,7 @@ export default function Dashboard() {
                   <p className="text-xs text-slate-500 text-center py-8">Generate a plan to view meals.</p>
                 ) : (
                   <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
-                    {currentPlan.nutritionPlan?.meals?.map((meal, idx) => (
+                    {(currentPlan.weeklyMealPlan?.[todayIndex]?.meals || []).map((meal, idx) => (
                       <div key={idx} className="flex justify-between items-start text-xs bg-slate-950/40 border border-slate-850 p-3 rounded-xl gap-2">
                         <div className="min-w-0">
                           <h4 className="font-bold text-slate-300 truncate text-xs">{meal.name}</h4>

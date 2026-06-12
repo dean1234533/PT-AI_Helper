@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, doc, onSnapshot, query, orderBy, writeBatch, getDocs, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, orderBy, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,6 +31,20 @@ function normalizeExercise(exercise) {
   };
 }
 
+// Flatten any circuit-style entries (no sets/reps but has sub-exercises) into individual exercises
+function flattenExercises(exercises = []) {
+  const result = [];
+  for (const ex of exercises) {
+    const subExercises = ex.exercises || ex.circuitExercises || ex.movements;
+    if (Array.isArray(subExercises) && subExercises.length) {
+      subExercises.forEach((sub) => result.push(normalizeExercise(sub)));
+    } else {
+      result.push(normalizeExercise(ex));
+    }
+  }
+  return result;
+}
+
 function normalizeWorkoutDay(item, index = 0) {
   const exercises = item.exercises || item.mainWorkout || [];
   const day = titleDay(item.day || item.dayName, index);
@@ -44,7 +58,7 @@ function normalizeWorkoutDay(item, index = 0) {
     cooldown: Array.isArray(item.cooldown) ? 'Complete the cool-down steps below.' : (item.cooldown || item.cooldownSummary || ''),
     cooldownSteps: (item.cooldownSteps || (Array.isArray(item.cooldown) ? item.cooldown : [])).map(normalizeStep),
     progressiveOverload: item.progressiveOverload || item.progressionGuide || '',
-    exercises: exercises.map(normalizeExercise),
+    exercises: flattenExercises(exercises),
   };
 }
 
@@ -124,20 +138,10 @@ export function usePlans() {
   const savePlan = async (planData) => {
     if (!user) return;
     const normalized = normalizePlan(planData);
-    const newPlan = { generatedAt: new Date().toISOString(), weekNumber: plans.length + 1, ...normalized };
-
-    // Mark old plans to expire in 90 days
-    if (plans.length > 0) {
-      const expiresAt = Timestamp.fromMillis(Date.now() + NINETY_DAYS_MS);
-      const batch = writeBatch(db);
-      plans.forEach((p) => {
-        if (!p.expiresAt) batch.update(doc(db, 'users', user.uid, 'plans', p.id), { expiresAt });
-      });
-      await batch.commit();
-    }
-
-    const ref = await addDoc(collection(db, 'users', user.uid, 'plans'), newPlan);
-    return { id: ref.id, ...newPlan };
+    const newPlan = { generatedAt: new Date().toISOString(), weekNumber: 1, ...normalized };
+    const planRef = doc(db, 'users', user.uid, 'plans', 'current');
+    await setDoc(planRef, newPlan);
+    return { id: 'current', ...newPlan };
   };
 
   const saveAnalysis = async (analysisData) => {
