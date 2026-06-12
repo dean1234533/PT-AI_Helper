@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import {
   Users, Plus, Send, CheckCircle, Clock, XCircle,
   Trash2, ChevronDown, ChevronUp,
-  Loader2, Sparkles, Calendar, X, Save
+  Loader2, Sparkles, Calendar, X, Save, Link, Copy
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs,
@@ -25,7 +25,7 @@ const STATUS_CONFIG = {
 function AddClientModal({ onClose, onSave }) {
   const [form, setForm] = useState({
     name: '', email: '', goal: '',
-    fitnessLevel: 'Beginner', workoutDays: 3, autoCheckIn: true,
+    fitnessLevel: 'Beginner', workoutDays: 3, checkInMethod: 'auto',
   });
   const [saving, setSaving] = useState(false);
 
@@ -96,15 +96,34 @@ function AddClientModal({ onClose, onSave }) {
             </div>
           </div>
 
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setForm(f => ({ ...f, autoCheckIn: !f.autoCheckIn }))}
-              className={`w-10 h-5 rounded-full transition-colors relative ${form.autoCheckIn ? 'bg-blue-600' : 'bg-slate-700'}`}
-            >
-              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.autoCheckIn ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Check-in Method
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'auto', icon: Calendar, label: 'Auto Email', desc: 'Sent every Monday' },
+                { value: 'link', icon: Link,     label: 'By Link',    desc: 'Copy & share manually' },
+              ].map(({ value, icon: Icon, label, desc }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, checkInMethod: value }))}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                    form.checkInMethod === value
+                      ? 'bg-blue-600/20 border-blue-500/60 text-blue-300'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-600'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold">{label}</p>
+                    <p className="text-[10px] opacity-70">{desc}</p>
+                  </div>
+                </button>
+              ))}
             </div>
-            <span className="text-sm text-slate-300">Send automatic weekly check-ins every Monday</span>
-          </label>
+          </div>
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -128,17 +147,18 @@ function AddClientModal({ onClose, onSave }) {
   );
 }
 
-function ClientCard({ client, checkIns, onDelete, onSendCheckIn }) {
+function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
   const [expanded, setExpanded] = useState(false);
   const [sending, setSending]   = useState(false);
 
   const latestCheckIn = checkIns.find(c => c.clientEmail === client.email);
   const status = latestCheckIn?.status || 'none';
   const { label, color, bg, Icon } = STATUS_CONFIG[status] || STATUS_CONFIG.none;
+  const isLinkMethod = client.checkInMethod === 'link';
 
   const handleSend = async () => {
     setSending(true);
-    try { await onSendCheckIn(client); }
+    try { await (isLinkMethod ? onCopyLink(client) : onSendCheckIn(client)); }
     finally { setSending(false); }
   };
 
@@ -164,8 +184,10 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn }) {
             disabled={sending}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/25 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
           >
-            {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            {sending ? 'Sending...' : 'Send Check-in'}
+            {sending
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : isLinkMethod ? <Copy className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+            {sending ? (isLinkMethod ? 'Generating...' : 'Sending...') : isLinkMethod ? 'Copy Link' : 'Send Email'}
           </button>
           <button onClick={() => setExpanded(e => !e)} className="p-1.5 text-slate-500 hover:text-white transition-colors">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -183,7 +205,7 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn }) {
               { label: 'Goal',          value: client.goal || 'Not set' },
               { label: 'Fitness Level', value: client.fitnessLevel || 'Not set' },
               { label: 'Workout Days',  value: client.workoutDays ? `${client.workoutDays}x/week` : 'Not set' },
-              { label: 'Auto Check-in', value: client.autoCheckIn !== false ? '✅ Every Monday' : '❌ Off' },
+              { label: 'Check-in Method', value: client.checkInMethod === 'link' ? '🔗 By Link' : '📧 Auto (Monday)' },
               { label: 'Added',         value: client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-GB') : 'Unknown' },
               { label: 'Last Check-in', value: latestCheckIn?.sentAt ? new Date(latestCheckIn.sentAt).toLocaleDateString('en-GB') : 'Never' },
             ].map(({ label, value }) => (
@@ -294,12 +316,38 @@ export default function Clients() {
     }
   };
 
+  const handleCopyLink = async (client) => {
+    try {
+      const res = await fetch('/api/ScheduledCheckins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName:   client.name,
+          clientEmail:  client.email,
+          trainerId:    user.uid,
+          trainerName:  user.displayName || 'Your Trainer',
+          trainerEmail: user.email,
+          planSummary: { goal: client.goal, fitnessLevel: client.fitnessLevel, workoutDays: client.workoutDays },
+          linkOnly: true,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { checkInId } = await res.json();
+      const link = `${window.location.origin}/#/checkin/${checkInId}`;
+      await navigator.clipboard.writeText(link);
+      toast.success(`Link copied! Share it with ${client.name}.`);
+      loadData();
+    } catch (err) {
+      toast.error(`Failed: ${err.message}`);
+    }
+  };
+
   const handleSendAll = async () => {
-    if (!confirm(`Send check-ins to all ${clients.length} clients now?`)) return;
+    const autoClients = clients.filter(c => c.checkInMethod !== 'link');
+    if (!confirm(`Send email check-ins to ${autoClients.length} auto-email clients now?`)) return;
     setSendingAll(true);
     let sent = 0;
-    for (const client of clients) {
-      if (client.autoCheckIn === false) continue;
+    for (const client of autoClients) {
       try { await handleSendCheckIn(client); sent++; } catch { /* continue */ }
     }
     setSendingAll(false);
@@ -308,7 +356,7 @@ export default function Clients() {
 
   const stats = {
     total:            clients.length,
-    autoEnabled:      clients.filter(c => c.autoCheckIn !== false).length,
+    autoEnabled:      clients.filter(c => c.checkInMethod !== 'link').length,
     awaitingResponse: checkIns.filter(c => c.status === 'sent').length,
     responded:        checkIns.filter(c => c.status === 'answered').length,
   };
@@ -349,7 +397,7 @@ export default function Clients() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: 'Total Clients',     value: stats.total,            Icon: Users,       color: 'text-blue-400',    bg: 'bg-blue-600/10 border-blue-500/20' },
-              { label: 'Auto Check-in On',  value: stats.autoEnabled,      Icon: Calendar,    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+              { label: 'Auto Email',         value: stats.autoEnabled,      Icon: Calendar,    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
               { label: 'Awaiting Response', value: stats.awaitingResponse, Icon: Clock,       color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
               { label: 'Responded',         value: stats.responded,        Icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
             ].map(({ label, value, Icon, color, bg }) => (
@@ -403,6 +451,7 @@ export default function Clients() {
                   checkIns={checkIns}
                   onDelete={handleDeleteClient}
                   onSendCheckIn={handleSendCheckIn}
+                  onCopyLink={handleCopyLink}
                 />
               ))}
             </div>

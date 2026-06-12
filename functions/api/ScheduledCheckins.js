@@ -129,7 +129,7 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
 </html>`;
 }
 
-async function sendCheckInToClient(client, env) {
+async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   const { name, email, trainerId, trainerName, trainerEmail, planSummary } = client;
   const geminiKey = getenv('GEMINI_API_KEY', env);
   const resendKey = getenv('RESEND_API_KEY', env);
@@ -137,12 +137,11 @@ async function sendCheckInToClient(client, env) {
   const apiKey = getenv('FIREBASE_API_KEY', env);
 
   if (!geminiKey) throw new Error('Gemini API is not configured on the server.');
-  if (!resendKey) throw new Error('Email service is not configured on the server.');
   if (!projectId || !apiKey) throw new Error('Firebase REST API is not configured on the server.');
 
   const checkInId = generateCheckInId();
   const appUrl = getenv('APP_URL', env) || 'https://ptaihelper.com';
-  const checkInUrl = `${appUrl}/checkin/${checkInId}`;
+  const checkInUrl = `${appUrl}/#/checkin/${checkInId}`;
 
   const { greeting, questions } = await generateCheckInQuestions(geminiKey, name, planSummary);
 
@@ -160,6 +159,9 @@ async function sendCheckInToClient(client, env) {
     weekNumber: { integerValue: Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000)) },
   });
 
+  if (linkOnly) return { checkInId, checkInUrl, clientName: name };
+
+  if (!resendKey) throw new Error('Email service is not configured on the server.');
   const html = buildCheckInEmail({ clientName: name, trainerName: trainerName || 'Your Trainer', greeting, questions, checkInUrl });
   const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -174,7 +176,7 @@ async function sendCheckInToClient(client, env) {
   });
 
   if (!emailRes.ok) throw new Error(`Email failed for ${email}: ${await emailRes.text()}`);
-  return { checkInId, clientName: name };
+  return { checkInId, checkInUrl, clientName: name };
 }
 
 async function runScheduledCheckins(env) {
@@ -252,7 +254,7 @@ export async function onRequestOptions() {
 export async function onRequestPost(ctx) {
   const env = ctx.env;
   try {
-    const { clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary } = await ctx.request.json();
+    const { clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary, linkOnly } = await ctx.request.json();
     if (!clientEmail) return Response.json({ error: 'clientEmail required' }, { status: 400, headers: CORS });
 
     const result = await sendCheckInToClient({
@@ -262,7 +264,7 @@ export async function onRequestPost(ctx) {
       trainerName,
       trainerEmail,
       planSummary,
-    }, env);
+    }, env, { linkOnly: !!linkOnly });
 
     return Response.json({ success: true, ...result }, { headers: CORS });
   } catch (err) {
