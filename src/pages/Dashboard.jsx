@@ -34,6 +34,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [testingAI, setTestingAI] = useState(false);
+  const [planDayIndex, setPlanDayIndex] = useState(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 6 : d - 1;
+  });
 
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
 
@@ -62,11 +66,6 @@ export default function Dashboard() {
     // Map 0 -> 6 (Sunday), 1 -> 0 (Monday), 2 -> 1 (Tuesday), etc.
     return day === 0 ? 6 : day - 1;
   }, []);
-
-  const todayWorkout = useMemo(() => {
-    if (!currentPlan?.workoutPlan?.days) return null;
-    return currentPlan.workoutPlan.days[todayIndex] || currentPlan.workoutPlan.days[0];
-  }, [currentPlan, todayIndex]);
 
   const progressSummary = useMemo(() => {
     if (!profile.weight) return { change: 0, text: 'No starting weight' };
@@ -179,116 +178,171 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Today's Focus Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Workout Column */}
-            <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-4">
-                  <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <Calendar className="w-4.5 h-4.5 text-blue-400" />
-                    Today's Routine
-                  </h3>
-                  {todayWorkout?.isRestDay && (
-                    <span className="px-2 py-0.5 bg-emerald-600/15 border border-emerald-500/25 rounded-md text-[9px] font-black text-emerald-400 uppercase tracking-wider">
-                      Rest
-                    </span>
-                  )}
-                </div>
+          {/* 7-Day Plan Viewer */}
+          {(() => {
+            const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const selectedWorkout = currentPlan?.workoutPlan?.days?.[planDayIndex];
+            const selectedMeals = currentPlan?.weeklyMealPlan?.[planDayIndex]?.meals || [];
 
-                {!currentPlan ? (
-                  <div className="py-8 text-center">
-                    <p className="text-xs text-slate-500">No active workout plans found.</p>
-                    <button
-                      onClick={() => navigate('/plan')}
-                      className="mt-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-all"
-                    >
-                      Generate Your Plan
-                    </button>
-                  </div>
-                ) : todayWorkout?.isRestDay ? (
-                  <div className="space-y-3 py-2">
-                    <h4 className="font-bold text-slate-200 text-sm">Active Recovery & Relaxation</h4>
-                    <p className="text-xs text-slate-450 leading-relaxed">
-                      Your somatotype requires structured recovery to reset muscles and manage hormonal profiles. Take today to rest, perform stretching, hydrate, and nourish your body.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-bold text-slate-150 text-sm">{todayWorkout?.dayName}</h4>
-                        <p className="text-[10px] text-slate-500 font-medium">{todayWorkout?.focus}</p>
-                      </div>
-                      <span className="text-[10px] text-slate-450 font-bold">
-                        {todayWorkout?.exercises?.length || 0} Exercises
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {todayWorkout?.exercises?.slice(0, 4).map((ex, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-xs bg-slate-950/40 border border-slate-850 px-4 py-2.5 rounded-xl">
-                          <span className="font-semibold text-slate-300">{ex.name}</span>
-                          <span className="text-[10px] text-slate-500 font-medium">{ex.sets} sets × {ex.reps} reps</span>
-                        </div>
-                      ))}
-                      {todayWorkout?.exercises?.length > 4 && (
-                        <p className="text-[10px] text-slate-500 text-center font-semibold pt-1">
-                          + {todayWorkout.exercises.length - 4} more exercises in full plan
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {currentPlan && (
-                <button
-                  onClick={() => navigate('/plan')}
-                  className="mt-6 w-full flex items-center justify-center gap-1 py-3 border border-slate-800 hover:border-slate-700 bg-slate-950/20 hover:bg-slate-950/60 rounded-2xl text-xs font-semibold text-slate-350 hover:text-white transition-colors"
-                >
-                  View Full Week Schedule
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Meals Column */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md flex flex-col justify-between">
-              <div>
-                <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider border-b border-slate-800/60 pb-3 mb-4 flex items-center gap-2">
-                  <Apple className="w-4.5 h-4.5 text-emerald-400" />
-                  Today's Nutritional Targets
-                </h3>
-
-                {!currentPlan ? (
-                  <p className="text-xs text-slate-500 text-center py-8">Generate a plan to view meals.</p>
-                ) : (
-                  <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
-                    {(currentPlan.weeklyMealPlan?.[todayIndex]?.meals || []).map((meal, idx) => (
-                      <div key={idx} className="flex justify-between items-start text-xs bg-slate-950/40 border border-slate-850 p-3 rounded-xl gap-2">
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-300 truncate text-xs">{meal.name}</h4>
-                          <span className="text-[9px] text-slate-500">{meal.time}</span>
-                        </div>
-                        <span className="text-[10px] text-emerald-400 font-bold shrink-0">{meal.calories} kcal</span>
-                      </div>
+            return (
+              <div className="space-y-4">
+                {/* Day selector */}
+                {currentPlan && (
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                    {DAY_LABELS.map((label, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPlanDayIndex(i)}
+                        className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                          planDayIndex === i
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : i === todayIndex
+                            ? 'bg-slate-800 border border-blue-500/40 text-blue-300'
+                            : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600'
+                        }`}
+                      >
+                        {label}
+                        {i === todayIndex && <span className="ml-1 text-[8px] opacity-70">today</span>}
+                      </button>
                     ))}
                   </div>
                 )}
-              </div>
 
-              {currentPlan && (
-                <button
-                  onClick={() => navigate('/plan')}
-                  className="mt-6 w-full flex items-center justify-center gap-1 py-3 border border-slate-800 hover:border-slate-700 bg-slate-950/20 hover:bg-slate-950/60 rounded-2xl text-xs font-semibold text-slate-350 hover:text-white transition-colors"
-                >
-                  Show Ingredients & Guidance
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Workout Column */}
+                  <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
+                    <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-4">
+                      <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-400" />
+                        {planDayIndex === todayIndex ? "Today's Routine" : `${DAY_LABELS[planDayIndex]} Routine`}
+                      </h3>
+                      {selectedWorkout?.isRestDay && (
+                        <span className="px-2 py-0.5 bg-emerald-600/15 border border-emerald-500/25 rounded-md text-[9px] font-black text-emerald-400 uppercase tracking-wider">Rest</span>
+                      )}
+                    </div>
+
+                    {!currentPlan ? (
+                      <div className="py-8 text-center">
+                        <p className="text-xs text-slate-500">No active workout plans found.</p>
+                        <button onClick={() => navigate('/plan')} className="mt-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-all">
+                          Generate Your Plan
+                        </button>
+                      </div>
+                    ) : selectedWorkout?.isRestDay ? (
+                      <div className="space-y-3 py-2">
+                        <h4 className="font-bold text-slate-200 text-sm">Active Recovery & Relaxation</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Your somatotype requires structured recovery to reset muscles and manage hormonal profiles. Take today to rest, perform stretching, hydrate, and nourish your body.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-slate-200 text-sm">{selectedWorkout?.dayName}</h4>
+                            <p className="text-[10px] text-slate-500 font-medium">{selectedWorkout?.focus}</p>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-bold">{selectedWorkout?.exercises?.length || 0} Exercises</span>
+                        </div>
+
+                        {selectedWorkout?.warmup && (
+                          <div className="bg-blue-950/30 border border-blue-900/40 rounded-xl px-3 py-2">
+                            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Warm-up</p>
+                            <p className="text-xs text-slate-400">{selectedWorkout.warmup}</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {(selectedWorkout?.exercises || []).map((ex, idx) => (
+                            <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3">
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="font-semibold text-slate-200 text-xs">{ex.name}</span>
+                                <span className="text-[10px] text-blue-400 font-bold shrink-0">{ex.sets} × {ex.reps}</span>
+                              </div>
+                              {(ex.rest || ex.tempo) && (
+                                <p className="text-[10px] text-slate-500 mt-1">
+                                  {ex.rest && `Rest: ${ex.rest}`}{ex.rest && ex.tempo && ' · '}{ex.tempo && `Tempo: ${ex.tempo}`}
+                                </p>
+                              )}
+                              {ex.notes && <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{ex.notes}</p>}
+                            </div>
+                          ))}
+                        </div>
+
+                        {selectedWorkout?.cooldown && (
+                          <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-xl px-3 py-2">
+                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Cool-down</p>
+                            <p className="text-xs text-slate-400">{selectedWorkout.cooldown}</p>
+                          </div>
+                        )}
+
+                        {selectedWorkout?.progressiveOverload && (
+                          <div className="bg-amber-950/20 border border-amber-900/30 rounded-xl px-3 py-2">
+                            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Progressive Overload</p>
+                            <p className="text-xs text-slate-400">{selectedWorkout.progressiveOverload}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {currentPlan && (
+                      <button onClick={() => navigate('/plan')} className="mt-5 w-full flex items-center justify-center gap-1 py-3 border border-slate-800 hover:border-slate-700 bg-slate-950/20 hover:bg-slate-950/60 rounded-2xl text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+                        View Full Plan & Swap Meals <ChevronRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Meals Column */}
+                  <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
+                    <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider border-b border-slate-800/60 pb-3 mb-4 flex items-center gap-2">
+                      <Apple className="w-4 h-4 text-emerald-400" />
+                      {planDayIndex === todayIndex ? "Today's Nutrition" : `${DAY_LABELS[planDayIndex]} Nutrition`}
+                    </h3>
+
+                    {!currentPlan ? (
+                      <p className="text-xs text-slate-500 text-center py-8">Generate a plan to view meals.</p>
+                    ) : selectedMeals.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-8">No meals for this day.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedMeals.map((meal, idx) => {
+                          const cal  = meal.usdaCalories ?? meal.calories;
+                          const prot = meal.usdaProtein  ?? meal.macros?.protein;
+                          const carb = meal.usdaCarbs    ?? meal.macros?.carbs;
+                          const fat  = meal.usdaFat      ?? meal.macros?.fat;
+                          return (
+                            <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                              <div className="flex justify-between items-start gap-2">
+                                <h4 className="font-bold text-slate-200 text-xs leading-tight">{meal.name}</h4>
+                                <span className="text-[10px] text-emerald-400 font-bold shrink-0">{cal ?? '—'} kcal</span>
+                              </div>
+                              <div className="flex gap-2 text-[10px] text-slate-500">
+                                <span>P <span className="text-slate-300">{prot ?? '—'}g</span></span>
+                                <span>C <span className="text-slate-300">{carb ?? '—'}g</span></span>
+                                <span>F <span className="text-slate-300">{fat ?? '—'}g</span></span>
+                              </div>
+                              {meal.ingredients?.length > 0 && (
+                                <p className="text-[10px] text-slate-500 leading-relaxed">
+                                  {meal.ingredients.slice(0, 4).join(' · ')}
+                                  {meal.ingredients.length > 4 && ` +${meal.ingredients.length - 4} more`}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {currentPlan && (
+                      <button onClick={() => navigate('/plan')} className="mt-5 w-full flex items-center justify-center gap-1 py-3 border border-slate-800 hover:border-slate-700 bg-slate-950/20 hover:bg-slate-950/60 rounded-2xl text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+                        Full Meal Details <ChevronRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Quick Actions Grid */}
           <div className="space-y-4">
