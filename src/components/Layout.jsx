@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import AIChat from './AIChat';
+import InstallBanner from './InstallBanner';
 import { useTheme, THEMES } from '../hooks/useTheme';
 
 const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20PT%20AI%20Helper%20app';
@@ -207,6 +208,7 @@ export default function Layout({ children }) {
           {children}
         </main>
         <AIChat />
+        <InstallBanner />
         {/* WhatsApp support — mobile only (desktop uses sidebar link) */}
         <a
           href={WHATSAPP_URL}
