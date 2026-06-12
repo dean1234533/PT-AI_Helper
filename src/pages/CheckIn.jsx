@@ -21,7 +21,8 @@ import {
   Weight,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -276,7 +277,8 @@ Analyze this check-in. If adherence is low or they face challenges, modify the w
 Return a compact JSON patch, not the full plan. Do NOT resend the whole existing plan.
 Return your response ONLY as a valid JSON object matching this structure:
 {
-  "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity) and motivational feedback.",
+  "motivationalMessage": "A warm, personal message from coach to client. Tone and content must match their week: if mood or adherence is low (≤5), be genuinely encouraging — tell them you believe in them, that one tough week doesn't define them, and to take it one step at a time. If they are doing well (mood and adherence ≥8), celebrate them — tell them they're smashing it and to keep up the hard work. If they are somewhere in the middle, acknowledge their effort and give them a motivating push to go the extra mile. Keep it 2-3 sentences, warm, human, and personal — use their name.",
+  "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity).",
   "workoutFocus": "Updated weekly training focus, or null if unchanged",
   "workoutDayAdjustments": [
     {
@@ -324,6 +326,7 @@ Rules:
         result = parseAIJson(responseText);
       } catch {
         result = {
+          motivationalMessage: '',
           adjustments: 'Check-in saved. The AI plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.',
           workoutDayAdjustments: [],
           mealAdjustments: [],
@@ -346,7 +349,7 @@ Rules:
       // Save checkin alongside adjustments
       saveCheckIn({
         ...checkInData,
-        planAdjustments: result.adjustments,
+        planAdjustments: result.adjustments || '',
       });
 
       // Save the new updated plan only when there is a renderable plan to save.
@@ -354,7 +357,7 @@ Rules:
         savePlan(updatedPlan);
       }
 
-      setAdjustmentSummary(result.adjustments);
+      setAdjustmentSummary({ message: result.motivationalMessage || '', adjustments: result.adjustments || '' });
       toast.success('Check-in submitted & plan updated!');
       
       // Reset form fields
@@ -425,14 +428,22 @@ Rules:
         {activeTab === 'new' ? (
           <div className="space-y-8">
             {adjustmentSummary && (
-              <div className="bg-emerald-950/20 border border-emerald-900/60 p-6 rounded-3xl backdrop-blur-xl shadow-xl space-y-3">
+              <div className="bg-emerald-950/20 border border-emerald-900/60 p-6 rounded-3xl backdrop-blur-xl shadow-xl space-y-4">
                 <h3 className="font-extrabold text-emerald-400 flex items-center gap-2 text-sm uppercase tracking-wider">
                   <CheckCircle className="w-5 h-5 text-emerald-500" />
                   Plan Successfully Updated
                 </h3>
-                <div className="text-xs text-slate-350 leading-relaxed whitespace-pre-line">
-                  {adjustmentSummary}
-                </div>
+                {adjustmentSummary.message && (
+                  <div className="bg-slate-900/60 border border-emerald-800/40 rounded-2xl px-4 py-3 flex items-start gap-3">
+                    <Heart className="w-4 h-4 text-pink-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-slate-200 leading-relaxed">{adjustmentSummary.message}</p>
+                  </div>
+                )}
+                {adjustmentSummary.adjustments && (
+                  <div className="text-xs text-slate-400 leading-relaxed whitespace-pre-line">
+                    {adjustmentSummary.adjustments}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 mt-2">
                   <button
                     onClick={() => navigate('/plan')}
