@@ -321,12 +321,16 @@ export default function Dashboard() {
                                 <span>C <span className="text-slate-300">{carb ?? '—'}g</span></span>
                                 <span>F <span className="text-slate-300">{fat ?? '—'}g</span></span>
                               </div>
-                              {meal.ingredients?.length > 0 && (
-                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                  {meal.ingredients.slice(0, 4).join(' · ')}
-                                  {meal.ingredients.length > 4 && ` +${meal.ingredients.length - 4} more`}
-                                </p>
-                              )}
+                              {(() => {
+                                const ings = (meal.enrichedIngredients?.length ? meal.enrichedIngredients : meal.ingredients) || [];
+                                const labels = ings.map(i => typeof i === 'string' ? i : (i.ingredient || i.name || i.item || i.food || i.description || '')).filter(Boolean);
+                                return labels.length > 0 ? (
+                                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                                    {labels.slice(0, 4).join(' · ')}
+                                    {labels.length > 4 && ` +${labels.length - 4} more`}
+                                  </p>
+                                ) : null;
+                              })()}
                             </div>
                           );
                         })}
