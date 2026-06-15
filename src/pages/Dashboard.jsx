@@ -326,8 +326,7 @@ export default function Dashboard() {
                                 const labels = ings.map(i => typeof i === 'string' ? i : (i.ingredient || i.name || i.item || i.food || i.description || '')).filter(Boolean);
                                 return labels.length > 0 ? (
                                   <p className="text-[10px] text-slate-500 leading-relaxed">
-                                    {labels.slice(0, 4).join(' · ')}
-                                    {labels.length > 4 && ` +${labels.length - 4} more`}
+                                    {labels.join(' · ')}
                                   </p>
                                 ) : null;
                               })()}
