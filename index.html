@@ -14,6 +14,12 @@
     <title>DB's AI</title>
   </head>
   <body>
+    <script>
+      // Ensure all paths go through the /dbsai base so BrowserRouter matches correctly
+      if (!location.pathname.startsWith('/dbsai')) {
+        location.replace('/dbsai' + location.pathname + location.search + location.hash);
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
