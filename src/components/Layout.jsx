@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, CheckSquare, User, Users,
-  LogOut, Dumbbell, Menu, X, MessageCircle, Settings, ArrowLeft,
+  LogOut, Menu, X, ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -46,9 +46,7 @@ function Sidebar({ onClose }) {
       {/* Logo */}
       <div className="p-5 border-b border-white/8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-blue-brand shrink-0">
-            <Dumbbell className="w-5 h-5 text-white" />
-          </div>
+          <img src="/logo.png" alt="DB's Workouts" className="w-10 h-10 rounded-xl object-contain shrink-0" />
           <div>
             <p className="text-white font-bold text-sm leading-tight">DB's AI</p>
             <p className="text-white/40 text-xs">Personal Trainer</p>
@@ -191,9 +189,7 @@ export default function Layout({ children }) {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
-              <Dumbbell className="w-3.5 h-3.5 text-white" />
-            </div>
+            <img src="/logo.png" alt="DB's Workouts" className="w-8 h-8 rounded-lg object-contain" />
             <span className="font-bold text-white text-sm">DB's AI</span>
           </div>
           <button
