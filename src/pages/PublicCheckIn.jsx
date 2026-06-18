@@ -147,7 +147,7 @@ export default function PublicCheckIn() {
                   value={item.answer}
                   onChange={(event) => updateAnswer(index, event.target.value)}
                   rows={4}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-2xl px-4 py-3 text-sm outline-none"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 rounded-2xl px-4 py-3 text-sm outline-none"
                   placeholder="Type your answer here..."
                   required
                 />
@@ -157,7 +157,7 @@ export default function PublicCheckIn() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-2xl py-3 transition-colors"
+              className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-2xl py-3 transition-colors"
             >
               {submitting ? 'Submitting...' : 'Submit Check-in'}
             </button>

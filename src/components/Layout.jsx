@@ -9,7 +9,6 @@ import toast from 'react-hot-toast';
 import AIChat from './AIChat';
 import InstallBanner from './InstallBanner';
 import WorkoutReminder from './WorkoutReminder';
-import { useTheme, THEMES } from '../hooks/useTheme';
 
 const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20PT%20AI%20Helper%20app';
 
@@ -28,7 +27,6 @@ function Sidebar({ onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
-  const { themeId, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -93,26 +91,6 @@ function Sidebar({ onClose }) {
             <p className="text-white/35 text-xs truncate">{user?.email}</p>
           </div>
         </div>
-        {/* Background colour picker */}
-        <div className="mb-3 px-2">
-          <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mb-2">Background</p>
-          <div className="flex gap-1.5 flex-wrap">
-            {THEMES.map(({ id, label, color }) => (
-              <button
-                key={id}
-                title={label}
-                onClick={() => setTheme(id)}
-                className="relative w-6 h-6 rounded-full border-2 transition-all hover:scale-110"
-                style={{
-                  backgroundColor: color,
-                  borderColor: themeId === id ? '#60a5fa' : 'rgba(255,255,255,0.15)',
-                  boxShadow: themeId === id ? '0 0 0 2px rgba(96,165,250,0.4)' : 'none',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
         <a
           href={WHATSAPP_URL}
           target="_blank"

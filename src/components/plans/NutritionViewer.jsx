@@ -90,11 +90,11 @@ export default function NutritionViewer({ plan }) {
 
       {/* Hydration */}
       {n.hydration && (
-        <div className="flex items-start gap-3 bg-blue-50 rounded-xl p-4">
-          <Droplets className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 bg-brand-50 rounded-xl p-4">
+          <Droplets className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
           <div>
-            <p className="font-semibold text-blue-900 text-sm">Hydration</p>
-            <p className="text-blue-700 text-sm mt-0.5">{n.hydration}</p>
+            <p className="font-semibold text-brand-900 text-sm">Hydration</p>
+            <p className="text-brand-700 text-sm mt-0.5">{n.hydration}</p>
           </div>
         </div>
       )}

@@ -119,7 +119,7 @@ function WorkoutAccordion({ workout }) {
               <ul className="space-y-1">
                 {workout.cooldown.map((c, i) => (
                   <li key={i} className="text-sm text-gray-700 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
                     {c.exercise} <span className="text-gray-400 text-xs">— {c.duration}</span>
                   </li>
                 ))}
@@ -172,12 +172,12 @@ export default function WorkoutViewer({ plan }) {
       {w.recoveryTips?.length > 0 && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <BedDouble className="w-4 h-4 text-blue-500" /> Recovery & Sleep Tips
+            <BedDouble className="w-4 h-4 text-brand-600" /> Recovery & Sleep Tips
           </h3>
           <ul className="space-y-2">
             {w.recoveryTips.map((tip, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">{i + 1}</span>
+                <span className="w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">{i + 1}</span>
                 {tip}
               </li>
             ))}

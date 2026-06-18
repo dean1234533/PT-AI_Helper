@@ -76,14 +76,14 @@ Return ONLY a valid JSON object:
         <div className="flex justify-between items-start shrink-0">
           <div>
             <h3 className="font-extrabold text-slate-100 text-base">Swap Meal</h3>
-            <p className="text-slate-500 text-xs mt-0.5">Finding a replacement for <span className="text-blue-400">{meal.name}</span></p>
+            <p className="text-slate-500 text-xs mt-0.5">Finding a replacement for <span className="text-brand-400">{meal.name}</span></p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-white text-xs border border-slate-700 rounded-lg px-2 py-1">✕ Cancel</button>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center py-8 gap-3">
-            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
             <p className="text-slate-400 text-xs">AI is finding a macro-matched replacement…</p>
           </div>
         ) : replacement ? (
@@ -110,7 +110,7 @@ Return ONLY a valid JSON object:
               )}
               <div className="flex gap-3 text-[10px] font-bold bg-slate-950/60 px-3 py-2 rounded-xl border border-slate-800">
                 <span className="text-white">{replacement.calories} kcal</span>
-                <span className="text-blue-400">P: {replacement.macros?.protein}g</span>
+                <span className="text-brand-400">P: {replacement.macros?.protein}g</span>
                 <span className="text-emerald-400">C: {replacement.macros?.carbs}g</span>
                 <span className="text-amber-400">F: {replacement.macros?.fat}g</span>
               </div>
@@ -121,7 +121,7 @@ Return ONLY a valid JSON object:
               </button>
               <button
                 onClick={() => onSwap(replacement)}
-                className="flex-1 py-2.5 text-xs font-semibold bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-xl transition-all"
+                className="flex-1 py-2.5 text-xs font-semibold bg-gradient-to-r from-brand-600 to-emerald-600 text-white rounded-xl transition-all"
               >
                 Use This Meal
               </button>
@@ -169,8 +169,8 @@ function ExerciseRow({ ex, idx }) {
             </div>
           </div>
           {ex.notes && (
-            <div className="bg-blue-950/20 border border-blue-900/40 rounded-xl px-4 py-3">
-              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Coaching Cue</p>
+            <div className="bg-brand-950/20 border border-brand-900/40 rounded-xl px-4 py-3">
+              <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider mb-1">Coaching Cue</p>
               <p className="text-xs text-slate-300 leading-relaxed">{ex.notes}</p>
             </div>
           )}
@@ -213,8 +213,8 @@ function TimedSteps({ steps, fallback }) {
             </span>
             <span>
               <span className="font-semibold text-slate-200">{step.name || step.exercise}</span>
-              {step.duration && <span className="text-blue-400"> · {step.duration}</span>}
-              {step.reps && <span className="text-blue-400"> · {step.reps}</span>}
+              {step.duration && <span className="text-brand-400"> · {step.duration}</span>}
+              {step.reps && <span className="text-brand-400"> · {step.reps}</span>}
               {step.notes && <span className="block text-slate-500 mt-0.5">{step.notes}</span>}
             </span>
           </li>
@@ -269,9 +269,9 @@ function MealCard({ meal, onSwap }) {
           <p className="text-xs font-black text-white">{cal ?? '—'}</p>
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
-          <Beef className="w-3 h-3 text-blue-400 mx-auto mb-0.5" />
+          <Beef className="w-3 h-3 text-brand-400 mx-auto mb-0.5" />
           <p className="text-[9px] text-slate-500 font-semibold">Protein</p>
-          <p className="text-xs font-black text-blue-400">{prot ?? '—'}g</p>
+          <p className="text-xs font-black text-brand-400">{prot ?? '—'}g</p>
         </div>
         <div className="bg-slate-950/60 rounded-xl p-2 text-center border border-slate-850">
           <Zap className="w-3 h-3 text-emerald-400 mx-auto mb-0.5" />
@@ -683,7 +683,7 @@ Rules:
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
         <div className="max-w-md text-center space-y-6">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
+            <div className="w-20 h-20 border-4 border-brand-500/20 border-t-blue-500 rounded-full animate-spin mx-auto" />
             <Sparkles className="w-8 h-8 text-emerald-400 absolute inset-0 m-auto animate-pulse" />
           </div>
           <div>
@@ -707,7 +707,7 @@ Rules:
             <h2 className="font-bold text-lg">Generation Failed</h2>
             <p className="text-sm mt-2">{error}</p>
           </div>
-          <button onClick={generatePlan} className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-2xl mx-auto transition-colors">
+          <button onClick={generatePlan} className="flex items-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-2xl mx-auto transition-colors">
             <RefreshCw className="w-4 h-4" /> Try Again
           </button>
         </div>
@@ -721,14 +721,14 @@ Rules:
         {isAdmin ? (
           <div className="text-center space-y-4">
             <p className="text-slate-400 text-sm">No plan generated yet.</p>
-            <button onClick={generatePlan} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl">
+            <button onClick={generatePlan} className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl">
               Generate Test Plan
             </button>
           </div>
         ) : (
           <div className="text-center space-y-4">
             <p className="text-slate-400 text-sm">Please complete your profile and body analysis first.</p>
-            <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-blue-600 rounded-xl text-xs font-semibold">
+            <button onClick={() => navigate('/setup/profile')} className="mt-4 px-4 py-2 bg-brand-600 rounded-xl text-xs font-semibold">
               Go to Profile Setup
             </button>
           </div>
@@ -747,7 +747,7 @@ Rules:
     <div className="min-h-screen bg-slate-950 text-white pb-24 relative overflow-hidden">
       <SEO title="My Plan" noIndex />
       {/* Background glows */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-600/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-5xl mx-auto px-4 pt-12">
@@ -773,7 +773,7 @@ Rules:
             <button
               onClick={handleWorkoutPDF}
               disabled={exporting === 'workout'}
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/25 rounded-xl text-xs font-semibold text-blue-400 hover:text-blue-300 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 rounded-xl text-xs font-semibold text-brand-400 hover:text-brand-300 transition-all disabled:opacity-50"
             >
               {exporting === 'workout' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               Workout PDF
@@ -801,7 +801,7 @@ Rules:
             onClick={() => setActiveTab('workout')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'workout'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -824,7 +824,7 @@ Rules:
           <div className="space-y-6">
             {/* Focus card */}
             <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-5 backdrop-blur-xl shadow-xl flex gap-4">
-              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Weekly Training Focus</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">{workoutPlan?.focus}</p>
@@ -835,7 +835,7 @@ Rules:
               <div className="bg-yellow-950/20 border border-yellow-900/50 rounded-3xl p-6 text-center">
                 <p className="text-yellow-300 font-bold text-sm">This saved plan is missing workout sessions.</p>
                 <p className="text-slate-400 text-xs mt-2">Regenerate to create the full detailed workout plan.</p>
-                <button onClick={generatePlan} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold">
+                <button onClick={generatePlan} className="mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold">
                   Regenerate Full Plan
                 </button>
               </div>
@@ -851,7 +851,7 @@ Rules:
                     activeDayIdx === idx
                       ? day.isRestDay
                         ? 'bg-emerald-600 border-transparent text-white'
-                        : 'bg-blue-600 border-transparent text-white'
+                        : 'bg-brand-600 border-transparent text-white'
                       : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -866,7 +866,7 @@ Rules:
               <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600/10 rounded-xl text-blue-400">
+                    <div className="p-2 bg-brand-600/10 rounded-xl text-brand-400">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div>
@@ -877,7 +877,7 @@ Rules:
                   {todayWorkoutDay.isRestDay ? (
                     <span className="self-start sm:self-center px-3 py-1 bg-emerald-600/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">Rest & Recover</span>
                   ) : (
-                    <span className="self-start sm:self-center px-3 py-1 bg-blue-600/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-extrabold uppercase tracking-wider">Training Day</span>
+                    <span className="self-start sm:self-center px-3 py-1 bg-brand-600/10 border border-brand-500/20 rounded-full text-brand-400 text-[10px] font-extrabold uppercase tracking-wider">Training Day</span>
                   )}
                 </div>
 
@@ -901,10 +901,10 @@ Rules:
 
                     {/* Progressive overload banner */}
                     {todayWorkoutDay.progressiveOverload && (
-                      <div className="bg-blue-950/20 border border-blue-900/40 rounded-2xl px-5 py-3 flex items-start gap-3">
-                        <TrendingUp className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="bg-brand-950/20 border border-brand-900/40 rounded-2xl px-5 py-3 flex items-start gap-3">
+                        <TrendingUp className="w-4 h-4 text-brand-400 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Progressive Overload</p>
+                          <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">Progressive Overload</p>
                           <p className="text-xs text-slate-300 leading-relaxed mt-1">{todayWorkoutDay.progressiveOverload}</p>
                         </div>
                       </div>
@@ -950,7 +950,7 @@ Rules:
                 <div className="grid grid-cols-3 gap-2 border-t border-slate-800/60 pt-3 text-center">
                   <div className="bg-slate-950/60 p-2 rounded-xl border border-slate-850">
                     <span className="text-[9px] text-slate-500 uppercase font-semibold">Protein</span>
-                    <span className="block font-bold text-xs text-blue-400 mt-0.5">{nutritionPlan?.dailyMacros?.protein}g</span>
+                    <span className="block font-bold text-xs text-brand-400 mt-0.5">{nutritionPlan?.dailyMacros?.protein}g</span>
                   </div>
                   <div className="bg-slate-950/60 p-2 rounded-xl border border-slate-850">
                     <span className="text-[9px] text-slate-500 uppercase font-semibold">Carbs</span>
@@ -1015,7 +1015,7 @@ Rules:
                       </p>
                       <div className="flex flex-wrap gap-4 text-xs">
                         <span className="text-white font-bold">{Math.round(totals.cal)} kcal</span>
-                        <span className="text-blue-400">Protein: {Math.round(totals.prot * 10) / 10}g</span>
+                        <span className="text-brand-400">Protein: {Math.round(totals.prot * 10) / 10}g</span>
                         <span className="text-emerald-400">Carbs: {Math.round(totals.carbs * 10) / 10}g</span>
                         <span className="text-amber-400">Fat: {Math.round(totals.fat * 10) / 10}g</span>
                         {totals.fibre > 0 && <span className="text-teal-400">Fibre: {Math.round(totals.fibre * 10) / 10}g</span>}
@@ -1026,7 +1026,7 @@ Rules:
               </div>
             ) : (
               <div className="text-center py-16 text-slate-500 text-sm">
-                No meal data found. <button onClick={generatePlan} className="text-blue-400 underline ml-1">Regenerate Full Plan</button>
+                No meal data found. <button onClick={generatePlan} className="text-brand-400 underline ml-1">Regenerate Full Plan</button>
               </div>
             )}
 

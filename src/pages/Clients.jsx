@@ -65,7 +65,7 @@ function AddClientModal({ onClose, onSave }) {
                 value={form[key]}
                 onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                 placeholder={placeholder}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-2.5 text-slate-100 text-sm outline-none transition-all"
+                className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-4 py-2.5 text-slate-100 text-sm outline-none transition-all"
               />
             </div>
           ))}
@@ -78,7 +78,7 @@ function AddClientModal({ onClose, onSave }) {
               <select
                 value={form.fitnessLevel}
                 onChange={e => setForm(f => ({ ...f, fitnessLevel: e.target.value }))}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
+                className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
               >
                 {['Beginner', 'Intermediate', 'Advanced'].map(l => <option key={l}>{l}</option>)}
               </select>
@@ -90,7 +90,7 @@ function AddClientModal({ onClose, onSave }) {
               <select
                 value={form.workoutDays}
                 onChange={e => setForm(f => ({ ...f, workoutDays: Number(e.target.value) }))}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-blue-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
+                className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
               >
                 {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} days</option>)}
               </select>
@@ -112,7 +112,7 @@ function AddClientModal({ onClose, onSave }) {
                   onClick={() => setForm(f => ({ ...f, checkInMethod: value }))}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
                     form.checkInMethod === value
-                      ? 'bg-blue-600/20 border-blue-500/60 text-blue-300'
+                      ? 'bg-brand-600/20 border-brand-500/60 text-brand-300'
                       : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-600'
                   }`}
                 >
@@ -137,7 +137,7 @@ function AddClientModal({ onClose, onSave }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : 'Add Client'}
@@ -167,8 +167,8 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
     <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
       <div className="p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-            <span className="text-blue-400 font-black text-sm">{client.name?.charAt(0).toUpperCase()}</span>
+          <div className="w-10 h-10 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
+            <span className="text-brand-400 font-black text-sm">{client.name?.charAt(0).toUpperCase()}</span>
           </div>
           <div className="min-w-0">
             <p className="font-bold text-slate-100 text-sm truncate">{client.name}</p>
@@ -183,7 +183,7 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
           <button
             onClick={handleSend}
             disabled={sending}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/25 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 text-brand-400 hover:text-brand-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
           >
             {sending
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -387,7 +387,7 @@ export default function Clients() {
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Client
@@ -398,7 +398,7 @@ export default function Clients() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Total Clients',     value: stats.total,            Icon: Users,       color: 'text-blue-400',    bg: 'bg-blue-600/10 border-blue-500/20' },
+              { label: 'Total Clients',     value: stats.total,            Icon: Users,       color: 'text-brand-400',    bg: 'bg-brand-600/10 border-brand-500/20' },
               { label: 'Auto Email',         value: stats.autoEnabled,      Icon: Calendar,    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
               { label: 'Awaiting Response', value: stats.awaitingResponse, Icon: Clock,       color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
               { label: 'Responded',         value: stats.responded,        Icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
@@ -416,10 +416,10 @@ export default function Clients() {
           </div>
 
           {/* Info banner */}
-          <div className="bg-blue-950/30 border border-blue-900/40 rounded-2xl p-4 flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="bg-brand-950/30 border border-brand-900/40 rounded-2xl p-4 flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-blue-300">Automated Weekly Check-ins</p>
+              <p className="text-sm font-semibold text-brand-300">Automated Weekly Check-ins</p>
               <p className="text-xs text-slate-400 mt-1">
                 Every Monday at 8:00 AM, AI-personalised check-in emails are automatically sent to all clients
                 with auto check-in enabled. You receive an email when each client responds. You can also
@@ -431,7 +431,7 @@ export default function Clients() {
           {/* Client list */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
             </div>
           ) : clients.length === 0 ? (
             <div className="text-center py-20 space-y-4">
@@ -439,7 +439,7 @@ export default function Clients() {
               <p className="text-slate-400 text-sm">No clients yet. Add your first client to get started.</p>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-all"
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-all"
               >
                 Add First Client
               </button>

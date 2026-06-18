@@ -128,7 +128,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-1.5 font-medium">{progressSummary.text}</p>
               </div>
-              <div className="p-3 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-xl">
+              <div className="p-3 bg-brand-600/10 border border-brand-500/20 text-brand-400 rounded-xl">
                 <Weight className="w-5 h-5" />
               </div>
             </div>
@@ -197,9 +197,9 @@ export default function Dashboard() {
                         onClick={() => setPlanDayIndex(i)}
                         className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                           planDayIndex === i
-                            ? 'bg-blue-600 text-white shadow-lg'
+                            ? 'bg-brand-600 text-white shadow-lg'
                             : i === todayIndex
-                            ? 'bg-slate-800 border border-blue-500/40 text-blue-300'
+                            ? 'bg-slate-800 border border-brand-500/40 text-brand-300'
                             : 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600'
                         }`}
                       >
@@ -215,7 +215,7 @@ export default function Dashboard() {
                   <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
                     <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-4">
                       <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-blue-400" />
+                        <Calendar className="w-4 h-4 text-brand-400" />
                         {planDayIndex === todayIndex ? "Today's Routine" : `${DAY_LABELS[planDayIndex]} Routine`}
                       </h3>
                       {selectedWorkout?.isRestDay && (
@@ -226,7 +226,7 @@ export default function Dashboard() {
                     {!currentPlan ? (
                       <div className="py-8 text-center">
                         <p className="text-xs text-slate-500">No active workout plans found.</p>
-                        <button onClick={() => navigate('/plan')} className="mt-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-all">
+                        <button onClick={() => navigate('/plan')} className="mt-3 text-xs bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-4 rounded-xl transition-all">
                           Generate Your Plan
                         </button>
                       </div>
@@ -248,8 +248,8 @@ export default function Dashboard() {
                         </div>
 
                         {selectedWorkout?.warmup && (
-                          <div className="bg-blue-950/30 border border-blue-900/40 rounded-xl px-3 py-2">
-                            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Warm-up</p>
+                          <div className="bg-brand-950/30 border border-brand-900/40 rounded-xl px-3 py-2">
+                            <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider mb-1">Warm-up</p>
                             <p className="text-xs text-slate-400">{selectedWorkout.warmup}</p>
                           </div>
                         )}
@@ -259,7 +259,7 @@ export default function Dashboard() {
                             <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3">
                               <div className="flex justify-between items-start gap-2">
                                 <span className="font-semibold text-slate-200 text-xs">{ex.name}</span>
-                                <span className="text-[10px] text-blue-400 font-bold shrink-0">{ex.sets} × {ex.reps}</span>
+                                <span className="text-[10px] text-brand-400 font-bold shrink-0">{ex.sets} × {ex.reps}</span>
                               </div>
                               {(ex.rest || ex.tempo) && (
                                 <p className="text-[10px] text-slate-500 mt-1">
@@ -357,7 +357,7 @@ export default function Dashboard() {
                 onClick={() => navigate('/plan')}
                 className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
               >
-                <div className="p-3 bg-blue-600/10 text-blue-400 rounded-xl">
+                <div className="p-3 bg-brand-600/10 text-brand-400 rounded-xl">
                   <Dumbbell className="w-5 h-5" />
                 </div>
                 <div>
@@ -411,7 +411,7 @@ export default function Dashboard() {
             <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
-                  <Cpu className="w-4.5 h-4.5 text-blue-400" />
+                  <Cpu className="w-4.5 h-4.5 text-brand-400" />
                   AI Engine (Admin)
                 </h3>
                 <button
