@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function Login() {
   const { login, resetPassword } = useAuth();
@@ -49,6 +50,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 py-10 sm:p-4 relative overflow-hidden">
+      <SEO title="Login" canonical="https://dbworkouts.co.uk/ai-plans" noIndex />
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />

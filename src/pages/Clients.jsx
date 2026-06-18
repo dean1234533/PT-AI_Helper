@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import app from '../firebase/config';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 const db = getFirestore(app);
 
@@ -364,6 +365,7 @@ export default function Clients() {
   return (
     <Layout>
       <div className="min-h-screen bg-slate-950 text-white pb-20">
+      <SEO title="Clients" noIndex />
         <div className="max-w-5xl mx-auto px-4 pt-10 space-y-8">
 
           {/* Header */}

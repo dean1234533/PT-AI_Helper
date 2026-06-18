@@ -24,6 +24,7 @@ import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -90,6 +91,7 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
+      <SEO title="Dashboard" noIndex />
         {/* Decorative glows */}
         <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-600/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-accent-500/5 rounded-full blur-3xl pointer-events-none"></div>

@@ -20,6 +20,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 export default function BodyAnalysis() {
   const navigate = useNavigate();
@@ -204,6 +205,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
+      <SEO title="Body Analysis" noIndex />
       {/* Glow decorations */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>

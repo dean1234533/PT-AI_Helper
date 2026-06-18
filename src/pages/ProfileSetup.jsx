@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 const STEPS = [
   { id: 'basic', title: 'Basic Info', icon: User },
@@ -263,6 +264,7 @@ export default function ProfileSetup() {
 
   const content = (
     <div className="min-h-screen bg-slate-950 text-white pb-16 relative overflow-hidden">
+      <SEO title="Profile" noIndex />
       {/* Background glow effects */}
       <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/3 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>

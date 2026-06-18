@@ -15,6 +15,7 @@ import {
   FileText, CheckCircle, ArrowLeft, Moon, Droplets, FlaskConical
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 // ─── Meal swap modal ─────────────────────────────────────────────────────────
 function SwapModal({ meal, dayName, onSwap, onClose, callAI, profile, analysis }) {
@@ -744,6 +745,7 @@ Rules:
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-24 relative overflow-hidden">
+      <SEO title="My Plan" noIndex />
       {/* Background glows */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" />

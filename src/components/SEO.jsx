@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = "DB's AI";
+export const SITE_URL = 'https://dbworkouts.co.uk';
 const DEFAULT_DESC = 'AI-powered nutrition and workout plans for personal trainers. Generate personalised client plans in seconds using Claude AI, real USDA food data, and verified exercise databases.';
 const DEFAULT_IMAGE = '/og-image.png';
 
@@ -12,12 +13,13 @@ export default function SEO({
   noIndex = false,
 }) {
   const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — AI Plans for Personal Trainers`;
+  const canonicalUrl = canonical || `${SITE_URL}/ai-plans`;
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {canonical && <link rel="canonical" href={canonical} />}
+      <link rel="canonical" href={canonicalUrl} />
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph */}
@@ -26,6 +28,7 @@ export default function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:url" content={canonicalUrl} />
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -38,11 +41,12 @@ export default function SEO({
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
         name: SITE_NAME,
+        url: `${SITE_URL}/ai-plans`,
         applicationCategory: 'HealthApplication',
         description: DEFAULT_DESC,
         offers: [
-          { '@type': 'Offer', price: '0', priceCurrency: 'GBP', name: 'Free Plan' },
-          { '@type': 'Offer', price: '19', priceCurrency: 'GBP', name: 'Pro Plan', billingIncrement: 'Month' },
+          { '@type': 'Offer', price: '7.99', priceCurrency: 'GBP', name: 'Personal Plan', billingIncrement: 'Month' },
+          { '@type': 'Offer', price: '24.99', priceCurrency: 'GBP', name: 'PT Pro', billingIncrement: 'Month' },
         ],
       })}</script>
     </Helmet>
