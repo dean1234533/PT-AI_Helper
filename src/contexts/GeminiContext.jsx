@@ -51,7 +51,7 @@ export function GeminiProvider({ children }) {
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
-        generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 32768 },
       }),
     });
 
