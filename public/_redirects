@@ -1,0 +1,5 @@
+# Redirect bare check-in links (from emails) to the /dbsai/ base
+/checkin/* /dbsai/checkin/:splat 302
+
+# SPA fallback — serve index.html for all non-file routes
+/* /index.html 200
