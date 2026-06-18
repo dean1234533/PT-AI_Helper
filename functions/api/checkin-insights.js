@@ -35,9 +35,17 @@ export async function onRequestPost(ctx) {
     if (!questions.length || !answers.length) {
       return Response.json({ error: 'questions and answers are required' }, { status: 400, headers: CORS });
     }
+    if (questions.length > 10 || answers.length > 10) {
+      return Response.json({ error: 'Too many items' }, { status: 400, headers: CORS });
+    }
 
-    const qa = questions.map((q, i) => `Q: ${q}\nA: ${answers?.[i]?.answer || '(no answer)'}`).join('\n\n');
-    const prompt = `Client: ${clientName}\n\nCheck-in responses:\n\n${qa}`;
+    const safeClientName = String(clientName || 'Client').slice(0, 100);
+    const qa = questions.map((q, i) => {
+      const question = String(q || '').slice(0, 500);
+      const answer = String(answers?.[i]?.answer || '(no answer)').slice(0, 1000);
+      return `Q: ${question}\nA: ${answer}`;
+    }).join('\n\n');
+    const prompt = `Client: ${safeClientName}\n\nCheck-in responses:\n\n${qa}`;
     const fullPrompt = `${INSIGHTS_SYSTEM}\n\n${prompt}`;
 
     const geminiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;

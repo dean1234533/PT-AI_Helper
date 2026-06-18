@@ -434,6 +434,18 @@ export async function onRequestPost(ctx) {
       return Response.json({ error: 'questionnaire is required' }, { status: 400, headers: CORS });
     }
 
+    // Validate photoUrl is a Firebase Storage URL only
+    if (photoUrl && !/^https:\/\/firebasestorage\.googleapis\.com\//.test(photoUrl)) {
+      return Response.json({ error: 'Invalid photoUrl' }, { status: 400, headers: CORS });
+    }
+
+    // Clamp free-text fields to prevent prompt injection
+    const FREE_TEXT_LIMIT = 500;
+    const freeTextFields = ['additionalNotes', 'injuries', 'medications', 'foodsToExclude', 'fitnessGoals'];
+    for (const field of freeTextFields) {
+      if (questionnaire[field]) questionnaire[field] = String(questionnaire[field]).slice(0, FREE_TEXT_LIMIT);
+    }
+
     const [usdaFoods, wgerExercises] = await Promise.all([
       fetchUSDAFoods(questionnaire.dietaryStyle, getenv('USDA_API_KEY')).catch(() => []),
       fetchWgerExercises(questionnaire.equipment, questionnaire.preferredWorkoutTypes).catch(() => []),

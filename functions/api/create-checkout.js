@@ -17,13 +17,13 @@ export async function onRequestOptions() {
 export async function onRequestPost(ctx) {
   const env = ctx.env;
   try {
-    const { userId, userEmail, returnUrl } = await ctx.request.json();
+    const { userId, userEmail } = await ctx.request.json();
     if (!userId || !userEmail) return Response.json({ error: 'userId and userEmail required' }, { status: 400, headers: CORS });
 
     if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID) return Response.json({ error: 'Stripe is not configured on the server.' }, { status: 500, headers: CORS });
     if (!env.STRIPE_PRICE_ID.startsWith('price_')) return Response.json({ error: 'STRIPE_PRICE_ID must be a Stripe price ID that starts with price_.' }, { status: 500, headers: CORS });
 
-    const base = returnUrl || env.STRIPE_PORTAL_RETURN_URL || 'https://pt-ai-helper.pages.dev';
+    const base = env.STRIPE_PORTAL_RETURN_URL || 'https://dbworkouts.co.uk/dbsai';
 
     const params = new URLSearchParams({
       mode: 'subscription',

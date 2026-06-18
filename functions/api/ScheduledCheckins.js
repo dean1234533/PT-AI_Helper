@@ -30,10 +30,7 @@ Rules:
 - The greeting should feel personal and warm, not templated`;
 
 function generateCheckInId() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let id = '';
-  for (let i = 0; i < 32; i++) id += chars[Math.floor(Math.random() * chars.length)];
-  return id;
+  return crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
 }
 
 function getenv(name, env) {

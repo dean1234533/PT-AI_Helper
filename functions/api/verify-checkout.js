@@ -18,7 +18,9 @@ export async function onRequestGet(ctx) {
   const env = ctx.env;
   try {
     const sessionId = new URL(ctx.request.url).searchParams.get('session_id');
-    if (!sessionId) return Response.json({ error: 'session_id required' }, { status: 400, headers: CORS });
+    if (!sessionId || !/^cs_[a-zA-Z0-9_]+$/.test(sessionId)) {
+      return Response.json({ error: 'Invalid session_id' }, { status: 400, headers: CORS });
+    }
 
     if (!env.STRIPE_SECRET_KEY) return Response.json({ error: 'Stripe is not configured on the server.' }, { status: 500, headers: CORS });
 

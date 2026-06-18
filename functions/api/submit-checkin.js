@@ -14,11 +14,21 @@ function toFirestoreMap(obj) {
   };
 }
 
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function buildNotificationEmail({ trainerName, clientName, questions, answers }) {
   const qaRows = questions.map((q, i) => {
-    const ans = answers[i]?.answer || '(no answer)';
+    const ans = escHtml(answers[i]?.answer || '(no answer)');
+    const question = escHtml(String(q));
     return `<div style="margin-bottom:16px;padding:14px;background:#f9fafb;border-radius:10px;border-left:3px solid #4f46e5">
-      <p style="font-size:13px;font-weight:700;color:#4f46e5;margin:0 0 6px">${i + 1}. ${q}</p>
+      <p style="font-size:13px;font-weight:700;color:#4f46e5;margin:0 0 6px">${i + 1}. ${question}</p>
       <p style="font-size:14px;color:#374151;margin:0;line-height:1.6">${ans}</p>
     </div>`;
   }).join('');

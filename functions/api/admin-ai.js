@@ -130,6 +130,9 @@ export async function onRequestPost(ctx) {
 
   const { prompt, imageBase64 = null, imageMimeType = 'image/jpeg' } = body || {};
   if (!prompt?.trim()) return Response.json({ error: 'prompt is required' }, { status: 400, headers: CORS });
+  if (imageBase64 && imageBase64.length > 1_000_000) {
+    return Response.json({ error: 'Image too large (max ~750 KB)' }, { status: 413, headers: CORS });
+  }
 
   const hasImage = Boolean(imageBase64);
   const allErrors = [];

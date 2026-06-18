@@ -1,14 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // User's own data — strictly scoped to owning UID
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Trainer-managed client records — only authenticated users (trainer) can read/write.
+    // Deletes are blocked; clients are archived, not removed.
     match /clients/{doc} {
       allow read, write: if request.auth != null;
+      allow delete: if false;
     }
+
+    // Check-ins: server functions create/update unauthenticated via REST API.
+    // Only authenticated users (trainer) can read. Nobody can delete.
     match /checkIns/{doc} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false;
     }
   }
 }
