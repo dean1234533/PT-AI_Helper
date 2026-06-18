@@ -1,5 +1,4 @@
 import { useAuth } from '../contexts/AuthContext';
-import { lsGet } from '../hooks/useLocalStorage';
 import { GEMINI_KEY_STORAGE } from '../contexts/GeminiContext';
 import { Navigate, useLocation } from 'react-router-dom';
 
@@ -19,7 +18,8 @@ export default function ProtectedRoute({ children }) {
   if (isAdmin) return children;
 
   // Regular users must have a Gemini key
-  const geminiKey = lsGet(GEMINI_KEY_STORAGE, '');
+  // Use localStorage.getItem directly — GeminiContext stores the raw string (not JSON-encoded)
+  const geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
   if (!geminiKey) return <Navigate to="/setup/api-key" replace />;
 
   return children;
