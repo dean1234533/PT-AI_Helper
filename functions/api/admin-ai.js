@@ -69,7 +69,7 @@ const PROVIDERS = [
         url: 'https://openrouter.ai/api/v1/chat/completions',
         options: {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'HTTP-Referer': appUrl || 'https://ptaihelper.com', 'X-Title': "DB's AI" },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, 'HTTP-Referer': appUrl || 'https://pt-ai-helper.pages.dev', 'X-Title': "DB's AI" },
           body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 4096 }),
         },
         parseResponse: async (res) => { const d = await res.json(); if (d?.error) return ''; return d?.choices?.[0]?.message?.content || ''; },
@@ -133,7 +133,7 @@ export async function onRequestPost(ctx) {
 
   const hasImage = Boolean(imageBase64);
   const allErrors = [];
-  const appUrl = env.APP_URL || 'https://ptaihelper.com';
+  const appUrl = env.APP_URL || 'https://pt-ai-helper.pages.dev';
 
   for (const provider of PROVIDERS) {
     if (hasImage && !provider.supportsVision) continue;

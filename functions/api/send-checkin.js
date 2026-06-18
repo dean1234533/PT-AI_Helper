@@ -124,7 +124,7 @@ export async function onRequestPost(ctx) {
     const userPrompt = buildCheckInPrompt(clientName, planSummary, extraContext);
     const { greeting, questions } = await generateCheckInQuestions(geminiKey, userPrompt);
 
-    const checkInUrl = `${appUrl || env.APP_URL || 'https://ptaihelper.com'}/checkin/${checkInId}`;
+    const checkInUrl = `${appUrl || env.APP_URL || 'https://pt-ai-helper.pages.dev'}/#/checkin/${checkInId}`;
     const html = buildCheckInEmail({ clientName, trainerName, greeting, questions, checkInUrl });
 
     const resendKey = env.RESEND_API_KEY;

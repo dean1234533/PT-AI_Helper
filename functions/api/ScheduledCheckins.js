@@ -140,7 +140,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   if (!projectId || !apiKey) throw new Error('Firebase REST API is not configured on the server.');
 
   const checkInId = generateCheckInId();
-  const appUrl = getenv('APP_URL', env) || 'https://ptaihelper.com';
+  const appUrl = getenv('APP_URL', env) || 'https://pt-ai-helper.pages.dev';
   const checkInUrl = `${appUrl}/#/checkin/${checkInId}`;
 
   const { greeting, questions } = await generateCheckInQuestions(geminiKey, name, planSummary);

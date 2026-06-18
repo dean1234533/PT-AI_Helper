@@ -23,7 +23,7 @@ export async function onRequestPost(ctx) {
 
     const params = new URLSearchParams({
       customer: stripeCustomerId,
-      return_url: returnUrl || env.STRIPE_PORTAL_RETURN_URL || 'https://ptaihelper.com/dashboard',
+      return_url: returnUrl || env.STRIPE_PORTAL_RETURN_URL || 'https://pt-ai-helper.pages.dev/#/dashboard',
     });
 
     const stripeRes = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
