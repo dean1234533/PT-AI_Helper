@@ -4,32 +4,10 @@
  * invite link. Looks up the pending `clients` doc by inviteToken and links it
  * to the new account. Returns the trainer's identity so the frontend can
  * stamp it onto the new user's own profile doc.
- * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY
+ * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
  */
 
-function getenv(name, env) {
-  return env[name] || env[`VITE_${name}`];
-}
-
-async function getFirestoreCollection(projectId, apiKey, collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}?key=${apiKey}&pageSize=100`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Firestore fetch failed: ${res.status}`);
-  const data = await res.json();
-  return data.documents || [];
-}
-
-async function patchFirestoreDoc(projectId, apiKey, collection, docId, fields, updateMaskFields) {
-  const mask = updateMaskFields.map((f) => `updateMask.fieldPaths=${f}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}?key=${apiKey}&${mask}`;
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!res.ok) throw new Error(`Firestore update failed: ${await res.text()}`);
-  return res.json();
-}
+import { firestoreList, firestorePatch } from '../_shared/firestore.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -49,13 +27,7 @@ export async function onRequestPost(ctx) {
       return Response.json({ error: 'inviteToken and clientUid are required' }, { status: 400, headers: CORS });
     }
 
-    const projectId = getenv('FIREBASE_PROJECT_ID', env);
-    const apiKey = getenv('FIREBASE_API_KEY', env);
-    if (!projectId || !apiKey) {
-      return Response.json({ error: 'Firebase REST API is not configured on the server.' }, { status: 500, headers: CORS });
-    }
-
-    const clients = await getFirestoreCollection(projectId, apiKey, 'clients');
+    const clients = await firestoreList('clients', env);
     const match = clients.find((doc) => {
       const f = doc.fields || {};
       return f.inviteToken?.stringValue === inviteToken && f.status?.stringValue === 'invited';
@@ -71,17 +43,15 @@ export async function onRequestPost(ctx) {
     const trainerName = f.trainerName?.stringValue || 'Your trainer';
     const trainerEmail = f.trainerEmail?.stringValue || '';
 
-    await patchFirestoreDoc(
-      projectId,
-      apiKey,
-      'clients',
-      docId,
+    await firestorePatch(
+      `clients/${docId}`,
       {
         clientUid: { stringValue: clientUid },
         status: { stringValue: 'active' },
         activatedAt: { timestampValue: new Date().toISOString() },
       },
-      ['clientUid', 'status', 'activatedAt']
+      ['clientUid', 'status', 'activatedAt'],
+      env
     );
 
     return Response.json({ success: true, trainerId, trainerName, trainerEmail }, { headers: CORS });

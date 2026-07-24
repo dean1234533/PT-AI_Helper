@@ -12,6 +12,7 @@
  */
 
 import { sendPushToUid } from '../_shared/fcm.js';
+import { firestoreList, firestoreCreateDoc, firestoreGet } from '../_shared/firestore.js';
 
 const CHECKIN_SYSTEM_PROMPT = `You are a supportive personal trainer assistant. Based on the client's plan and goals, generate a friendly, personalised weekly check-in.
 
@@ -43,22 +44,6 @@ function getenv(name, env) {
   return env[name] || env[`VITE_${name}`];
 }
 
-async function getFirestoreCollection(projectId, apiKey, collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}?key=${apiKey}&pageSize=100`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Firestore fetch failed: ${res.status}`);
-  const data = await res.json();
-  return data.documents || [];
-}
-
-async function getFirestoreDoc(projectId, apiKey, path) {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}?key=${apiKey}`;
-  const res = await fetch(url);
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Firestore fetch failed: ${res.status}`);
-  return res.json();
-}
-
 function buildReminderEmail({ clientName, trainerName, checkInUrl }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -79,17 +64,6 @@ function buildReminderEmail({ clientName, trainerName, checkInUrl }) {
   </div>
 </body>
 </html>`;
-}
-
-async function createFirestoreDoc(projectId, apiKey, collection, docId, fields) {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!res.ok) throw new Error(`Firestore write failed: ${res.status}`);
-  return res.json();
 }
 
 async function generateCheckInQuestions(geminiKey, clientName, planSummary) {
@@ -166,11 +140,8 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   const { name, email, trainerId, trainerName, trainerEmail, planSummary } = client;
   const geminiKey = getenv('GEMINI_API_KEY', env);
   const resendKey = getenv('RESEND_API_KEY', env);
-  const projectId = getenv('FIREBASE_PROJECT_ID', env);
-  const apiKey = getenv('FIREBASE_API_KEY', env);
 
   if (!geminiKey) throw new Error('Gemini API is not configured on the server.');
-  if (!projectId || !apiKey) throw new Error('Firebase REST API is not configured on the server.');
 
   const checkInId = generateCheckInId();
   const appUrl = getenv('APP_URL', env) || 'https://pt-ai-helper.pages.dev';
@@ -178,7 +149,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
 
   const { greeting, questions } = await generateCheckInQuestions(geminiKey, name, planSummary);
 
-  await createFirestoreDoc(projectId, apiKey, 'checkIns', checkInId, {
+  await firestoreCreateDoc(`checkIns/${checkInId}`, {
     checkInId: { stringValue: checkInId },
     clientName: { stringValue: name },
     clientEmail: { stringValue: email },
@@ -190,7 +161,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
     status: { stringValue: 'sent' },
     sentAt: { timestampValue: new Date().toISOString() },
     weekNumber: { integerValue: Math.ceil((Date.now() - new Date('2025-01-01').getTime()) / (7 * 24 * 60 * 60 * 1000)) },
-  });
+  }, env);
 
   if (linkOnly) return { checkInId, checkInUrl, clientName: name };
 
@@ -216,12 +187,10 @@ const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
 
 async function sendReminderToLinkedClient(client, env) {
   const { name, email, clientUid, trainerName } = client;
-  const projectId = getenv('FIREBASE_PROJECT_ID', env);
-  const apiKey = getenv('FIREBASE_API_KEY', env);
   const resendKey = getenv('RESEND_API_KEY', env);
   if (!resendKey) throw new Error('Email service is not configured on the server.');
 
-  const profileDoc = await getFirestoreDoc(projectId, apiKey, `users/${clientUid}/data/profile`);
+  const profileDoc = await firestoreGet(`users/${clientUid}/data/profile`, env);
   const lastCheckInAt = profileDoc?.fields?.lastCheckInAt?.stringValue;
   if (lastCheckInAt && Date.now() - new Date(lastCheckInAt).getTime() < SIX_DAYS_MS) {
     return { skipped: true, clientName: name };
@@ -280,9 +249,7 @@ function parseWorkoutDays(profileDoc) {
 }
 
 async function sendWorkoutDayPush(clientUid, env) {
-  const projectId = getenv('FIREBASE_PROJECT_ID', env);
-  const apiKey = getenv('FIREBASE_API_KEY', env);
-  const currentDoc = await getFirestoreDoc(projectId, apiKey, `users/${clientUid}/data/current`);
+  const currentDoc = await firestoreGet(`users/${clientUid}/data/current`, env);
   if (!currentDoc) return;
 
   const today = findTodaysDay(parseWorkoutDays(currentDoc));
@@ -298,9 +265,7 @@ async function sendWorkoutDayPush(clientUid, env) {
 async function runScheduledCheckins(env) {
   console.log('Running scheduled check-ins:', new Date().toISOString());
 
-  const projectId = getenv('FIREBASE_PROJECT_ID', env);
-  const apiKey = getenv('FIREBASE_API_KEY', env);
-  const clients = await getFirestoreCollection(projectId, apiKey, 'clients');
+  const clients = await firestoreList('clients', env);
 
   if (!clients.length) {
     console.log('No clients found');

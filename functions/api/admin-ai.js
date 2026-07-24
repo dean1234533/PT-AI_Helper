@@ -1,6 +1,8 @@
 // Auto-rotating multi-provider AI handler for Cloudflare Pages Functions.
 // Tries each provider in priority order; skips any without a key or that fail with quota/rate errors.
 
+import { firestoreGet } from '../_shared/firestore.js';
+
 const PROVIDERS = [
   {
     id: 'gemini',
@@ -117,14 +119,8 @@ async function verifyCaller(idToken, env) {
 }
 
 async function isLinkedClient(uid, env) {
-  const projectId = getenv('FIREBASE_PROJECT_ID', env);
-  const webApiKey = getenv('FIREBASE_API_KEY', env);
-  if (!projectId || !webApiKey) return false;
-
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/data/profile?key=${webApiKey}`;
-  const res = await fetch(url);
-  if (!res.ok) return false;
-  const doc = await res.json();
+  const doc = await firestoreGet(`users/${uid}/data/profile`, env).catch(() => null);
+  if (!doc) return false;
   return Boolean(doc.fields?.trainerId?.stringValue);
 }
 

@@ -1,8 +1,10 @@
 /**
  * POST /api/submit-checkin
  * Public endpoint — client submits answers. Updates Firestore, notifies PT via email.
- * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, RESEND_API_KEY, RESEND_FROM_EMAIL
+ * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON, RESEND_API_KEY, RESEND_FROM_EMAIL
  */
+
+import { firestoreGet, firestorePatch } from '../_shared/firestore.js';
 
 function toFirestoreMap(obj) {
   return {
@@ -72,12 +74,9 @@ export async function onRequestPost(ctx) {
       return Response.json({ error: 'checkInId and answers are required' }, { status: 400, headers: CORS });
     }
 
-    const baseUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/checkIns/${checkInId}`;
-
     // 1. Read current check-in to get trainer email + questions
-    const getRes = await fetch(`${baseUrl}?key=${env.FIREBASE_API_KEY}`);
-    if (!getRes.ok) throw new Error('Check-in not found');
-    const currentDoc = await getRes.json();
+    const currentDoc = await firestoreGet(`checkIns/${checkInId}`, env);
+    if (!currentDoc) throw new Error('Check-in not found');
     const f = (key) => currentDoc.fields?.[key]?.stringValue ?? '';
     const questions = currentDoc.fields?.questions?.arrayValue?.values?.map((v) => v.stringValue || '') ?? [];
     const trainerEmail = f('trainerEmail');
@@ -89,8 +88,9 @@ export async function onRequestPost(ctx) {
     }
 
     // 2. Update Firestore: set answers + status = answered
-    const patchBody = {
-      fields: {
+    await firestorePatch(
+      `checkIns/${checkInId}`,
+      {
         status: { stringValue: 'answered' },
         answeredAt: { timestampValue: new Date().toISOString() },
         answers: {
@@ -99,19 +99,9 @@ export async function onRequestPost(ctx) {
           },
         },
       },
-    };
-
-    const updateMask = 'updateMask.fieldPaths=status&updateMask.fieldPaths=answeredAt&updateMask.fieldPaths=answers';
-    const patchRes = await fetch(`${baseUrl}?key=${env.FIREBASE_API_KEY}&${updateMask}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patchBody),
-    });
-
-    if (!patchRes.ok) {
-      const errText = await patchRes.text();
-      throw new Error(`Firestore update failed: ${errText}`);
-    }
+      ['status', 'answeredAt', 'answers'],
+      env
+    );
 
     // 3. Notify trainer via email
     if (trainerEmail) {
