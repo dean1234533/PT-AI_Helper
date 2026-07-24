@@ -1,13 +1,14 @@
 /**
- * Cloudflare Pages Function — Scheduled Cron + manual POST trigger
- * Cron: must run DAILY (Cloudflare Pages dashboard Cron Trigger) — it now
- * drives both the weekly check-in reminder (self-gated by lastCheckInAt) and
- * the daily workout-day push for linked clients.
- * POST: manual trigger for sending a single check-in
+ * Cloudflare Pages Function — external-cron-driven batch job + manual POST trigger
+ * Cloudflare Pages has no native Cron Trigger support for this project, so the
+ * daily batch (weekly check-in reminder, self-gated by lastCheckInAt, + daily
+ * workout-day push for linked clients) is driven by an external scheduler
+ * hitting POST /api/ScheduledCheckins?runAll=true with header
+ * X-Cron-Secret: <CRON_SECRET>.
  *
  * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, GEMINI_API_KEY,
  *           RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL,
- *           FCM_SERVICE_ACCOUNT_JSON
+ *           FCM_SERVICE_ACCOUNT_JSON, CRON_SECRET
  */
 
 import { sendPushToUid } from '../_shared/fcm.js';
@@ -353,7 +354,10 @@ async function runScheduledCheckins(env) {
   return results;
 }
 
-// ── Cron handler (every Monday 8:00 AM UTC — configure in Cloudflare Pages dashboard) ──
+// ── Native cron handler — currently dormant. Cloudflare Pages does not invoke
+// this for this project (confirmed: no Cron Trigger support exists for Pages
+// here). Kept in case that changes; the real trigger today is the ?runAll=true
+// POST handler below, driven by an external scheduler. ──
 export async function scheduled(event, env) {
   try {
     const results = await runScheduledCheckins(env);
@@ -363,12 +367,17 @@ export async function scheduled(event, env) {
   }
 }
 
-// ── Manual POST trigger ──────────────────────────────────────────────────────
+// ── Manual POST trigger / external cron ──────────────────────────────────────
+// Cloudflare Pages does not support native Cron Triggers for this project
+// (confirmed: wrangler.toml [triggers] is rejected for Pages, and no
+// dashboard/API surface exposes one for this project). Point a free external
+// scheduler (e.g. cron-job.org) at POST /api/ScheduledCheckins?runAll=true
+// once a day, with header X-Cron-Secret: <CRON_SECRET env var>.
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Cron-Secret',
 };
 
 export async function onRequestOptions() {
@@ -377,6 +386,22 @@ export async function onRequestOptions() {
 
 export async function onRequestPost(ctx) {
   const env = ctx.env;
+  const url = new URL(ctx.request.url);
+
+  if (url.searchParams.get('runAll') === 'true') {
+    const secret = ctx.request.headers.get('X-Cron-Secret') || url.searchParams.get('secret');
+    if (!env.CRON_SECRET || secret !== env.CRON_SECRET) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
+    }
+    try {
+      const results = await runScheduledCheckins(env);
+      return Response.json({ success: true, ...results }, { headers: CORS });
+    } catch (err) {
+      console.error('runAll error:', err);
+      return Response.json({ error: err.message }, { status: 500, headers: CORS });
+    }
+  }
+
   try {
     const { clientName, clientEmail, trainerId, trainerName, trainerEmail, planSummary, linkOnly } = await ctx.request.json();
     if (!clientEmail) return Response.json({ error: 'clientEmail required' }, { status: 400, headers: CORS });
