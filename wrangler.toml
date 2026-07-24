@@ -25,8 +25,10 @@ pages_build_output_dir = "dist"
 #   USDA_API_KEY               (optional — uses DEMO_KEY if absent)
 
 # ── Cron trigger ─────────────────────────────────────────────────────────────
-# Runs daily at 8:00 AM UTC — drives both the weekly check-in reminder
+# Must run DAILY at 8:00 AM UTC — drives both the weekly check-in reminder
 # (self-gated by lastCheckInAt) and the daily workout-day push for linked
 # clients. Handled by /functions/api/ScheduledCheckins.js → scheduled()
-[triggers]
-crons = ["0 8 * * *"]
+# NOTE: Pages projects do NOT support [triggers] in wrangler.toml (confirmed
+# by a failed build) — this must be set in the Cloudflare dashboard instead:
+# Workers & Pages → pt-ai-helper → Settings → find the Cron Triggers section
+# (location varies by dashboard version) → change from "0 8 * * 1" to "0 8 * * *"
