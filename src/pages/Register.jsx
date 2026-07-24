@@ -1,17 +1,22 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Dumbbell, Eye, EyeOff, Loader2 } from 'lucide-react';
-import SEO from '../components/SEO';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [healthConsent, setHealthConsent] = useState(false);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -25,9 +30,36 @@ export default function Register() {
       toast.error('Password must be at least 6 characters');
       return;
     }
+    if (!ageConfirmed) { toast.error('You must confirm you are 18 or older'); return; }
+    if (!healthConsent) { toast.error('You must consent to health data processing to use this app'); return; }
     setLoading(true);
     try {
-      await register(form.email, form.password, form.name);
+      const cred = await register(form.email, form.password, form.name);
+
+      if (inviteToken) {
+        try {
+          const res = await fetch('/api/complete-invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ inviteToken, clientUid: cred.user.uid }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            await setDoc(
+              doc(db, 'users', cred.user.uid, 'data', 'profile'),
+              { trainerId: data.trainerId, trainerName: data.trainerName, trainerEmail: data.trainerEmail },
+              { merge: true }
+            );
+            toast.success(`Account created! You're connected with ${data.trainerName}.`);
+            navigate('/setup/profile');
+            return;
+          }
+          toast.error(data.error || 'That invite link is no longer valid — continuing as a regular account.');
+        } catch {
+          toast.error('Could not process the invite link — continuing as a regular account.');
+        }
+      }
+
       toast.success('Account created! Let\'s set up your API key.');
       navigate('/setup/api-key');
     } catch (err) {
@@ -43,7 +75,6 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 relative overflow-hidden">
-      <SEO title="Sign Up" canonical="https://dbworkouts.co.uk/ai-plans" noIndex />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 left-1/4 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />
@@ -131,9 +162,35 @@ export default function Register() {
               />
             </div>
 
+            <div className="space-y-3 pt-1">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ageConfirmed}
+                  onChange={(e) => setAgeConfirmed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-brand-600 shrink-0"
+                />
+                <span className="text-xs text-white/50 leading-relaxed">
+                  I confirm I am <strong className="text-white/70">18 years or older</strong>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={healthConsent}
+                  onChange={(e) => setHealthConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-brand-600 shrink-0"
+                />
+                <span className="text-xs text-white/50 leading-relaxed">
+                  I consent to my health and fitness data (weight, height, goals, dietary information, progress photos) being processed to generate personalised plans. I have read the{' '}
+                  <a href="https://dbworkouts.co.uk/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-300 underline">Privacy Policy</a>.
+                </span>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !ageConfirmed || !healthConsent}
               className="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-glow-violet mt-2"
             >
               {loading ? (

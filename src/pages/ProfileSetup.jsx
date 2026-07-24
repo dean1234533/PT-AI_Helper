@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
+import { useAuth } from '../contexts/AuthContext';
+import { usePlans } from '../hooks/usePlans';
+import { useCheckIns } from '../hooks/useCheckIns';
 import { updatePassword } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
+import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import {
   User,
   Activity,
@@ -72,7 +76,10 @@ export default function ProfileSetup() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, saveProfile } = useProfile();
-  
+  const { user, deleteAccount } = useAuth();
+  const { clearPlans } = usePlans();
+  const { clearCheckIns } = useCheckIns();
+
   const isEditMode = location.pathname === '/profile';
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState(profile);
@@ -80,6 +87,30 @@ export default function ProfileSetup() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to permanently delete your account and all data? This cannot be undone.')) return;
+    setDeleteLoading(true);
+    try {
+      // Delete all user subcollection data
+      const batch = writeBatch(db);
+      const subcols = ['plans', 'checkins'];
+      for (const sub of subcols) {
+        const snap = await getDocs(collection(db, 'users', user.uid, sub));
+        snap.docs.forEach(d => batch.delete(d.ref));
+      }
+      batch.delete(doc(db, 'users', user.uid, 'data', 'profile'));
+      batch.delete(doc(db, 'users', user.uid, 'data', 'analysis'));
+      await batch.commit();
+      localStorage.clear();
+      await deleteAccount();
+      navigate('/login');
+    } catch {
+      toast.error('Could not delete account. Please sign out and back in, then try again.');
+      setDeleteLoading(false);
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -902,6 +933,21 @@ export default function ProfileSetup() {
             </form>
           </div>
         )}
+      {isEditMode && (
+        <div className="mt-8 border border-red-900/40 rounded-2xl p-6 bg-red-950/10">
+          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-1">Danger Zone</h3>
+          <p className="text-xs text-white/40 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deleteLoading}
+            className="flex items-center gap-2 px-5 py-2.5 bg-red-900/30 hover:bg-red-900/60 border border-red-800/50 text-red-400 hover:text-red-300 text-sm font-semibold rounded-xl transition-all disabled:opacity-50"
+          >
+            {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {deleteLoading ? 'Deleting…' : 'Delete My Account & All Data'}
+          </button>
+        </div>
+      )}
       </div>
     </div>
   );

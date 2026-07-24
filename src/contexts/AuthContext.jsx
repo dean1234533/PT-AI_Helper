@@ -6,6 +6,7 @@ import {
   signOut,
   updateProfile,
   sendPasswordResetEmail,
+  deleteUser,
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
@@ -36,8 +37,10 @@ export function AuthProvider({ children }) {
 
   const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 
+  const deleteAccount = () => deleteUser(auth.currentUser);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword, deleteAccount }}>
       {!loading && children}
     </AuthContext.Provider>
   );

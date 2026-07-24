@@ -21,7 +21,6 @@ export default {
           900: '#4c000b',
           950: '#2d0007',
         },
-        // DB's Workouts green accent — unchanged
         accent: {
           300: '#6ee7b7',
           400: '#34d399',

@@ -3,6 +3,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
+import { registerPush } from '../hooks/usePushNotifications';
 import { X, Dumbbell, Flame, Bell } from 'lucide-react';
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -74,8 +75,9 @@ export default function WorkoutReminder() {
     const perm = await Notification.requestPermission().catch(() => 'denied');
     if (perm === 'granted') {
       scheduleReminders(name, focus);
+      if (user?.uid) registerPush(user.uid);
     }
-  }, []); // eslint-disable-line
+  }, [user]); // eslint-disable-line
 
   const scheduleReminders = useCallback((name, focus) => {
     // Clear any existing timers from this session
@@ -98,6 +100,8 @@ export default function WorkoutReminder() {
     if (!user || !profile?.name) return;
 
     async function run() {
+      if (Notification.permission === 'granted') registerPush(user.uid);
+
       // Already reminded today — don't show the banner again
       if (localStorage.getItem(TODAY_KEY())) {
         // Still reschedule browser notifications for the rest of the day

@@ -1,11 +1,16 @@
 /**
  * Cloudflare Pages Function — Scheduled Cron + manual POST trigger
- * Cron: runs every Monday at 8:00 AM UTC (set in Cloudflare Pages dashboard)
+ * Cron: must run DAILY (Cloudflare Pages dashboard Cron Trigger) — it now
+ * drives both the weekly check-in reminder (self-gated by lastCheckInAt) and
+ * the daily workout-day push for linked clients.
  * POST: manual trigger for sending a single check-in
  *
  * Env vars: FIREBASE_PROJECT_ID, FIREBASE_API_KEY, GEMINI_API_KEY,
- *           RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL
+ *           RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL,
+ *           FCM_SERVICE_ACCOUNT_JSON
  */
+
+import { sendPushToUid } from '../_shared/fcm.js';
 
 const CHECKIN_SYSTEM_PROMPT = `You are a supportive personal trainer assistant. Based on the client's plan and goals, generate a friendly, personalised weekly check-in.
 
@@ -43,6 +48,36 @@ async function getFirestoreCollection(projectId, apiKey, collection) {
   if (!res.ok) throw new Error(`Firestore fetch failed: ${res.status}`);
   const data = await res.json();
   return data.documents || [];
+}
+
+async function getFirestoreDoc(projectId, apiKey, path) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}?key=${apiKey}`;
+  const res = await fetch(url);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Firestore fetch failed: ${res.status}`);
+  return res.json();
+}
+
+function buildReminderEmail({ clientName, trainerName, checkInUrl }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weekly check-in reminder</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
+  <div style="max-width:520px;margin:0 auto;padding:24px">
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:20px;padding:32px;margin-bottom:20px;text-align:center">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:14px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px">📅</div>
+      <h1 style="color:white;font-size:22px;font-weight:800;margin:0 0 6px">Time for your weekly check-in</h1>
+      <p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0">Hi ${clientName} — ${trainerName} is checking in on your progress</p>
+    </div>
+    <div style="background:white;border-radius:20px;padding:28px;text-align:center">
+      <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0 0 24px">Log your weight, energy, and how the week went — it takes just a couple of minutes and helps ${trainerName} fine-tune your plan.</p>
+      <a href="${checkInUrl}" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:white;text-decoration:none;font-weight:700;font-size:15px;padding:16px 36px;border-radius:14px;letter-spacing:0.3px">
+        Do My Check-in →
+      </a>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 async function createFirestoreDoc(projectId, apiKey, collection, docId, fields) {
@@ -176,6 +211,89 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   return { checkInId, checkInUrl, clientName: name };
 }
 
+const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
+
+async function sendReminderToLinkedClient(client, env) {
+  const { name, email, clientUid, trainerName } = client;
+  const projectId = getenv('FIREBASE_PROJECT_ID', env);
+  const apiKey = getenv('FIREBASE_API_KEY', env);
+  const resendKey = getenv('RESEND_API_KEY', env);
+  if (!resendKey) throw new Error('Email service is not configured on the server.');
+
+  const profileDoc = await getFirestoreDoc(projectId, apiKey, `users/${clientUid}/data/profile`);
+  const lastCheckInAt = profileDoc?.fields?.lastCheckInAt?.stringValue;
+  if (lastCheckInAt && Date.now() - new Date(lastCheckInAt).getTime() < SIX_DAYS_MS) {
+    return { skipped: true, clientName: name };
+  }
+
+  const appUrl = getenv('APP_URL', env) || 'https://pt-ai-helper.pages.dev';
+  const checkInUrl = `${appUrl}/#/checkin`;
+  const html = buildReminderEmail({ clientName: name, trainerName: trainerName || 'Your trainer', checkInUrl });
+
+  await sendPushToUid(clientUid, {
+    title: 'Time for your weekly check-in',
+    body: `${trainerName || 'Your trainer'} wants to know how your week went.`,
+    url: '/#/checkin',
+  }, env).catch((err) => console.error('Push error:', err.message));
+
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: getenv('RESEND_FROM_EMAIL', env) || "DB's AI <onboarding@resend.dev>",
+      to: [email],
+      subject: `Time for your weekly check-in, ${name} 💪`,
+      html,
+    }),
+  });
+
+  if (!emailRes.ok) throw new Error(`Email failed for ${email}: ${await emailRes.text()}`);
+  return { checkInUrl, clientName: name };
+}
+
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+function findTodaysDay(days) {
+  if (!Array.isArray(days) || !days.length) return null;
+  const todayIdx = new Date().getDay(); // 0=Sun
+  const todayName = DAY_NAMES[todayIdx];
+
+  const match = days.find((d) => (d.dayName || '').toLowerCase().startsWith(todayName.slice(0, 3)));
+  if (match) return match;
+
+  const dayNum = todayIdx === 0 ? 7 : todayIdx; // Mon=1 .. Sun=7
+  return days.find((d) => d.dayNumber === dayNum) || null;
+}
+
+function parseWorkoutDays(profileDoc) {
+  const days = profileDoc?.fields?.workoutPlan?.mapValue?.fields?.days?.arrayValue?.values || [];
+  return days.map((v) => {
+    const f = v.mapValue?.fields || {};
+    return {
+      dayName: f.dayName?.stringValue || '',
+      dayNumber: f.dayNumber?.integerValue ? Number(f.dayNumber.integerValue) : null,
+      isRestDay: f.isRestDay?.booleanValue || false,
+      focus: f.focus?.stringValue || '',
+    };
+  });
+}
+
+async function sendWorkoutDayPush(clientUid, env) {
+  const projectId = getenv('FIREBASE_PROJECT_ID', env);
+  const apiKey = getenv('FIREBASE_API_KEY', env);
+  const currentDoc = await getFirestoreDoc(projectId, apiKey, `users/${clientUid}/data/current`);
+  if (!currentDoc) return;
+
+  const today = findTodaysDay(parseWorkoutDays(currentDoc));
+  if (!today || today.isRestDay) return;
+
+  await sendPushToUid(clientUid, {
+    title: 'Workout day!',
+    body: today.focus || "Today's session is waiting for you.",
+    url: '/#/plan',
+  }, env).catch((err) => console.error('Push error:', err.message));
+}
+
 async function runScheduledCheckins(env) {
   console.log('Running scheduled check-ins:', new Date().toISOString());
 
@@ -195,6 +313,7 @@ async function runScheduledCheckins(env) {
     const client = {
       name: f.name?.stringValue || 'Client',
       email: f.email?.stringValue,
+      clientUid: f.clientUid?.stringValue || null,
       trainerId: f.trainerId?.stringValue,
       trainerName: f.trainerName?.stringValue,
       trainerEmail: f.trainerEmail?.stringValue,
@@ -208,10 +327,18 @@ async function runScheduledCheckins(env) {
       autoCheckIn: f.autoCheckIn?.booleanValue !== false,
     };
 
+    if (client.clientUid) {
+      await sendWorkoutDayPush(client.clientUid, env);
+    }
+
     if (!client.email || !client.autoCheckIn) continue;
 
     try {
-      const result = await sendCheckInToClient(client, env);
+      // Clients who registered a linked account get a reminder pointing to their
+      // real check-in page instead of the legacy AI-generated Q&A link.
+      const result = client.clientUid
+        ? await sendReminderToLinkedClient(client, env)
+        : await sendCheckInToClient(client, env);
       results.sent.push(result);
       console.log(`Check-in sent to ${client.name} (${client.email})`);
     } catch (err) {

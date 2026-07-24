@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, query, orderBy, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from './useProfile';
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 export function useCheckIns() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [checkIns, setCheckIns] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +19,7 @@ export function useCheckIns() {
     const unsub = onSnapshot(q, (snap) => {
       setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    });
+    }, () => setLoading(false));
     return unsub;
   }, [user]);
 
@@ -31,6 +33,22 @@ export function useCheckIns() {
       ...data,
     };
     const ref = await addDoc(collection(db, 'users', user.uid, 'checkins'), newCheckIn);
+
+    if (profile?.trainerId) {
+      await setDoc(doc(db, 'users', user.uid, 'data', 'profile'), { lastCheckInAt: newCheckIn.date }, { merge: true });
+      fetch('/api/notify-trainer-checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trainerId: profile.trainerId,
+          trainerEmail: profile.trainerEmail,
+          trainerName: profile.trainerName,
+          clientName: profile.name,
+          checkinData: newCheckIn,
+        }),
+      }).catch(() => {});
+    }
+
     return { id: ref.id, ...newCheckIn };
   };
 

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import SEO from '../components/SEO';
 
 export default function Login() {
   const { login, resetPassword } = useAuth();
@@ -50,7 +49,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 py-10 sm:p-4 relative overflow-hidden">
-      <SEO title="Login" canonical="https://dbworkouts.co.uk/ai-plans" noIndex />
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />
@@ -105,7 +103,7 @@ export default function Login() {
           ) : (
             <>
               <h2 className="text-xl font-bold text-white mb-6">Welcome back</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="text-sm font-medium text-white/70 block mb-1.5">Email address</label>
                   <input
@@ -114,7 +112,7 @@ export default function Login() {
                     onChange={update('email')}
                     placeholder="you@example.com"
                     required
-                    autoComplete="email"
+                    autoComplete="off"
                     className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                   />
                 </div>
@@ -136,7 +134,7 @@ export default function Login() {
                       onChange={update('password')}
                       placeholder="••••••••"
                       required
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 pr-11 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                     />
                     <button

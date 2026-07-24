@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Key, ArrowRight, CheckCircle, ExternalLink, Loader2, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import { useGemini } from '../contexts/GeminiContext';
 import toast from 'react-hot-toast';
-import SEO from '../components/SEO';
 
 export default function ApiKeySetup() {
   const navigate = useNavigate();
@@ -34,7 +33,6 @@ export default function ApiKeySetup() {
 
   return (
     <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 py-10 relative overflow-hidden">
-      <SEO title="API Key Setup" canonical="https://dbworkouts.co.uk/ai-plans" noIndex />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />

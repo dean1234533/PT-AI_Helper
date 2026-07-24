@@ -12,7 +12,7 @@ export default defineConfig({
         name: "DB's AI",
         short_name: "DB's AI",
         description: 'AI-powered nutrition and workout plans',
-        start_url: '/dbsai/',
+        start_url: '/',
         display: 'standalone',
         background_color: '#0f1117',
         theme_color: '#7c3aed',

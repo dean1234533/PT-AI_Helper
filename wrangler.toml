@@ -25,7 +25,8 @@ pages_build_output_dir = "dist"
 #   USDA_API_KEY               (optional — uses DEMO_KEY if absent)
 
 # ── Cron trigger ─────────────────────────────────────────────────────────────
-# Weekly check-ins run every Monday at 8:00 AM UTC.
-# Configure in Cloudflare Pages dashboard → Settings → Functions → Cron Triggers
-# Cron expression: 0 8 * * 1
-# Function: /functions/api/ScheduledCheckins.js → scheduled()
+# Runs daily at 8:00 AM UTC — drives both the weekly check-in reminder
+# (self-gated by lastCheckInAt) and the daily workout-day push for linked
+# clients. Handled by /functions/api/ScheduledCheckins.js → scheduled()
+[triggers]
+crons = ["0 8 * * *"]

@@ -26,6 +26,10 @@ const defaultProfile = {
   photoBase64: null,
   profileComplete: false,
   updatedAt: null,
+  trainerId: null,
+  trainerName: null,
+  trainerEmail: null,
+  lastCheckInAt: null,
 };
 
 export function useProfile() {
@@ -39,7 +43,7 @@ export function useProfile() {
     const unsub = onSnapshot(ref, (snap) => {
       setProfile(snap.exists() ? { ...defaultProfile, ...snap.data() } : defaultProfile);
       setLoading(false);
-    });
+    }, () => setLoading(false));
     return unsub;
   }, [user]);
 

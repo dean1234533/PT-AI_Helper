@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import ProgressSparkline from '../components/ProgressSparkline';
 import {
-  Users, Plus, Send, CheckCircle, Clock, XCircle,
+  Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
-  Loader2, Sparkles, Calendar, X, Save, Link, Copy
+  Loader2, Calendar, X, Send, Copy, Weight, Zap, Smile
 } from 'lucide-react';
 import {
-  getFirestore, collection, addDoc, getDocs,
-  deleteDoc, doc, query, where, orderBy
+  getFirestore, collection, addDoc, getDocs, onSnapshot,
+  deleteDoc, doc, query, where, orderBy, limit
 } from 'firebase/firestore';
 import app from '../firebase/config';
 import toast from 'react-hot-toast';
@@ -17,26 +17,21 @@ import SEO from '../components/SEO';
 
 const db = getFirestore(app);
 
-const STATUS_CONFIG = {
-  sent:     { label: 'Awaiting Response', color: 'text-amber-400',   bg: 'bg-amber-500/10  border-amber-500/20',   Icon: Clock },
-  answered: { label: 'Responded',         color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
-  none:     { label: 'Not Sent Yet',      color: 'text-slate-400',   bg: 'bg-slate-500/10   border-slate-500/20',   Icon: XCircle },
-};
+function generateInviteToken() {
+  return crypto.randomUUID().replace(/-/g, '');
+}
 
-function AddClientModal({ onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: '', email: '', goal: '',
-    fitnessLevel: 'Beginner', workoutDays: 3, checkInMethod: 'auto',
-  });
+function InviteClientModal({ onClose, onInvite }) {
+  const [form, setForm] = useState({ name: '', email: '' });
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleInvite = async () => {
     if (!form.name.trim() || !form.email.trim()) {
       toast.error('Name and email are required');
       return;
     }
     setSaving(true);
-    try { await onSave(form); onClose(); }
+    try { await onInvite(form); onClose(); }
     finally { setSaving(false); }
   };
 
@@ -44,17 +39,21 @@ function AddClientModal({ onClose, onSave }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5">
         <div className="flex justify-between items-center">
-          <h3 className="font-extrabold text-slate-100 text-lg">Add New Client</h3>
+          <h3 className="font-extrabold text-slate-100 text-lg">Invite a Client</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        <p className="text-xs text-slate-400 leading-relaxed">
+          They'll get an email with a link to create their own account, fill out their profile,
+          and start weekly check-ins you can follow right here.
+        </p>
+
         <div className="space-y-4">
           {[
-            { label: 'Full Name',     key: 'name',  placeholder: 'Jane Smith' },
+            { label: 'Full Name', key: 'name', placeholder: 'Jane Smith' },
             { label: 'Email Address', key: 'email', placeholder: 'jane@example.com', type: 'email' },
-            { label: 'Goal',          key: 'goal',  placeholder: 'e.g. Lose 10kg, Build muscle...' },
           ].map(({ label, key, placeholder, type }) => (
             <div key={key}>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -69,62 +68,6 @@ function AddClientModal({ onClose, onSave }) {
               />
             </div>
           ))}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                Fitness Level
-              </label>
-              <select
-                value={form.fitnessLevel}
-                onChange={e => setForm(f => ({ ...f, fitnessLevel: e.target.value }))}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
-              >
-                {['Beginner', 'Intermediate', 'Advanced'].map(l => <option key={l}>{l}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                Workout Days/Week
-              </label>
-              <select
-                value={form.workoutDays}
-                onChange={e => setForm(f => ({ ...f, workoutDays: Number(e.target.value) }))}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2.5 text-slate-100 text-sm outline-none"
-              >
-                {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} days</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Check-in Method
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: 'auto', icon: Calendar, label: 'Auto Email', desc: 'Sent every Monday' },
-                { value: 'link', icon: Link,     label: 'By Link',    desc: 'Copy & share manually' },
-              ].map(({ value, icon: Icon, label, desc }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, checkInMethod: value }))}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
-                    form.checkInMethod === value
-                      ? 'bg-brand-600/20 border-brand-500/60 text-brand-300'
-                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold">{label}</p>
-                    <p className="text-[10px] opacity-70">{desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -135,12 +78,12 @@ function AddClientModal({ onClose, onSave }) {
             Cancel
           </button>
           <button
-            onClick={handleSave}
+            onClick={handleInvite}
             disabled={saving}
             className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? 'Saving...' : 'Add Client'}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {saving ? 'Sending...' : 'Send Invite'}
           </button>
         </div>
       </div>
@@ -148,20 +91,96 @@ function AddClientModal({ onClose, onSave }) {
   );
 }
 
-function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
+function ActiveClientDetails({ clientUid }) {
+  const [profile, setProfile] = useState(null);
+  const [checkIns, setCheckIns] = useState([]);
+
+  useEffect(() => {
+    const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
+      setProfile(snap.exists() ? snap.data() : null);
+    });
+    const q = query(collection(db, 'users', clientUid, 'checkins'), orderBy('date', 'desc'), limit(12));
+    const unsubCheckIns = onSnapshot(q, (snap) => {
+      setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return () => { unsubProfile(); unsubCheckIns(); };
+  }, [clientUid]);
+
+  const latest = checkIns[0] || null;
+  const weights = [...checkIns].reverse().map((c) => Number(c.weight)).filter((w) => !Number.isNaN(w));
+  const startWeight = weights[0];
+  const currentWeight = weights[weights.length - 1];
+  const delta = startWeight != null && currentWeight != null ? currentWeight - startWeight : null;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Weight Trend</p>
+        {weights.length >= 2 ? (
+          <>
+            <ProgressSparkline values={weights} />
+            <p className="text-xs text-slate-300 flex items-center gap-1.5">
+              <Weight className="w-3.5 h-3.5 text-brand-400" />
+              {currentWeight} kg
+              {delta != null && (
+                <span className={delta <= 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                  ({delta > 0 ? '+' : ''}{delta.toFixed(1)} kg)
+                </span>
+              )}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-slate-500">No check-ins yet</p>
+        )}
+      </div>
+
+      <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Latest Check-in</p>
+        {latest ? (
+          <div className="space-y-1.5 text-xs text-slate-300">
+            <p className="text-slate-500">{new Date(latest.date).toLocaleDateString()}</p>
+            <p className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-amber-500" /> Energy {latest.energy}/10</p>
+            <p className="flex items-center gap-1.5"><Smile className="w-3.5 h-3.5 text-emerald-400" /> Mood {latest.mood}/10</p>
+            <p>Workout: <span className="font-semibold capitalize">{latest.adherenceWorkout}</span></p>
+            <p>Nutrition: <span className="font-semibold capitalize">{latest.adherenceNutrition}</span></p>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">Waiting on their first check-in</p>
+        )}
+      </div>
+
+      <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Profile</p>
+        <div className="space-y-1.5 text-xs text-slate-300">
+          <p>Goal: <span className="font-semibold">{profile?.goal || 'Not set'}</span></p>
+          <p>Level: <span className="font-semibold">{profile?.fitnessLevel || 'Not set'}</span></p>
+          <p>Days/week: <span className="font-semibold">{profile?.trainingDaysPerWeek || 'Not set'}</span></p>
+        </div>
+      </div>
+
+      {latest?.notesWell || latest?.notesChallenging ? (
+        <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {latest.notesWell && (
+            <div className="bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3">
+              <p className="text-[10px] text-emerald-400 font-semibold mb-1">What went well</p>
+              <p className="text-xs text-slate-300">{latest.notesWell}</p>
+            </div>
+          )}
+          {latest.notesChallenging && (
+            <div className="bg-amber-950/20 border border-amber-900/30 rounded-xl p-3">
+              <p className="text-[10px] text-amber-400 font-semibold mb-1">Challenges</p>
+              <p className="text-xs text-slate-300">{latest.notesChallenging}</p>
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ClientCard({ client, onDelete, onCopyLink }) {
   const [expanded, setExpanded] = useState(false);
-  const [sending, setSending]   = useState(false);
-
-  const latestCheckIn = checkIns.find(c => c.clientEmail === client.email);
-  const status = latestCheckIn?.status || 'none';
-  const { label, color, bg, Icon } = STATUS_CONFIG[status] || STATUS_CONFIG.none;
-  const isLinkMethod = client.checkInMethod === 'link';
-
-  const handleSend = async () => {
-    setSending(true);
-    try { await (isLinkMethod ? onCopyLink(client) : onSendCheckIn(client)); }
-    finally { setSending(false); }
-  };
+  const isActive = client.status === 'active' && client.clientUid;
 
   return (
     <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
@@ -177,19 +196,19 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${bg} ${color}`}>
-            <Icon className="w-3 h-3" />{label}
-          </span>
-          <button
-            onClick={handleSend}
-            disabled={sending}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 text-brand-400 hover:text-brand-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
-          >
-            {sending
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : isLinkMethod ? <Copy className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-            {sending ? (isLinkMethod ? 'Generating...' : 'Sending...') : isLinkMethod ? 'Copy Link' : 'Send Email'}
-          </button>
+          {isActive ? (
+            <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+              <CheckCircle className="w-3 h-3" />Active
+            </span>
+          ) : (
+            <button
+              onClick={() => onCopyLink(client)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 hover:text-amber-300 text-xs font-semibold rounded-xl transition-all"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy Invite Link
+            </button>
+          )}
           <button onClick={() => setExpanded(e => !e)} className="p-1.5 text-slate-500 hover:text-white transition-colors">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -200,32 +219,13 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
       </div>
 
       {expanded && (
-        <div className="border-t border-slate-800/60 p-5 space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: 'Goal',          value: client.goal || 'Not set' },
-              { label: 'Fitness Level', value: client.fitnessLevel || 'Not set' },
-              { label: 'Workout Days',  value: client.workoutDays ? `${client.workoutDays}x/week` : 'Not set' },
-              { label: 'Check-in Method', value: client.checkInMethod === 'link' ? '🔗 By Link' : '📧 Auto (Monday)' },
-              { label: 'Added',         value: client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-GB') : 'Unknown' },
-              { label: 'Last Check-in', value: latestCheckIn?.sentAt ? new Date(latestCheckIn.sentAt).toLocaleDateString('en-GB') : 'Never' },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-slate-950/40 border border-slate-800 rounded-xl p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
-                <p className="text-xs text-slate-200 font-semibold mt-1">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          {latestCheckIn?.status === 'answered' && latestCheckIn.answers?.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Latest Check-in Responses</p>
-              {latestCheckIn.answers.slice(0, 3).map((a, i) => (
-                <div key={i} className="bg-emerald-950/20 border border-emerald-900/30 rounded-xl p-3">
-                  <p className="text-[10px] text-emerald-400 font-semibold mb-1">{a.question}</p>
-                  <p className="text-xs text-slate-300">{a.answer}</p>
-                </div>
-              ))}
+        <div className="border-t border-slate-800/60 p-5">
+          {isActive ? (
+            <ActiveClientDetails clientUid={client.clientUid} />
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <Clock className="w-4 h-4 text-amber-400" />
+              Invited {client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-GB') : ''} — waiting for them to sign up.
             </div>
           )}
         </div>
@@ -235,131 +235,70 @@ function ClientCard({ client, checkIns, onDelete, onSendCheckIn, onCopyLink }) {
 }
 
 export default function Clients() {
-  const { user }                        = useAuth();
-  const navigate                        = useNavigate();
-  const [clients, setClients]           = useState([]);
-  const [checkIns, setCheckIns]         = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [sendingAll, setSendingAll]     = useState(false);
-
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+  const { user } = useAuth();
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin) { navigate('/dashboard'); return; }
-    loadData();
-  }, [isAdmin]);
+    if (!user) return;
+    const unsub = onSnapshot(
+      query(collection(db, 'clients'), where('trainerId', '==', user.uid)),
+      (snap) => {
+        setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => { toast.error('Failed to load clients'); console.error(err); setLoading(false); }
+    );
+    return unsub;
+  }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [clientSnap, checkInSnap] = await Promise.all([
-        getDocs(query(collection(db, 'clients'), where('trainerId', '==', user.uid))),
-        getDocs(query(collection(db, 'checkIns'), where('trainerId', '==', user.uid), orderBy('sentAt', 'desc'))),
-      ]);
-      setClients(clientSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      setCheckIns(checkInSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      toast.error('Failed to load clients');
-      console.error(err);
-    } finally { setLoading(false); }
-  };
-
-  const handleAddClient = async (form) => {
-    const docRef = await addDoc(collection(db, 'clients'), {
-      ...form,
-      trainerId:    user.uid,
-      trainerName:  user.displayName || 'Your Trainer',
+  const handleInviteClient = async (form) => {
+    const inviteToken = generateInviteToken();
+    const trainerName = user.displayName || 'Your Trainer';
+    await addDoc(collection(db, 'clients'), {
+      name: form.name,
+      email: form.email,
+      trainerId: user.uid,
+      trainerName,
       trainerEmail: user.email,
-      createdAt:    new Date().toISOString(),
+      status: 'invited',
+      inviteToken,
+      createdAt: new Date().toISOString(),
     });
-    setClients(c => [...c, {
-      id: docRef.id, ...form,
-      trainerId: user.uid, trainerName: user.displayName,
-      trainerEmail: user.email, createdAt: new Date().toISOString(),
-    }]);
-    toast.success(`${form.name} added!`);
+
+    const inviteUrl = `${window.location.origin}/#/register?invite=${inviteToken}`;
+    try {
+      const res = await fetch('/api/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientEmail: form.email, clientName: form.name, trainerName, inviteUrl }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(`Invite sent to ${form.name}!`);
+    } catch (err) {
+      toast.error(`Invite created, but email failed to send. Copy the link instead. (${err.message})`);
+    }
   };
 
   const handleDeleteClient = async (clientId) => {
     if (!confirm('Remove this client?')) return;
     try {
       await deleteDoc(doc(db, 'clients', clientId));
-      setClients(c => c.filter(cl => cl.id !== clientId));
       toast.success('Client removed');
     } catch { toast.error('Failed to remove client'); }
   };
 
-  const handleSendCheckIn = async (client) => {
-    try {
-      const res = await fetch('/api/ScheduledCheckins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId:     client.id,
-          clientName:   client.name,
-          clientEmail:  client.email,
-          trainerId:    user.uid,
-          trainerName:  user.displayName || 'Your Trainer',
-          trainerEmail: user.email,
-          planSummary: {
-            goal:         client.goal,
-            fitnessLevel: client.fitnessLevel,
-            workoutDays:  client.workoutDays,
-          },
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      toast.success(`Check-in sent to ${client.name}!`);
-      loadData();
-    } catch (err) {
-      toast.error(`Failed: ${err.message}`);
-    }
-  };
-
   const handleCopyLink = async (client) => {
-    try {
-      const res = await fetch('/api/ScheduledCheckins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientName:   client.name,
-          clientEmail:  client.email,
-          trainerId:    user.uid,
-          trainerName:  user.displayName || 'Your Trainer',
-          trainerEmail: user.email,
-          planSummary: { goal: client.goal, fitnessLevel: client.fitnessLevel, workoutDays: client.workoutDays },
-          linkOnly: true,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const { checkInId } = await res.json();
-      const link = `${window.location.origin}/#/checkin/${checkInId}`;
-      await navigator.clipboard.writeText(link);
-      toast.success(`Link copied! Share it with ${client.name}.`);
-      loadData();
-    } catch (err) {
-      toast.error(`Failed: ${err.message}`);
-    }
-  };
-
-  const handleSendAll = async () => {
-    const autoClients = clients.filter(c => c.checkInMethod !== 'link');
-    if (!confirm(`Send email check-ins to ${autoClients.length} auto-email clients now?`)) return;
-    setSendingAll(true);
-    let sent = 0;
-    for (const client of autoClients) {
-      try { await handleSendCheckIn(client); sent++; } catch { /* continue */ }
-    }
-    setSendingAll(false);
-    toast.success(`Sent check-ins to ${sent} clients`);
+    const inviteUrl = `${window.location.origin}/#/register?invite=${client.inviteToken}`;
+    await navigator.clipboard.writeText(inviteUrl);
+    toast.success(`Invite link copied for ${client.name}`);
   };
 
   const stats = {
-    total:            clients.length,
-    autoEnabled:      clients.filter(c => c.checkInMethod !== 'link').length,
-    awaitingResponse: checkIns.filter(c => c.status === 'sent').length,
-    responded:        checkIns.filter(c => c.status === 'answered').length,
+    total: clients.length,
+    invited: clients.filter(c => c.status !== 'active').length,
+    active: clients.filter(c => c.status === 'active').length,
   };
 
   return (
@@ -374,34 +313,23 @@ export default function Clients() {
               <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 Client Management
               </h1>
-              <p className="text-slate-400 text-xs mt-1">Manage clients and automated weekly check-ins</p>
+              <p className="text-slate-400 text-xs mt-1">Invite clients and monitor their real progress</p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleSendAll}
-                disabled={sendingAll || !clients.length}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
-              >
-                {sendingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                Send All Check-ins
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition-all"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Client
-              </button>
-            </div>
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Invite Client
+            </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Total Clients',     value: stats.total,            Icon: Users,       color: 'text-brand-400',    bg: 'bg-brand-600/10 border-brand-500/20' },
-              { label: 'Auto Email',         value: stats.autoEnabled,      Icon: Calendar,    color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-              { label: 'Awaiting Response', value: stats.awaitingResponse, Icon: Clock,       color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
-              { label: 'Responded',         value: stats.responded,        Icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+              { label: 'Total Clients', value: stats.total, Icon: Users, color: 'text-brand-400', bg: 'bg-brand-600/10 border-brand-500/20' },
+              { label: 'Awaiting Signup', value: stats.invited, Icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+              { label: 'Active', value: stats.active, Icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
             ].map(({ label, value, Icon, color, bg }) => (
               <div key={label} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between">
                 <div>
@@ -421,9 +349,9 @@ export default function Clients() {
             <div>
               <p className="text-sm font-semibold text-brand-300">Automated Weekly Check-ins</p>
               <p className="text-xs text-slate-400 mt-1">
-                Every Monday at 8:00 AM, AI-personalised check-in emails are automatically sent to all clients
-                with auto check-in enabled. You receive an email when each client responds. You can also
-                trigger check-ins manually anytime using the button on each client card.
+                Once a client signs up through your invite link, they get a reminder email roughly once a
+                week if they haven't checked in recently. Their weight, energy, mood, and adherence show up
+                here automatically.
               </p>
             </div>
           </div>
@@ -436,12 +364,12 @@ export default function Clients() {
           ) : clients.length === 0 ? (
             <div className="text-center py-20 space-y-4">
               <Users className="w-12 h-12 text-slate-700 mx-auto" />
-              <p className="text-slate-400 text-sm">No clients yet. Add your first client to get started.</p>
+              <p className="text-slate-400 text-sm">No clients yet. Invite your first client to get started.</p>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => setShowInviteModal(true)}
                 className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-all"
               >
-                Add First Client
+                Invite First Client
               </button>
             </div>
           ) : (
@@ -450,9 +378,7 @@ export default function Clients() {
                 <ClientCard
                   key={client.id}
                   client={client}
-                  checkIns={checkIns}
                   onDelete={handleDeleteClient}
-                  onSendCheckIn={handleSendCheckIn}
                   onCopyLink={handleCopyLink}
                 />
               ))}
@@ -461,10 +387,10 @@ export default function Clients() {
         </div>
       </div>
 
-      {showAddModal && (
-        <AddClientModal
-          onClose={() => setShowAddModal(false)}
-          onSave={handleAddClient}
+      {showInviteModal && (
+        <InviteClientModal
+          onClose={() => setShowInviteModal(false)}
+          onInvite={handleInviteClient}
         />
       )}
     </Layout>

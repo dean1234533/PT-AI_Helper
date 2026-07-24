@@ -97,6 +97,37 @@ const PROVIDERS = [
   },
 ];
 
+function getenv(name, env) {
+  return env[name] || env[`VITE_${name}`];
+}
+
+async function verifyCaller(idToken, env) {
+  const webApiKey = getenv('FIREBASE_API_KEY', env);
+  if (!idToken || !webApiKey) return null;
+
+  const lookupRes = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${webApiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) }
+  );
+  if (!lookupRes.ok) return null;
+  const lookupData = await lookupRes.json();
+  const account = lookupData.users?.[0];
+  if (!account?.localId) return null;
+  return { uid: account.localId, email: account.email || '' };
+}
+
+async function isLinkedClient(uid, env) {
+  const projectId = getenv('FIREBASE_PROJECT_ID', env);
+  const webApiKey = getenv('FIREBASE_API_KEY', env);
+  if (!projectId || !webApiKey) return false;
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}/data/profile?key=${webApiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) return false;
+  const doc = await res.json();
+  return Boolean(doc.fields?.trainerId?.stringValue);
+}
+
 function getKey(provider, env) {
   for (const envKey of provider.envKeys) {
     const val = env[envKey];
@@ -125,6 +156,18 @@ export async function onRequestOptions() {
 
 export async function onRequestPost(ctx) {
   const env = ctx.env;
+
+  const authHeader = ctx.request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const caller = await verifyCaller(idToken, env);
+  if (!caller) return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
+
+  const adminEmail = getenv('ADMIN_EMAIL', env);
+  const isAdmin = adminEmail && caller.email && caller.email.toLowerCase() === adminEmail.toLowerCase();
+  if (!isAdmin && !(await isLinkedClient(caller.uid, env))) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
+  }
+
   let body;
   try { body = await ctx.request.json(); } catch { return Response.json({ error: 'Invalid JSON' }, { status: 400, headers: CORS }); }
 

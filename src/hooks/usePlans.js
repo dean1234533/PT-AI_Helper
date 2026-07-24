@@ -112,7 +112,7 @@ export function usePlans() {
     const unsubPlans = onSnapshot(q, (snap) => {
       setPlans(snap.docs.map((d) => normalizePlan({ id: d.id, ...d.data() })));
       setLoading(false);
-    });
+    }, () => setLoading(false));
 
     const analysisRef = doc(db, 'users', user.uid, 'data', 'analysis');
     const unsubAnalysis = onSnapshot(analysisRef, (snap) => {

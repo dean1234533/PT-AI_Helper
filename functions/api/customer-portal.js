@@ -25,7 +25,7 @@ export async function onRequestPost(ctx) {
 
     const params = new URLSearchParams({
       customer: stripeCustomerId,
-      return_url: env.STRIPE_PORTAL_RETURN_URL || 'https://dbworkouts.co.uk/dbsai/dashboard',
+      return_url: env.STRIPE_PORTAL_RETURN_URL || 'https://pt-ai-helper.pages.dev/#/dashboard',
     });
 
     const stripeRes = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {

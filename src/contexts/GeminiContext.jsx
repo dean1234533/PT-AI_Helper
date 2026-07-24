@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { useProfile } from '../hooks/useProfile';
 
 export const GEMINI_KEY_STORAGE = 'dbsai_gemini_key';
 
@@ -9,6 +10,7 @@ const GeminiContext = createContext(null);
 
 export function GeminiProvider({ children }) {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [geminiKey, setGeminiKeyState] = useState(() => localStorage.getItem(GEMINI_KEY_STORAGE) || '');
 
   const setGeminiKey = useCallback((key) => {
@@ -21,15 +23,17 @@ export function GeminiProvider({ children }) {
     localStorage.removeItem(GEMINI_KEY_STORAGE);
   }, []);
 
-  // Admin calls route through the server which auto-rotates all configured providers.
-  // Regular users call Gemini directly with their own key.
+  // Admin calls and managed-client calls route through the server, which auto-rotates
+  // all configured providers. Solo/trainer users call Gemini directly with their own key.
   const callAI = useCallback(async (prompt, imageBase64 = null, imageMimeType = 'image/jpeg') => {
     const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+    const isManagedClient = Boolean(profile?.trainerId);
 
-    if (isAdmin) {
+    if (isAdmin || isManagedClient) {
+      const idToken = await user.getIdToken();
       const res = await fetch('/api/admin-ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ prompt, imageBase64, imageMimeType }),
       });
       const data = await res.json().catch(() => ({}));
@@ -51,7 +55,7 @@ export function GeminiProvider({ children }) {
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
-        generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 32768 },
+        generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
       }),
     });
 
@@ -68,7 +72,7 @@ export function GeminiProvider({ children }) {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('The AI returned an empty response. Please try again.');
     return text;
-  }, [user, geminiKey]);
+  }, [user, geminiKey, profile?.trainerId]);
 
   const testKey = useCallback(async (keyToTest) => {
     const key = keyToTest || geminiKey;

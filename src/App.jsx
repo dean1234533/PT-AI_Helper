@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
@@ -106,9 +106,9 @@ export default function App() {
     <HelmetProvider>
       <AuthProvider>
         <GeminiProvider>
-          <BrowserRouter basename="/dbsai">
+          <HashRouter>
             <AppRoutes />
-          </BrowserRouter>
+          </HashRouter>
           <Toaster
             position="top-right"
             toastOptions={{

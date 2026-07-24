@@ -1,5 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <rect width="100" height="100" rx="16" fill="#000000"/>
-  <text y="58" x="50" font-size="48" text-anchor="middle" fill="#b30018" font-family="system-ui, sans-serif" font-weight="bold">D</text>
-  <text y="78" x="50" font-size="18" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="bold">DB's AI</text>
+  <!-- bar -->
+  <rect x="22" y="46" width="56" height="8" rx="4" fill="white"/>
+  <!-- left plates -->
+  <rect x="10" y="32" width="12" height="36" rx="3" fill="white"/>
+  <rect x="2"  y="37" width="8"  height="26" rx="2" fill="#cccccc"/>
+  <!-- right plates -->
+  <rect x="78" y="32" width="12" height="36" rx="3" fill="white"/>
+  <rect x="90" y="37" width="8"  height="26" rx="2" fill="#cccccc"/>
 </svg>
