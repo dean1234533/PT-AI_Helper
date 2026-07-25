@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
+import { useGemini } from '../contexts/GeminiContext';
+import { normalizePlan } from '../hooks/usePlans';
+import {
+  generateAnalysis, generateFullPlan, generateCheckInAdjustment, planHasRenderableContent,
+} from '../utils/planGeneration';
 import Layout from '../components/Layout';
 import ProgressSparkline from '../components/ProgressSparkline';
 import {
   Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
   Loader2, Calendar, X, Copy, Weight, Zap, Smile,
-  Palette, Upload, Save
+  Palette, Upload, Save, Sparkles, TrendingUp
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
   updateDoc, doc, query, where, orderBy, limit
 } from 'firebase/firestore';
-import app from '../firebase/config';
+import app, { auth } from '../firebase/config';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 
@@ -95,27 +100,122 @@ function InviteClientModal({ onClose, onInvite }) {
 }
 
 function ActiveClientDetails({ clientUid }) {
+  const { callAI } = useGemini();
   const [profile, setProfile] = useState(null);
   const [checkIns, setCheckIns] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
+  const [currentPlan, setCurrentPlan] = useState(null);
+  const [working, setWorking] = useState(null); // null | 'generating' | 'adjusting'
+  const [progressText, setProgressText] = useState('');
 
   useEffect(() => {
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
       setProfile(snap.exists() ? snap.data() : null);
     });
+    const unsubAnalysis = onSnapshot(doc(db, 'users', clientUid, 'data', 'analysis'), (snap) => {
+      setAnalysis(snap.exists() ? snap.data() : null);
+    });
+    const unsubPlan = onSnapshot(doc(db, 'users', clientUid, 'plans', 'current'), (snap) => {
+      setCurrentPlan(snap.exists() ? snap.data() : null);
+    });
     const q = query(collection(db, 'users', clientUid, 'checkins'), orderBy('date', 'desc'), limit(12));
     const unsubCheckIns = onSnapshot(q, (snap) => {
       setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-    return () => { unsubProfile(); unsubCheckIns(); };
+    return () => { unsubProfile(); unsubAnalysis(); unsubPlan(); unsubCheckIns(); };
   }, [clientUid]);
 
   const latest = checkIns[0] || null;
+  const previousCheckIn = checkIns[1] || null;
   const weights = [...checkIns].reverse().map((c) => Number(c.weight)).filter((w) => !Number.isNaN(w));
   const startWeight = weights[0];
   const currentWeight = weights[weights.length - 1];
   const delta = startWeight != null && currentWeight != null ? currentWeight - startWeight : null;
 
+  const saveToClient = async (payload) => {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch('/api/save-client-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ clientUid, ...payload }),
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to save');
+  };
+
+  const handleGeneratePlan = async () => {
+    if (!profile) { toast.error("Client hasn't completed their profile yet."); return; }
+    setWorking('generating');
+    try {
+      let currentAnalysis = analysis;
+      if (!currentAnalysis) {
+        setProgressText('Analyzing body type…');
+        currentAnalysis = await generateAnalysis(profile, callAI);
+        await saveToClient({ analysis: currentAnalysis });
+      }
+      setProgressText('Building 7-day plan…');
+      const plan = normalizePlan(await generateFullPlan(profile, currentAnalysis, callAI));
+      await saveToClient({ plan });
+      toast.success(`Plan generated for ${profile.name}!`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to generate plan');
+    } finally {
+      setWorking(null);
+      setProgressText('');
+    }
+  };
+
+  const handleApplyCheckIn = async () => {
+    if (!latest) return;
+    setWorking('adjusting');
+    setProgressText('Reviewing check-in…');
+    try {
+      const { updatedPlan } = await generateCheckInAdjustment({
+        profile,
+        analysis,
+        currentPlan,
+        checkInData: latest,
+        previousWeight: previousCheckIn?.weight || profile?.weight,
+        callAI,
+      });
+      if (planHasRenderableContent(updatedPlan)) {
+        await saveToClient({ plan: normalizePlan(updatedPlan) });
+        toast.success(`Plan updated for ${profile.name}!`);
+      } else {
+        toast.error('AI response was incomplete — plan left unchanged.');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to apply check-in update');
+    } finally {
+      setWorking(null);
+      setProgressText('');
+    }
+  };
+
+  const checkInIsNewerThanPlan = latest && (!currentPlan?.generatedAt || new Date(latest.date) > new Date(currentPlan.generatedAt));
+
   return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={handleGeneratePlan}
+          disabled={!!working}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 text-brand-400 hover:text-brand-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+        >
+          {working === 'generating' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+          {working === 'generating' ? (progressText || 'Working…') : currentPlan ? 'Regenerate Plan' : 'Generate Plan'}
+        </button>
+        {checkInIsNewerThanPlan && (
+          <button
+            onClick={handleApplyCheckIn}
+            disabled={!!working}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 hover:text-emerald-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+          >
+            {working === 'adjusting' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
+            {working === 'adjusting' ? (progressText || 'Working…') : 'Apply Check-in Update'}
+          </button>
+        )}
+      </div>
+
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Weight Trend</p>
@@ -177,6 +277,7 @@ function ActiveClientDetails({ clientUid }) {
           )}
         </div>
       ) : null}
+    </div>
     </div>
   );
 }

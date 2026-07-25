@@ -67,3 +67,32 @@ export async function firestoreDelete(path, env) {
   const { headers, url } = await base(env);
   await fetch(`${url}/${path}`, { method: 'DELETE', headers }).catch(() => {});
 }
+
+/**
+ * Recursively converts a plain JS value into a Firestore REST API "Value"
+ * object. Needed for deeply nested documents (e.g. a full workout/meal
+ * plan) — every other helper here has only ever written flat key/value pairs.
+ */
+export function toFirestoreValue(value) {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (typeof value === 'string') return { stringValue: value };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  if (Array.isArray(value)) {
+    return { arrayValue: { values: value.map(toFirestoreValue) } };
+  }
+  if (typeof value === 'object') {
+    return { mapValue: { fields: toFirestoreFields(value) } };
+  }
+  return { stringValue: String(value) };
+}
+
+export function toFirestoreFields(obj) {
+  return Object.fromEntries(
+    Object.entries(obj || {})
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, toFirestoreValue(v)])
+  );
+}

@@ -213,7 +213,7 @@ export default function WorkoutReminder() {
 // ─── Firestore helper ──────────────────────────────────────────────────────
 async function loadTodayWorkout(uid) {
   try {
-    const snap = await getDoc(doc(db, 'users', uid, 'data', 'current'));
+    const snap = await getDoc(doc(db, 'users', uid, 'plans', 'current'));
     if (!snap.exists()) return null;
     const plan = snap.data();
     const days = plan.workoutPlan?.days;

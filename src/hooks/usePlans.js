@@ -93,7 +93,7 @@ function normalizeNutritionPlan(plan = {}) {
   return { ...nutrition, focus: nutrition.focus || nutrition.notes || nutrition.mealTiming || '', dailyTargetCalories: nutrition.dailyCalories, dailyMacros: nutrition.macros ? { protein: nutrition.macros.protein?.grams, carbs: nutrition.macros.carbs?.grams, fat: nutrition.macros.fats?.grams } : nutrition.dailyMacros, generalAdvice: nutrition.generalAdvice || nutrition.notes || nutrition.mealTiming || '' };
 }
 
-function normalizePlan(plan) {
+export function normalizePlan(plan) {
   if (!plan) return plan;
   return { ...plan, workoutPlan: normalizeWorkoutPlan(plan.workoutPlan || {}), nutritionPlan: normalizeNutritionPlan(plan), weeklyMealPlan: normalizeWeeklyMealPlan(plan) };
 }

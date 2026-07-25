@@ -4,6 +4,7 @@ import { useProfile } from '../hooks/useProfile';
 import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useGemini } from '../contexts/GeminiContext';
+import { generateAnalysis } from '../utils/planGeneration';
 import {
   Sparkles,
   TrendingUp,
@@ -59,68 +60,7 @@ export default function BodyAnalysis() {
     setLoading(true);
     setError(null);
     try {
-      const hasPhoto = !!profile.photoBase64;
-      
-      const prompt = `
-You are an expert personal trainer and fitness scientist. Analyze the user's details and determine their body type (Ectomorph, Mesomorph, Endomorph, or a Combination).
-
-User Profile:
-- Name: ${profile.name}
-- Age: ${profile.age} years old
-- Gender: ${profile.gender}
-- Weight: ${profile.weight} kg
-- Height: ${profile.height} cm
-- Main Goal: ${profile.goal}
-- Secondary Goal/Timeline: ${profile.secondaryGoal || 'Not specified'}
-- Fitness Level: ${profile.fitnessLevel}
-- Workout preferences: ${profile.preferredWorkoutTypes?.join(', ') || 'Not specified'}
-- Equipment available: ${profile.equipment?.join(', ') || 'Not specified'}
-- Dietary style: ${profile.dietaryStyle || 'Balanced'}
-- Food allergies: ${profile.allergies?.join(', ') || 'None'}
-- Exclude/dislike: ${profile.foodsDisliked || 'None'}
-- Include/like: ${profile.foodsLiked || 'None'}
-- Other dietary restrictions: ${profile.dietaryRestrictions || 'None'}
-
-${hasPhoto ? 'Please analyze the attached full-body photo of the user to confirm their skeletal structure, body composition, and exact body type category.' : 'Based on their physical metrics (height, weight, age) and goals, deduce their most likely body type.'}
-
-Return your response ONLY as a valid JSON object matching this structure:
-{
-  "bodyType": "Ectomorph, Mesomorph, Endomorph, or specific combination like Ecto-Mesomorph",
-  "explanation": "A detailed explanation of their body type, skeletal build, metabolic tendencies, and how it aligns with their stated goals.",
-  "eat": ["Food 1", "Food 2", "Food 3", "Food 4", "Food 5"],
-  "avoid": ["Food 1", "Food 2", "Food 3", "Food 4", "Food 5"],
-  "macros": {
-    "protein": 30,
-    "carbs": 40,
-    "fat": 30
-  },
-  "workoutStyle": "The ideal training style, intensity, and frequency for this body type (e.g., heavy resistance training with minimal cardio, high volume hypertrophy, etc.)",
-  "timeline": "A realistic, science-backed timeline showing expected progress increments (e.g., 2-4kg weight loss in month 1, muscle definitions in weeks 6-8, etc.) to achieve their goal of: ${profile.goal}"
-}
-
-Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Provide no pre-amble or post-amble. Return ONLY the JSON object.
-`;
-
-      const responseText = await callAI(
-        prompt,
-        profile.photoBase64 || null,
-        'image/jpeg'
-      );
-
-      // Clean up response text if Gemini wraps it in markdown blocks
-      const cleanJson = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
-      const result = JSON.parse(cleanJson);
-      
-      // Validate macros sum to 100
-      const sum = (result.macros?.protein || 0) + (result.macros?.carbs || 0) + (result.macros?.fat || 0);
-      if (sum !== 100 && result.macros) {
-        // Normalize if they don't sum to 100
-        const total = sum || 1;
-        result.macros.protein = Math.round((result.macros.protein / total) * 100);
-        result.macros.carbs = Math.round((result.macros.carbs / total) * 100);
-        result.macros.fat = 100 - result.macros.protein - result.macros.carbs;
-      }
-
+      const result = await generateAnalysis(profile, callAI);
       saveAnalysis(result);
       toast.success('Body type analysis complete!');
     } catch (err) {
@@ -139,10 +79,10 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
   };
 
   useEffect(() => {
-    if (!analysis && profile.profileComplete) {
+    if (!analysis && profile.profileComplete && !isManagedClient) {
       performAnalysis();
     }
-  }, [profile, analysis]);
+  }, [profile, analysis, isManagedClient]);
 
   if (loading) {
     return (
@@ -187,6 +127,20 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
             Retry Analysis
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (!analysis && isManagedClient && profile.profileComplete) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
+        <p className="text-slate-400 text-sm">Your trainer is preparing your body analysis — check back soon.</p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mt-4 px-4 py-2 bg-brand-600 rounded-xl text-xs font-semibold"
+        >
+          Back to Dashboard
+        </button>
       </div>
     );
   }

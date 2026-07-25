@@ -5,7 +5,7 @@ import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
-import { parseAIJson } from '../utils/json';
+import { generateCheckInAdjustment, planHasRenderableContent } from '../utils/planGeneration';
 import {
   ClipboardList,
   Sparkles,
@@ -48,161 +48,7 @@ export default function CheckIn() {
   const [photoBase64, setPhotoBase64] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 const [adjustmentSummary, setAdjustmentSummary] = useState(null);
-
-  const applyCheckInPatch = (plan, patch) => {
-    const nextPlan = {
-      ...plan,
-      workoutPlan: {
-        ...(plan?.workoutPlan || {}),
-        focus: patch?.workoutFocus || plan?.workoutPlan?.focus,
-        days: (plan?.workoutPlan?.days || []).map((day) => {
-          const dayPatch = (patch?.workoutDayAdjustments || []).find((item) => item.dayNumber === day.dayNumber || item.dayName === day.dayName);
-          if (!dayPatch || day.isRestDay) return day;
-
-          return {
-            ...day,
-            focus: dayPatch.focus || day.focus,
-            progressiveOverload: dayPatch.progressiveOverload || day.progressiveOverload,
-            warmup: dayPatch.warmup || day.warmup,
-            warmupSteps: dayPatch.warmupSteps || day.warmupSteps,
-            cooldown: dayPatch.cooldown || day.cooldown,
-            cooldownSteps: dayPatch.cooldownSteps || day.cooldownSteps,
-            exercises: (day.exercises || []).map((exercise, index) => ({
-              ...exercise,
-              ...(dayPatch.exerciseAdjustments?.[index] || {}),
-            })),
-          };
-        }),
-      },
-      nutritionPlan: {
-        ...(plan?.nutritionPlan || {}),
-        ...(patch?.nutritionAdjustments || {}),
-      },
-      weeklyMealPlan: plan?.weeklyMealPlan || [],
-    };
-
-    if (patch?.mealAdjustments?.length) {
-      nextPlan.weeklyMealPlan = nextPlan.weeklyMealPlan.map((day) => {
-        const dayPatch = patch.mealAdjustments.find((item) => item.dayNumber === day.dayNumber || item.dayName === day.dayName);
-        if (!dayPatch) return day;
-        return {
-          ...day,
-          meals: (day.meals || []).map((meal, index) => ({
-            ...meal,
-            ...(dayPatch.meals?.[index] || {}),
-          })),
-        };
-      });
-    }
-
-    return nextPlan;
-  };
-
-  const planHasRenderableContent = (plan) => {
-    const hasTrainingDays = (plan?.workoutPlan?.days || []).some((day) => !day.isRestDay && (day.exercises || []).length > 0);
-    const hasMealDays = (plan?.weeklyMealPlan || []).some((day) => (day.meals || []).length > 0);
-    return hasTrainingDays && hasMealDays;
-  };
-
-  const generateCompleteCheckInPlan = async (checkInData, adjustments) => {
-    const fullPlanPrompt = `
-You are an elite Personal Trainer and Sports Dietitian. Generate a COMPLETE replacement 7-day plan after this weekly check-in.
-
-User:
-- Name: ${profile.name}
-- Goal: ${profile.goal}
-- Fitness level: ${profile.fitnessLevel}
-- Equipment: ${profile.equipment?.join(', ') || 'Not specified'}
-- Injuries/exercises to avoid: ${profile.exercisesToAvoid || 'None'}
-- Dietary style: ${profile.dietaryStyle || 'Balanced'}
-- Allergies: ${profile.allergies?.join(', ') || 'None'}
-- Dislikes: ${profile.foodsDisliked || 'None'}
-- Meals per day: ${profile.mealsPerDay || 3}
-- Training days/week: ${profile.trainingDaysPerWeek || 4}
-- Session duration: ${profile.sessionDuration || 45} mins
-
-Check-in:
-- Current weight: ${checkInData.weight} kg
-- Energy: ${checkInData.energy}/10
-- Mood: ${checkInData.mood}/10
-- Workout adherence: ${checkInData.adherenceWorkout}
-- Nutrition adherence: ${checkInData.adherenceNutrition}
-- What went well: ${checkInData.notesWell || 'None'}
-- Challenges: ${checkInData.notesChallenging || 'None'}
-- Adjustment summary to honour: ${adjustments || 'Adjust sensibly based on the check-in.'}
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "workoutPlan": {
-    "focus": "Specific weekly training focus",
-    "days": [
-      {
-        "dayNumber": 1,
-        "dayName": "Monday - Full Body Strength",
-        "focus": "Specific muscles and intent",
-        "isRestDay": false,
-        "warmup": "Short summary",
-        "warmupSteps": [
-          { "name": "Exact movement", "duration": "45 sec", "reps": "10 reps", "notes": "Safe setup, posture, breathing, and mistakes to avoid." }
-        ],
-        "cooldown": "Short summary",
-        "cooldownSteps": [
-          { "name": "Exact stretch", "duration": "45 sec each side", "notes": "How to perform safely and where to feel it." }
-        ],
-        "progressiveOverload": "Specific progression for this day",
-        "exercises": [
-          {
-            "name": "Exercise name",
-            "sets": "3",
-            "reps": "10-12",
-            "rest": "60-90s",
-            "tempo": "3 sec lower, 1 sec pause, controlled lift",
-            "targetMuscles": "Main muscles",
-            "notes": "Full safety explanation including setup, body position, breathing, range of motion, common mistakes, and when to stop.",
-            "progressionNote": "Specific next-week progression."
-          }
-        ]
-      }
-    ]
-  },
-  "nutritionPlan": {
-    "focus": "Specific nutrition strategy",
-    "dailyTargetCalories": 2200,
-    "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
-    "generalAdvice": "Detailed practical guidance"
-  },
-  "weeklyMealPlan": [
-    {
-      "dayName": "Monday",
-      "dayNumber": 1,
-      "meals": [
-        {
-          "name": "Meal 1: Breakfast",
-          "time": "7:30 AM",
-          "calories": 500,
-          "macros": { "protein": 40, "carbs": 50, "fat": 15 },
-          "ingredients": ["80g oats", "250ml milk", "30g whey protein"],
-          "prep": "Exact prep method.",
-          "whyThisMeal": "Why this supports the goal."
-        }
-      ]
-    }
-  ]
-}
-
-Rules:
-- workoutPlan.days must contain exactly 7 days.
-- Non-rest days must match the requested training days/week and each have at least 7 exercises.
-- Each non-rest day must have exactly 5 warmupSteps and exactly 5 cooldownSteps.
-- weeklyMealPlan must contain exactly 7 days.
-- Each day must have ${profile.mealsPerDay || 3} meals.
-- Every meal must have weighed ingredients, prep, and whyThisMeal.
-- No vague exercise or stretch instructions.
-- Return JSON only.
-`;
-
-    return parseAIJson(await callAI(fullPlanPrompt, photoBase64 || null, 'image/jpeg'));
-  };
+const [submittedPlain, setSubmittedPlain] = useState(false);
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
@@ -242,6 +88,7 @@ Rules:
 
     setLoading(true);
     setAdjustmentSummary(null);
+    setSubmittedPlain(false);
     try {
       const checkInData = {
         weight: Number(weight),
@@ -254,102 +101,27 @@ Rules:
         photoBase64,
       };
 
-      const prompt = `
-You are an expert personal trainer. The user is doing their weekly check-in. Compare their progress, feedback, and current plan, and generate adjustments for the upcoming week.
-
-User Profile:
-- Name: ${profile.name}
-- Somatotype: ${analysis?.bodyType || 'Balanced'}
-- Goal: ${profile.goal}
-
-Current Plan (Week ${currentPlan?.weekNumber || 1}):
-- Workout split focus: ${currentPlan?.workoutPlan?.focus || 'Not specified'}
-- Calories target: ${currentPlan?.nutritionPlan?.dailyTargetCalories || 'Not specified'}
-
-User Weekly Check-in Stats:
-- Current Weight: ${weight} kg (Original Weight: ${profile.weight} kg, Last Check-in Weight: ${latestCheckIn?.weight || profile.weight} kg)
-- Energy Level (1-10): ${energy}
-- Mood/Motivation (1-10): ${mood}
-- Workout Adherence: ${adherenceWorkout} (Stuck to it)
-- Nutrition Adherence: ${adherenceNutrition} (Stuck to it)
-- What went well: "${notesWell || 'None'}"
-- What was challenging: "${notesChallenging || 'None'}"
-
-Analyze this check-in. If adherence is low or they face challenges, modify the workout or nutrition to help them stay consistent. If energy is low, maybe lower volume or add rest. If they're crushing it, slightly increase intensity or adjust macro proportions towards their goal.
-
-Return a compact JSON patch, not the full plan. Do NOT resend the whole existing plan.
-Return your response ONLY as a valid JSON object matching this structure:
-{
-  "motivationalMessage": "A warm, personal message addressed directly to ${profile?.name || 'the client'} — you MUST use that exact name, never substitute another. Tone must match their week: if mood or adherence is low (≤5), be genuinely encouraging — tell them you believe in them, that one tough week doesn't define them, and to take it one step at a time. If they are doing well (mood and adherence ≥8), celebrate them — tell them they're smashing it and to keep up the hard work. If they are in the middle, acknowledge their effort with a motivating push to go the extra mile. Keep it 2-3 sentences, warm and human.",
-  "adjustments": "A bulleted summary (coaching report) of exactly what you adjusted for the new week (e.g., increased cardio by 10m, reduced carbs by 20g due to low activity).",
-  "workoutFocus": "Updated weekly training focus, or null if unchanged",
-  "workoutDayAdjustments": [
-    {
-      "dayNumber": 1,
-      "dayName": "Monday - Day Name",
-      "focus": "Updated day focus, or null if unchanged",
-      "warmup": "Short warm-up summary, or null",
-      "warmupSteps": [{ "name": "Exact warm-up movement", "duration": "45 sec", "reps": "10-12 reps", "notes": "Safe performance cue." }],
-      "cooldown": "Short cool-down summary, or null",
-      "cooldownSteps": [{ "name": "Exact stretch", "duration": "45 sec each side", "notes": "Safe performance cue." }],
-      "progressiveOverload": "Updated progression for this day, or null",
-      "exerciseAdjustments": [
-        { "sets": "4", "reps": "10-12", "rest": "75s", "tempo": "3 sec lower", "notes": "Full safe-performance cue.", "progressionNote": "Specific change next week." }
-      ]
-    }
-  ],
-  "nutritionAdjustments": {
-    "focus": "Updated nutrition focus, or null",
-    "dailyTargetCalories": 2200,
-    "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
-    "generalAdvice": "Updated advice, or null"
-  },
-  "mealAdjustments": []
-}
-
-Rules:
-- Return only changed fields and compact arrays. Do not include unchanged meals unless necessary.
-- workoutDayAdjustments can be empty if workouts do not need changing.
-- If you adjust a day, include exactly 5 warmupSteps and exactly 5 cooldownSteps for that day.
-- Never write vague text like "5 minutes stretching", "dynamic warmup", "mobility", "core work", or "do cardio". Name exact movements and exact durations/reps.
-- All exercises, stretches, warm-ups, machines, and running/cardio must include full safe-performance explanations.
-- If running is prescribed, include RPE or pace guidance, posture, foot strike/cadence cue, breathing, incline/speed, and when to slow down.
-- Keep client allergies, dislikes, injuries, equipment, and goal restrictions.
-- Provide no pre-amble or post-amble. Return ONLY the JSON object.
-`;
-
-      const responseText = await callAI(
-        prompt,
-        photoBase64 || null,
-        'image/jpeg'
-      );
-      
-      let result;
-      try {
-        result = parseAIJson(responseText);
-      } catch {
-        result = {
-          motivationalMessage: '',
-          adjustments: isManagedClient
-            ? 'Check-in saved. Your plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.'
-            : 'Check-in saved. The AI plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.',
-          workoutDayAdjustments: [],
-          mealAdjustments: [],
-        };
+      if (isManagedClient) {
+        // Trainer reviews and updates the plan themselves — no AI call here.
+        await saveCheckIn(checkInData);
+        setSubmittedPlain(true);
+        toast.success('Check-in submitted!');
+        setNotesWell('');
+        setNotesChallenging('');
+        setPhotoBase64(null);
+        setImagePreview(null);
+        setLoading(false);
+        return;
       }
 
-      let updatedPlan = currentPlan;
-      if (result.updatedPlan) {
-        updatedPlan = result.updatedPlan;
-      } else if (planHasRenderableContent(currentPlan)) {
-        updatedPlan = applyCheckInPatch(currentPlan, result);
-      } else {
-        try {
-          updatedPlan = await generateCompleteCheckInPlan(checkInData, result.adjustments);
-        } catch {
-          updatedPlan = currentPlan;
-        }
-      }
+      const { result, updatedPlan } = await generateCheckInAdjustment({
+        profile,
+        analysis,
+        currentPlan,
+        checkInData,
+        previousWeight: latestCheckIn?.weight,
+        callAI,
+      });
 
       // Save checkin alongside adjustments
       saveCheckIn({
@@ -433,6 +205,21 @@ Rules:
 
         {activeTab === 'new' ? (
           <div className="space-y-8">
+            {submittedPlain && (
+              <div className="bg-emerald-950/20 border border-emerald-900/60 p-6 rounded-3xl backdrop-blur-xl shadow-xl space-y-4">
+                <h3 className="font-extrabold text-emerald-400 flex items-center gap-2 text-sm uppercase tracking-wider">
+                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  Check-in Submitted
+                </h3>
+                <p className="text-sm text-slate-300">Your trainer will review it and update your plan.</p>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-colors"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
             {adjustmentSummary && (
               <div className="bg-emerald-950/20 border border-emerald-900/60 p-6 rounded-3xl backdrop-blur-xl shadow-xl space-y-4">
                 <h3 className="font-extrabold text-emerald-400 flex items-center gap-2 text-sm uppercase tracking-wider">
@@ -650,7 +437,7 @@ Rules:
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyzing check-in & adapting plan...
+                      {isManagedClient ? 'Submitting check-in...' : 'Analyzing check-in & adapting plan...'}
                     </>
                   ) : (
                     <>

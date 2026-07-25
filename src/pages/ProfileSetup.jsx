@@ -258,7 +258,7 @@ export default function ProfileSetup() {
 
     if (isEditMode) {
       // If photo changed and we are in edit mode, they can redo body analysis, else back to dashboard
-      if (formData.photoBase64 !== profile.photoBase64) {
+      if (formData.photoBase64 !== profile.photoBase64 && !isManagedClient) {
         toast((t) => (
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">New photo uploaded. Analyze your body type?</span>
@@ -287,6 +287,9 @@ export default function ProfileSetup() {
       } else {
         navigate('/dashboard');
       }
+    } else if (isManagedClient) {
+      // Managed clients don't run their own analysis — their trainer does it.
+      navigate('/dashboard');
     } else {
       // If setup, redirect to body analysis page (whether photo uploaded or not, as it calculates macros/goals too)
       navigate('/analysis');

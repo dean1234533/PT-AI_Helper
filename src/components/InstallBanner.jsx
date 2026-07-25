@@ -30,6 +30,14 @@ export default function InstallBanner() {
       return;
     }
 
+    // Already captured by the early global listener in main.jsx (the common
+    // case — the event usually fires before this component ever mounts).
+    if (window.__deferredInstallPrompt) {
+      setDeferredPrompt(window.__deferredInstallPrompt);
+      setShow(true);
+      return;
+    }
+
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -50,6 +58,7 @@ export default function InstallBanner() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') setShow(false);
     setDeferredPrompt(null);
+    window.__deferredInstallPrompt = null;
   };
 
   if (!show) return null;

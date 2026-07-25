@@ -7,8 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
 import { enrichMealPlanWithUSDA } from '../utils/usda';
 import { downloadWorkoutPDF, downloadNutritionPDF } from '../utils/pdfExport';
-import { findPlanQualityIssues, repairThinPlan } from '../utils/planQuality';
 import { parseAIJson } from '../utils/json';
+import { generateFullPlan } from '../utils/planGeneration';
 import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
@@ -253,12 +253,14 @@ function MealCard({ meal, onSwap }) {
             )}
           </div>
         </div>
-        <button
-          onClick={() => onSwap(meal)}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[10px] font-semibold rounded-xl transition-all shrink-0"
-        >
-          <Shuffle className="w-3 h-3" />Swap
-        </button>
+        {onSwap && (
+          <button
+            onClick={() => onSwap(meal)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[10px] font-semibold rounded-xl transition-all shrink-0"
+          >
+            <Shuffle className="w-3 h-3" />Swap
+          </button>
+        )}
       </div>
 
       {/* Macro strip */}
@@ -453,157 +455,7 @@ export default function MyPlan() {
     setLoading(true);
     setError(null);
     try {
-      const prompt = `
-You are an elite Personal Trainer and Sports Dietitian with 15 years experience. Generate a comprehensive, realistic 7-day Workout & Nutrition Plan.
-
-User Profile:
-- Name: ${profile.name}
-- Age: ${profile.age}
-- Gender: ${profile.gender}
-- Weight: ${profile.weight} kg
-- Height: ${profile.height} cm
-- Goal: ${profile.goal}
-- Secondary Goal: ${profile.secondaryGoal || 'Not specified'}
-- Body Type (Somatotype): ${analysis?.bodyType || 'Balanced'}
-- Ideal Macro Split: Protein ${analysis?.macros?.protein || 30}% / Carbs ${analysis?.macros?.carbs || 40}% / Fat ${analysis?.macros?.fat || 30}%
-- Fitness Level: ${profile.fitnessLevel}
-- Workout preferences: ${profile.preferredWorkoutTypes?.join(', ') || 'Not specified'}
-- Equipment: ${profile.equipment?.join(', ') || 'Not specified'}
-- Injuries/Avoid: ${profile.exercisesToAvoid || 'None'}
-- Training days/week: ${profile.trainingDaysPerWeek}
-- Session duration: ${profile.sessionDuration} mins
-- Dietary style: ${profile.dietaryStyle || 'Balanced'}
-- Allergies: ${profile.allergies?.join(', ') || 'None'}
-- Dislikes: ${profile.foodsDisliked || 'None'}
-- Likes: ${profile.foodsLiked || 'None'}
-- Meals/day: ${profile.mealsPerDay}
-- Dietary restrictions: ${profile.dietaryRestrictions || 'None'}
-
-CRITICAL WORKOUT RULES — READ CAREFULLY:
-1. Every training day MUST be a FULL PT SESSION, not a summary. Minimum per training day:
-   - warmupSteps: exactly 5 timed steps totalling 8-12 minutes
-   - exercises: 7-9 exercises or timed circuits that fill the requested ${profile.sessionDuration} minute session
-   - cooldownSteps: exactly 5 timed stretches/breathing steps totalling 5-8 minutes
-2. NEVER write vague text like "5 minutes stretching", "dynamic warmup", "do cardio", "core work", "mobility", or "stretch". Name the exact movement and exact duration/reps.
-3. Timed examples: "Bodyweight squats — 30 sec", "Dead bug — 20 sec each side", "Hip flexor stretch — 45 sec each side", "Incline treadmill walk — 5 min at RPE 4".
-4. Strength examples must include sets, reps, rest, tempo, targetMuscles, notes, and progressionNote.
-5. Session duration is ${profile.sessionDuration} mins — the warm-up, main session, finisher, and cool-down must plausibly fill that time.
-6. Exercise selection must match the equipment available: ${profile.equipment?.join(', ') || 'bodyweight only'}.
-7. Progressive overload note must be SPECIFIC per exercise — what exact weight/rep/time/rest change happens next week.
-
-CRITICAL MEAL PLAN RULES — READ CAREFULLY:
-1. Every meal must include name, time, calories, macros, ingredients with grams/ml, and prep instructions.
-2. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
-2. LUNCH should be a proper midday meal: sandwiches, wraps, salads, soups, pasta, jacket potato, stir fry, sushi bowls.
-3. DINNER should be a proper evening meal: grilled fish/chicken/meat with vegetables and a carb source, pasta dishes, curry with rice, stir fry, burgers, steak, salmon.
-4. SNACKS should be realistic: protein bar, fruit, Greek yogurt, nuts, rice cakes with peanut butter, cottage cheese, protein shake.
-5. VARIETY is essential — do NOT repeat the same meal more than twice across the 7 days. Each day should feel different and enjoyable.
-6. Make meals CULTURALLY APPROPRIATE and APPEALING — these are meals real people in the UK would actually enjoy eating.
-7. Calorie targets must be REALISTIC for the user's goal and body weight. Do not under-eat — a ${profile.weight}kg person needs substantial calories.
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "workoutPlan": {
-    "focus": "Overall weekly training split description",
-    "days": [
-      {
-        "dayNumber": 1,
-        "dayName": "Monday - Push (Chest/Shoulders/Triceps)",
-        "focus": "Chest, anterior deltoid, triceps — hypertrophy focus",
-        "isRestDay": false,
-        "warmup": "Short summary of the warm-up",
-        "warmupSteps": [
-          { "name": "Incline treadmill walk", "duration": "5 min", "notes": "RPE 4, nasal breathing, gradually raise body temperature" },
-          { "name": "Band pull-aparts", "duration": "45 sec", "reps": "15-20 reps", "notes": "Squeeze shoulder blades together" },
-          { "name": "Scapular push-ups", "duration": "45 sec", "reps": "10-12 reps", "notes": "Keep elbows locked, move only shoulder blades" },
-          { "name": "Push-up to downward dog", "duration": "60 sec", "reps": "6-8 reps", "notes": "Open chest and shoulders" },
-          { "name": "Light dumbbell press warm-up set", "duration": "2 min", "reps": "2 sets x 10 reps", "notes": "Use very light load before work sets" }
-        ],
-        "cooldown": "Short summary of the cool-down",
-        "cooldownSteps": [
-          { "name": "Doorframe chest stretch", "duration": "45 sec each side", "notes": "Elbow at shoulder height, breathe slowly" },
-          { "name": "Cross-body shoulder stretch", "duration": "30 sec each side", "notes": "Keep shoulder down away from ear" },
-          { "name": "Overhead triceps stretch", "duration": "30 sec each side", "notes": "Do not arch lower back" },
-          { "name": "Child's pose with side reach", "duration": "45 sec each side", "notes": "Reach hands to each corner" },
-          { "name": "Box breathing", "duration": "90 sec", "notes": "4 sec inhale, 4 hold, 4 exhale, 4 hold" }
-        ],
-        "progressiveOverload": "Week 1 baseline. Next week: add 2.5kg to compound lifts if all reps completed with good form.",
-        "exercises": [
-          {
-            "name": "Barbell Bench Press",
-            "sets": "4",
-            "reps": "8-10",
-            "rest": "90s",
-            "tempo": "3 sec lower, 1 sec pause, drive up",
-            "targetMuscles": "Chest, anterior delts, triceps",
-            "notes": "Retract scapula into bench. Lower bar to mid-chest with 3s eccentric. Drive through heels. Exhale on press.",
-            "progressionNote": "Week 1: 60% 1RM. Week 2: +2.5kg if form is solid. Week 3: +2.5kg or increase to 4x10."
-          },
-          {
-            "name": "Incline Dumbbell Press",
-            "sets": "3",
-            "reps": "10-12",
-            "rest": "75s",
-            "tempo": "2 sec lower, controlled press",
-            "targetMuscles": "Upper chest, shoulders",
-            "notes": "Bench at 30 degrees. Keep wrists stacked over elbows.",
-            "progressionNote": "Add 1-2 reps per set before increasing dumbbells by 2kg."
-          }
-        ]
-      }
-    ]
-  },
-  "nutritionPlan": {
-    "focus": "Overall dietary strategy description",
-    "dailyTargetCalories": 2200,
-    "dailyMacros": { "protein": 165, "carbs": 220, "fat": 73 },
-    "generalAdvice": "Hydration, timing, and supplement tips tailored to body type."
-  },
-  "weeklyMealPlan": [
-    {
-      "dayName": "Monday",
-      "dayNumber": 1,
-      "meals": [
-        {
-          "name": "Meal 1: Breakfast",
-          "time": "7:30 AM",
-          "calories": 550,
-          "macros": { "protein": 40, "carbs": 60, "fat": 15 },
-          "ingredients": ["80g rolled oats", "250ml semi-skimmed milk", "1 medium banana", "30g whey protein powder", "15g honey"],
-          "prep": "Cook oats with milk for 3-4 minutes, stir in whey after cooking, top with sliced banana and honey.",
-          "whyThisMeal": "High-carbohydrate breakfast to fuel training and high protein to support recovery."
-        }
-      ]
-    }
-  ]
-}
-
-Rules:
-- workoutPlan.days: provide exactly 7 days. Mark rest days with isRestDay: true and empty exercises array.
-- Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
-- Each training day MUST have a MINIMUM of 7 exercises — 8-9 is ideal. NEVER generate a session with fewer than 7 exercises.
-- warmupSteps must contain exactly 5 named timed movements. cooldownSteps must contain exactly 5 named timed stretches/breathing drills.
-- Each exercise MUST be a single named movement with its own sets, reps, rest, tempo, targetMuscles, notes, and progressionNote. NEVER group exercises into circuits or supersets — list every exercise individually.
-- weeklyMealPlan: provide exactly 7 days, each with ${profile.mealsPerDay} meals (breakfast, ${Number(profile.mealsPerDay) >= 4 ? 'morning snack, ' : ''}lunch, ${Number(profile.mealsPerDay) >= 5 ? 'afternoon snack, ' : ''}dinner${Number(profile.mealsPerDay) >= 3 ? ', snack' : ''}).
-- Include ingredient gram weights in every ingredient string (e.g. "150g salmon fillet").
-- Every meal needs prep and whyThisMeal fields.
-- BREAKFAST MUST contain breakfast foods — oats, eggs, yogurt, toast, fruit, smoothies. NEVER chicken or rice at breakfast.
-- Vary meals across the week — no two identical breakfasts, lunches, or dinners.
-- exercises.notes: write like a qualified PT coaching cue — form, tempo, breathing.
-- exercises.progressionNote: specific week-by-week overload strategy for this exercise.
-- No allergens from: ${profile.allergies?.join(', ') || 'none'}. No dislikes: ${profile.foodsDisliked || 'none'}.
-- Liked foods to include where possible: ${profile.foodsLiked || 'none'}.
-- Return ONLY the JSON. No preamble, no markdown.
-`;
-
-      const responseText = await callAI(prompt);
-      let plan = parseAIJson(responseText);
-
-      const qualityIssues = findPlanQualityIssues(plan);
-      if (qualityIssues.length > 0) {
-
-        plan = await repairThinPlan(plan, qualityIssues, callAI);
-      }
+      let plan = await generateFullPlan(profile, analysis, callAI);
 
       await savePlan(plan);
       toast.success('Plan generated!');
@@ -674,10 +526,10 @@ Rules:
     const hasWorkout = (currentPlan?.workoutPlan?.days || []).some(day => !day.isRestDay && (day.exercises || []).length > 0);
     const hasMeals = (currentPlan?.weeklyMealPlan || []).some(day => (day.meals || []).length > 0);
 
-    if ((!currentPlan || (!hasWorkout && !hasMeals)) && (profile.profileComplete || isAdmin)) {
+    if ((!currentPlan || (!hasWorkout && !hasMeals)) && (profile.profileComplete || isAdmin) && !isManagedClient) {
       generatePlan();
     }
-  }, [profile, currentPlan, isAdmin, plansLoading]);
+  }, [profile, currentPlan, isAdmin, isManagedClient, plansLoading]);
 
   // ── Loading states ──────────────────────────────────────────────────────────
   if (loading) {
@@ -726,6 +578,10 @@ Rules:
             <button onClick={generatePlan} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl">
               Generate Test Plan
             </button>
+          </div>
+        ) : isManagedClient ? (
+          <div className="text-center space-y-4">
+            <p className="text-slate-400 text-sm">Your trainer is building your plan — check back soon.</p>
           </div>
         ) : (
           <div className="text-center space-y-4">
@@ -787,12 +643,14 @@ Rules:
               {exporting === 'nutrition' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
               Nutrition PDF
             </button>
-            <button
-              onClick={generatePlan}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Regenerate
-            </button>
+            {!isManagedClient && (
+              <button
+                onClick={generatePlan}
+                className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+              </button>
+            )}
           </div>
         </div>
 
@@ -835,10 +693,16 @@ Rules:
             {!hasRenderableWorkout && (
               <div className="bg-yellow-950/20 border border-yellow-900/50 rounded-3xl p-6 text-center">
                 <p className="text-yellow-300 font-bold text-sm">This saved plan is missing workout sessions.</p>
-                <p className="text-slate-400 text-xs mt-2">Regenerate to create the full detailed workout plan.</p>
-                <button onClick={generatePlan} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold">
-                  Regenerate Full Plan
-                </button>
+                {isManagedClient ? (
+                  <p className="text-slate-400 text-xs mt-2">Ask your trainer to regenerate your plan.</p>
+                ) : (
+                  <>
+                    <p className="text-slate-400 text-xs mt-2">Regenerate to create the full detailed workout plan.</p>
+                    <button onClick={generatePlan} className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold">
+                      Regenerate Full Plan
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
@@ -993,7 +857,7 @@ Rules:
                     <MealCard
                       key={mIdx}
                       meal={meal}
-                      onSwap={(m) => setSwapMeal({ meal: m, dayIdx: activeNutDayIdx, mealIdx: mIdx })}
+                      onSwap={isManagedClient ? undefined : (m) => setSwapMeal({ meal: m, dayIdx: activeNutDayIdx, mealIdx: mIdx })}
                     />
                   ))}
                 </div>
@@ -1027,7 +891,9 @@ Rules:
               </div>
             ) : (
               <div className="text-center py-16 text-slate-500 text-sm">
-                No meal data found. <button onClick={generatePlan} className="text-blue-400 underline ml-1">Regenerate Full Plan</button>
+                {isManagedClient
+                  ? 'No meal data found. Ask your trainer to regenerate your plan.'
+                  : <>No meal data found. <button onClick={generatePlan} className="text-blue-400 underline ml-1">Regenerate Full Plan</button></>}
               </div>
             )}
 

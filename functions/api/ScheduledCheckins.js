@@ -249,7 +249,7 @@ function parseWorkoutDays(profileDoc) {
 }
 
 async function sendWorkoutDayPush(clientUid, env) {
-  const currentDoc = await firestoreGet(`users/${clientUid}/data/current`, env);
+  const currentDoc = await firestoreGet(`users/${clientUid}/plans/current`, env);
   if (!currentDoc) return;
 
   const today = findTodaysDay(parseWorkoutDays(currentDoc));
