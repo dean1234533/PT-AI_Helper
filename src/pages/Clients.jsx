@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
-  updateDoc, doc, query, where, orderBy, limit
+  doc, query, where, orderBy, limit
 } from 'firebase/firestore';
 import app, { auth } from '../firebase/config';
 import toast from 'react-hot-toast';
@@ -282,6 +282,67 @@ function ActiveClientDetails({ clientUid }) {
   );
 }
 
+function DeleteClientModal({ client, onClose, onConfirm }) {
+  const [typedName, setTypedName] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const matches = typedName.trim().toLowerCase() === (client.name || '').trim().toLowerCase();
+
+  const handleConfirm = async () => {
+    setDeleting(true);
+    try { await onConfirm(client); onClose(); }
+    finally { setDeleting(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-red-900/50 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-extrabold text-red-400 text-lg">Delete {client.name}</h3>
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              This permanently deletes their account, login, and all their data (profile, plans,
+              check-ins) — not just this list entry. This cannot be undone.
+            </p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors shrink-0">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            Type "{client.name}" to confirm
+          </label>
+          <input
+            type="text"
+            value={typedName}
+            onChange={(e) => setTypedName(e.target.value)}
+            placeholder={client.name}
+            className="w-full bg-slate-950/80 border border-slate-800 focus:border-red-500 rounded-xl px-4 py-2.5 text-slate-100 text-sm outline-none transition-all"
+          />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 border border-slate-700 text-slate-400 hover:text-white rounded-xl text-sm font-semibold transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!matches || deleting}
+            className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {deleting ? 'Deleting...' : 'Delete Permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClientCard({ client, onDelete, onCopyLink }) {
   const [expanded, setExpanded] = useState(false);
   const isActive = client.status === 'active' && client.clientUid;
@@ -316,7 +377,7 @@ function ClientCard({ client, onDelete, onCopyLink }) {
           <button onClick={() => setExpanded(e => !e)} className="p-1.5 text-slate-500 hover:text-white transition-colors">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-          <button onClick={() => onDelete(client.id)} className="p-1.5 text-slate-600 hover:text-red-400 transition-colors">
+          <button onClick={() => onDelete(client)} className="p-1.5 text-slate-600 hover:text-red-400 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -462,6 +523,7 @@ export default function Clients() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [deletingClient, setDeletingClient] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -495,12 +557,20 @@ export default function Clients() {
     toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
   };
 
-  const handleDeleteClient = async (clientId) => {
-    if (!confirm('Remove this client from your list?')) return;
+  const handleDeleteClient = async (client) => {
     try {
-      await updateDoc(doc(db, 'clients', clientId), { archived: true });
-      toast.success('Client removed');
-    } catch { toast.error('Failed to remove client'); }
+      const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/delete-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ clientUid: client.clientUid || null, clientDocId: client.id }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to delete client');
+      toast.success(`${client.name} deleted`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove client');
+      throw err;
+    }
   };
 
   const handleCopyLink = async (client) => {
@@ -594,7 +664,7 @@ export default function Clients() {
                 <ClientCard
                   key={client.id}
                   client={client}
-                  onDelete={handleDeleteClient}
+                  onDelete={setDeletingClient}
                   onCopyLink={handleCopyLink}
                 />
               ))}
@@ -607,6 +677,14 @@ export default function Clients() {
         <InviteClientModal
           onClose={() => setShowInviteModal(false)}
           onInvite={handleInviteClient}
+        />
+      )}
+
+      {deletingClient && (
+        <DeleteClientModal
+          client={deletingClient}
+          onClose={() => setDeletingClient(null)}
+          onConfirm={handleDeleteClient}
         />
       )}
     </Layout>
