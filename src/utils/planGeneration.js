@@ -69,11 +69,8 @@ export async function generateAnalysis(profile, callAI) {
   return parseAnalysisResponse(responseText);
 }
 
-export function buildFullPlanPrompt(profile, analysis) {
-  return `
-You are an elite Personal Trainer and Sports Dietitian with 15 years experience. Generate a comprehensive, realistic 7-day Workout & Nutrition Plan.
-
-User Profile:
+function profileBlock(profile, analysis) {
+  return `User Profile:
 - Name: ${profile.name}
 - Age: ${profile.age}
 - Gender: ${profile.gender}
@@ -94,7 +91,14 @@ User Profile:
 - Dislikes: ${profile.foodsDisliked || 'None'}
 - Likes: ${profile.foodsLiked || 'None'}
 - Meals/day: ${profile.mealsPerDay}
-- Dietary restrictions: ${profile.dietaryRestrictions || 'None'}
+- Dietary restrictions: ${profile.dietaryRestrictions || 'None'}`;
+}
+
+export function buildWorkoutPlanPrompt(profile, analysis) {
+  return `
+You are an elite Personal Trainer with 15 years experience. Generate a comprehensive, realistic 7-day Workout Plan.
+
+${profileBlock(profile, analysis)}
 
 CRITICAL WORKOUT RULES — READ CAREFULLY:
 1. Every training day MUST be a FULL PT SESSION, not a summary. Minimum per training day:
@@ -107,16 +111,6 @@ CRITICAL WORKOUT RULES — READ CAREFULLY:
 5. Session duration is ${profile.sessionDuration} mins — the warm-up, main session, finisher, and cool-down must plausibly fill that time.
 6. Exercise selection must match the equipment available: ${profile.equipment?.join(', ') || 'bodyweight only'}.
 7. Progressive overload note must be SPECIFIC per exercise — what exact weight/rep/time/rest change happens next week.
-
-CRITICAL MEAL PLAN RULES — READ CAREFULLY:
-1. Every meal must include name, time, calories, macros, ingredients with grams/ml, and prep instructions.
-2. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
-2. LUNCH should be a proper midday meal: sandwiches, wraps, salads, soups, pasta, jacket potato, stir fry, sushi bowls.
-3. DINNER should be a proper evening meal: grilled fish/chicken/meat with vegetables and a carb source, pasta dishes, curry with rice, stir fry, burgers, steak, salmon.
-4. SNACKS should be realistic: protein bar, fruit, Greek yogurt, nuts, rice cakes with peanut butter, cottage cheese, protein shake.
-5. VARIETY is essential — do NOT repeat the same meal more than twice across the 7 days. Each day should feel different and enjoyable.
-6. Make meals CULTURALLY APPROPRIATE and APPEALING — these are meals real people in the UK would actually enjoy eating.
-7. Calorie targets must be REALISTIC for the user's goal and body weight. Do not under-eat — a ${profile.weight}kg person needs substantial calories.
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -169,7 +163,39 @@ Return ONLY a valid JSON object with this exact structure:
         ]
       }
     ]
-  },
+  }
+}
+
+Rules:
+- workoutPlan.days: provide exactly 7 days. Mark rest days with isRestDay: true and empty exercises array.
+- Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
+- Each training day MUST have a MINIMUM of 7 exercises — 8-9 is ideal. NEVER generate a session with fewer than 7 exercises.
+- warmupSteps must contain exactly 5 named timed movements. cooldownSteps must contain exactly 5 named timed stretches/breathing drills.
+- Each exercise MUST be a single named movement with its own sets, reps, rest, tempo, targetMuscles, notes, and progressionNote. NEVER group exercises into circuits or supersets — list every exercise individually.
+- exercises.notes: write like a qualified PT coaching cue — form, tempo, breathing.
+- exercises.progressionNote: specific week-by-week overload strategy for this exercise.
+- Return ONLY the JSON. No preamble, no markdown.
+`;
+}
+
+export function buildNutritionPlanPrompt(profile, analysis) {
+  return `
+You are an elite Sports Dietitian with 15 years experience. Generate a comprehensive, realistic 7-day Nutrition Plan.
+
+${profileBlock(profile, analysis)}
+
+CRITICAL MEAL PLAN RULES — READ CAREFULLY:
+1. Every meal must include name, time, calories, macros, ingredients with grams/ml, and prep instructions.
+2. BREAKFAST must be a real breakfast food. Examples: porridge/oats, eggs on toast, yogurt with fruit and granola, smoothie with protein, scrambled eggs, avocado toast, overnight oats, pancakes, cereal with milk. NEVER serve chicken, rice, or dinner food at breakfast.
+3. LUNCH should be a proper midday meal: sandwiches, wraps, salads, soups, pasta, jacket potato, stir fry, sushi bowls.
+4. DINNER should be a proper evening meal: grilled fish/chicken/meat with vegetables and a carb source, pasta dishes, curry with rice, stir fry, burgers, steak, salmon.
+5. SNACKS should be realistic: protein bar, fruit, Greek yogurt, nuts, rice cakes with peanut butter, cottage cheese, protein shake.
+6. VARIETY is essential — do NOT repeat the same meal more than twice across the 7 days. Each day should feel different and enjoyable.
+7. Make meals CULTURALLY APPROPRIATE and APPEALING — these are meals real people in the UK would actually enjoy eating.
+8. Calorie targets must be REALISTIC for the user's goal and body weight. Do not under-eat — a ${profile.weight}kg person needs substantial calories.
+
+Return ONLY a valid JSON object with this exact structure:
+{
   "nutritionPlan": {
     "focus": "Overall dietary strategy description",
     "dailyTargetCalories": 2200,
@@ -196,34 +222,48 @@ Return ONLY a valid JSON object with this exact structure:
 }
 
 Rules:
-- workoutPlan.days: provide exactly 7 days. Mark rest days with isRestDay: true and empty exercises array.
-- Training days = ${profile.trainingDaysPerWeek}. Remaining days = rest.
-- Each training day MUST have a MINIMUM of 7 exercises — 8-9 is ideal. NEVER generate a session with fewer than 7 exercises.
-- warmupSteps must contain exactly 5 named timed movements. cooldownSteps must contain exactly 5 named timed stretches/breathing drills.
-- Each exercise MUST be a single named movement with its own sets, reps, rest, tempo, targetMuscles, notes, and progressionNote. NEVER group exercises into circuits or supersets — list every exercise individually.
 - weeklyMealPlan: provide exactly 7 days, each with ${profile.mealsPerDay} meals (breakfast, ${Number(profile.mealsPerDay) >= 4 ? 'morning snack, ' : ''}lunch, ${Number(profile.mealsPerDay) >= 5 ? 'afternoon snack, ' : ''}dinner${Number(profile.mealsPerDay) >= 3 ? ', snack' : ''}).
 - Include ingredient gram weights in every ingredient string (e.g. "150g salmon fillet").
 - Every meal needs prep and whyThisMeal fields.
 - BREAKFAST MUST contain breakfast foods — oats, eggs, yogurt, toast, fruit, smoothies. NEVER chicken or rice at breakfast.
 - Vary meals across the week — no two identical breakfasts, lunches, or dinners.
-- exercises.notes: write like a qualified PT coaching cue — form, tempo, breathing.
-- exercises.progressionNote: specific week-by-week overload strategy for this exercise.
 - No allergens from: ${profile.allergies?.join(', ') || 'none'}. No dislikes: ${profile.foodsDisliked || 'none'}.
 - Liked foods to include where possible: ${profile.foodsLiked || 'none'}.
 - Return ONLY the JSON. No preamble, no markdown.
 `;
 }
 
-/** Runs the full 7-day plan generation, including quality-repair, end-to-end. */
-export async function generateFullPlan(profile, analysis, callAI) {
-  const responseText = await callAI(buildFullPlanPrompt(profile, analysis));
+/** Runs workout-plan generation, including quality-repair, end-to-end. Returns { workoutPlan }. */
+export async function generateWorkoutPlan(profile, analysis, callAI) {
+  const responseText = await callAI(buildWorkoutPlanPrompt(profile, analysis));
   let plan = parseAIJson(responseText);
 
   const qualityIssues = findPlanQualityIssues(plan);
   if (qualityIssues.length > 0) {
     plan = await repairThinPlan(plan, qualityIssues, callAI);
   }
-  return plan;
+  return { workoutPlan: plan.workoutPlan };
+}
+
+/** Runs nutrition-plan generation, including quality-repair, end-to-end. Returns { nutritionPlan, weeklyMealPlan }. */
+export async function generateNutritionPlan(profile, analysis, callAI) {
+  const responseText = await callAI(buildNutritionPlanPrompt(profile, analysis));
+  let plan = parseAIJson(responseText);
+
+  const qualityIssues = findPlanQualityIssues(plan);
+  if (qualityIssues.length > 0) {
+    plan = await repairThinPlan(plan, qualityIssues, callAI);
+  }
+  return { nutritionPlan: plan.nutritionPlan, weeklyMealPlan: plan.weeklyMealPlan };
+}
+
+/** Runs both workout and nutrition generation in parallel and merges the result. */
+export async function generateFullPlan(profile, analysis, callAI) {
+  const [workout, nutrition] = await Promise.all([
+    generateWorkoutPlan(profile, analysis, callAI),
+    generateNutritionPlan(profile, analysis, callAI),
+  ]);
+  return { ...workout, ...nutrition };
 }
 
 export function buildCheckInAdjustmentPrompt({ profile, analysis, currentPlan, checkInData, previousWeight }) {

@@ -4,7 +4,8 @@ import { useProfile } from '../hooks/useProfile';
 import { useGemini } from '../contexts/GeminiContext';
 import { normalizePlan } from '../hooks/usePlans';
 import {
-  generateAnalysis, generateFullPlan, generateCheckInAdjustment, planHasRenderableContent,
+  generateAnalysis, generateFullPlan, generateWorkoutPlan, generateNutritionPlan,
+  generateCheckInAdjustment, planHasRenderableContent,
 } from '../utils/planGeneration';
 import Layout from '../components/Layout';
 import ProgressSparkline from '../components/ProgressSparkline';
@@ -113,6 +114,7 @@ function ActiveClientDetails({ clientUid }) {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [working, setWorking] = useState(null); // null | 'generating' | 'adjusting'
   const [progressText, setProgressText] = useState('');
+  const [showScopeMenu, setShowScopeMenu] = useState(false);
 
   useEffect(() => {
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
@@ -148,8 +150,9 @@ function ActiveClientDetails({ clientUid }) {
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to save');
   };
 
-  const handleGeneratePlan = async () => {
+  const handleGeneratePlan = async (scope = 'both') => {
     if (!profile) { toast.error("Client hasn't completed their profile yet."); return; }
+    setShowScopeMenu(false);
     setWorking('generating');
     try {
       let currentAnalysis = analysis;
@@ -158,9 +161,28 @@ function ActiveClientDetails({ clientUid }) {
         currentAnalysis = await generateAnalysis(profile, callAI);
         await saveToClient({ analysis: currentAnalysis });
       }
-      setProgressText('Building 7-day plan…');
-      const plan = normalizePlan(await generateFullPlan(profile, currentAnalysis, callAI));
-      await saveToClient({ plan });
+
+      let planPayload;
+      if (scope === 'workout') {
+        setProgressText('Building workout plan…');
+        const { workoutPlan } = await generateWorkoutPlan(profile, currentAnalysis, callAI);
+        // Normalize against the existing plan so shape stays consistent, but
+        // only send the workoutPlan field back — save-client-plan.js patches
+        // exactly the top-level fields given, leaving the client's existing
+        // nutrition data untouched.
+        const merged = normalizePlan({ ...currentPlan, workoutPlan });
+        planPayload = { workoutPlan: merged.workoutPlan };
+      } else if (scope === 'nutrition') {
+        setProgressText('Building nutrition plan…');
+        const { nutritionPlan, weeklyMealPlan } = await generateNutritionPlan(profile, currentAnalysis, callAI);
+        const merged = normalizePlan({ ...currentPlan, nutritionPlan, weeklyMealPlan });
+        planPayload = { nutritionPlan: merged.nutritionPlan, weeklyMealPlan: merged.weeklyMealPlan };
+      } else {
+        setProgressText('Building 7-day plan…');
+        planPayload = normalizePlan(await generateFullPlan(profile, currentAnalysis, callAI));
+      }
+
+      await saveToClient({ plan: planPayload });
       toast.success(`Plan generated for ${profile.name}!`);
     } catch (err) {
       toast.error(err.message || 'Failed to generate plan');
@@ -202,14 +224,42 @@ function ActiveClientDetails({ clientUid }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={handleGeneratePlan}
-          disabled={!!working}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 text-brand-400 hover:text-brand-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
-        >
-          {working === 'generating' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-          {working === 'generating' ? (progressText || 'Working…') : currentPlan ? 'Regenerate Plan' : 'Generate Plan'}
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowScopeMenu((v) => !v)}
+            disabled={!!working}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 border border-brand-500/25 text-brand-400 hover:text-brand-300 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+          >
+            {working === 'generating' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {working === 'generating' ? (progressText || 'Working…') : currentPlan ? 'Regenerate Plan' : 'Generate Plan'}
+            {!working && <ChevronDown className="w-3 h-3" />}
+          </button>
+          {showScopeMenu && !working && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowScopeMenu(false)} />
+              <div className="absolute left-0 top-full mt-1 z-20 w-44 bg-dark-800 border border-white/10 rounded-xl shadow-lg overflow-hidden">
+                <button
+                  onClick={() => handleGeneratePlan('both')}
+                  className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/8 transition-colors"
+                >
+                  Workout + Nutrition
+                </button>
+                <button
+                  onClick={() => handleGeneratePlan('workout')}
+                  className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/8 transition-colors"
+                >
+                  Workout Plan Only
+                </button>
+                <button
+                  onClick={() => handleGeneratePlan('nutrition')}
+                  className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/8 transition-colors"
+                >
+                  Nutrition Plan Only
+                </button>
+              </div>
+            </>
+          )}
+        </div>
         {checkInIsNewerThanPlan && (
           <button
             onClick={handleApplyCheckIn}

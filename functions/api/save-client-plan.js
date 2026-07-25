@@ -11,7 +11,7 @@
  * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
  */
 
-import { firestoreGet, firestoreCreateDoc, toFirestoreFields } from '../_shared/firestore.js';
+import { firestoreGet, firestorePatch, toFirestoreFields } from '../_shared/firestore.js';
 
 function getenv(name, env) {
   return env[name] || env[`VITE_${name}`];
@@ -62,17 +62,24 @@ export async function onRequestPost(ctx) {
     }
 
     if (analysis) {
-      await firestoreCreateDoc(
+      const analysisFields = { ...analysis, generatedAt: new Date().toISOString() };
+      await firestorePatch(
         `users/${clientUid}/data/analysis`,
-        toFirestoreFields({ ...analysis, generatedAt: new Date().toISOString() }),
+        toFirestoreFields(analysisFields),
+        Object.keys(analysisFields),
         env
       );
     }
 
+    // Partial saves (workout-only or nutrition-only) must only touch the
+    // top-level fields being written — a full-document replace here would
+    // silently wipe out whichever half of the plan wasn't just regenerated.
     if (plan) {
-      await firestoreCreateDoc(
+      const planFields = { ...plan, generatedAt: new Date().toISOString(), weekNumber: plan.weekNumber || 1 };
+      await firestorePatch(
         `users/${clientUid}/plans/current`,
-        toFirestoreFields({ ...plan, generatedAt: new Date().toISOString(), weekNumber: plan.weekNumber || 1 }),
+        toFirestoreFields(planFields),
+        Object.keys(planFields),
         env
       );
     }
