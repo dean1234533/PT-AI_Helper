@@ -20,6 +20,7 @@ import {
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
@@ -29,6 +30,7 @@ import SEO from '../components/SEO';
 export default function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { currentPlan, analysis } = usePlans();
   const { checkIns, latestCheckIn } = useCheckIns();
   const { callAI } = useGemini();
@@ -225,10 +227,14 @@ export default function Dashboard() {
 
                     {!currentPlan ? (
                       <div className="py-8 text-center">
-                        <p className="text-xs text-slate-500">No active workout plans found.</p>
-                        <button onClick={() => navigate('/plan')} className="mt-3 text-xs bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-4 rounded-xl transition-all">
-                          Generate Your Plan
-                        </button>
+                        <p className="text-xs text-slate-500">
+                          {isManagedClient ? 'Your trainer is preparing your plan.' : 'No active workout plans found.'}
+                        </p>
+                        {!isManagedClient && (
+                          <button onClick={() => navigate('/plan')} className="mt-3 text-xs bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-4 rounded-xl transition-all">
+                            Generate Your Plan
+                          </button>
+                        )}
                       </div>
                     ) : selectedWorkout?.isRestDay ? (
                       <div className="space-y-3 py-2">
@@ -302,7 +308,9 @@ export default function Dashboard() {
                     </h3>
 
                     {!currentPlan ? (
-                      <p className="text-xs text-slate-500 text-center py-8">Generate a plan to view meals.</p>
+                      <p className="text-xs text-slate-500 text-center py-8">
+                        {isManagedClient ? 'Your trainer is preparing your plan.' : 'Generate a plan to view meals.'}
+                      </p>
                     ) : selectedMeals.length === 0 ? (
                       <p className="text-xs text-slate-500 text-center py-8">No meals for this day.</p>
                     ) : (
@@ -375,7 +383,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-slate-200">Log Check-in</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Adjust plan for the upcoming week.</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {isManagedClient ? 'Share your progress with your trainer.' : 'Adjust plan for the upcoming week.'}
+                  </p>
                 </div>
               </button>
 
