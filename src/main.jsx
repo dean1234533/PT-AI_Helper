@@ -13,31 +13,64 @@ window.addEventListener('beforeinstallprompt', (e) => {
   window.__deferredInstallPrompt = e;
 });
 
-// The default injected registerSW.js only registers once and never checks
-// for updates while the app stays open — on installed/standalone PWAs
-// (especially iOS) that means users are stuck on stale code until they
-// manually delete and reinstall. This registers immediately, polls for a
-// new version every few minutes, and reloads once when a new one activates.
-let reloading = false;
-navigator.serviceWorker?.addEventListener('controllerchange', () => {
-  if (reloading) return;
-  reloading = true;
-  window.location.reload();
-});
+// One-time hard reset: a service worker registered before the update-polling
+// fix below could be stuck permanently serving its own cached snapshot and
+// never even check for a newer one — the exact failure mode this file exists
+// to prevent, but it can't fix itself retroactively from inside a stale SW.
+// Forcibly unregister everything and clear every cache once per device, then
+// reload into a completely clean state before registering the current SW.
+const PURGE_KEY = 'dbsai_sw_purge_v1';
 
-registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, registration) {
-    if (!registration) return;
-    setInterval(() => registration.update(), 5 * 60 * 1000);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') registration.update();
-    });
-  },
-});
+async function purgeStaleServiceWorkers() {
+  if (localStorage.getItem(PURGE_KEY)) return false;
+  localStorage.setItem(PURGE_KEY, '1');
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch { /* best-effort */ }
+  return true;
+}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+async function boot() {
+  if (await purgeStaleServiceWorkers()) {
+    window.location.reload();
+    return;
+  }
+
+  // The default injected registerSW.js only registers once and never checks
+  // for updates while the app stays open — on installed/standalone PWAs
+  // (especially iOS) that means users are stuck on stale code until they
+  // manually delete and reinstall. This registers immediately, polls for a
+  // new version every few minutes, and reloads once when a new one activates.
+  let reloading = false;
+  navigator.serviceWorker?.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+
+  registerSW({
+    immediate: true,
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return;
+      setInterval(() => registration.update(), 5 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update();
+      });
+    },
+  });
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
+
+boot();
