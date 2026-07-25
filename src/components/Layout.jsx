@@ -202,8 +202,15 @@ export default function Layout({ children }) {
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
-        <WorkoutReminder />
-        <AIChat />
+        {/* The AI coach chat + workout reminder are personal-fitness features —
+            they don't belong on the trainer's client-management admin page,
+            and the floating chat button otherwise overlaps its short content. */}
+        {location.pathname !== '/clients' && (
+          <>
+            <WorkoutReminder />
+            <AIChat />
+          </>
+        )}
         <InstallBanner />
       </div>
     </div>
