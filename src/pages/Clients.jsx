@@ -38,8 +38,14 @@ function InviteClientModal({ onClose, onInvite }) {
       return;
     }
     setSaving(true);
-    try { await onInvite(form); onClose(); }
-    finally { setSaving(false); }
+    try {
+      await onInvite(form);
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Failed to create invite');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -553,8 +559,14 @@ export default function Clients() {
     });
 
     const inviteUrl = `${window.location.origin}/#/register?invite=${inviteToken}`;
-    await navigator.clipboard.writeText(inviteUrl);
-    toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
+    } catch {
+      // Clipboard access can fail/be blocked (e.g. iOS Safari) — the invite
+      // itself is already created either way, so don't block on this.
+      toast.success(`Invite created for ${form.name}. Use "Copy Invite Link" on their card to grab the link.`);
+    }
   };
 
   const handleDeleteClient = async (client) => {
@@ -575,8 +587,12 @@ export default function Clients() {
 
   const handleCopyLink = async (client) => {
     const inviteUrl = `${window.location.origin}/#/register?invite=${client.inviteToken}`;
-    await navigator.clipboard.writeText(inviteUrl);
-    toast.success(`Invite link copied for ${client.name}`);
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success(`Invite link copied for ${client.name}`);
+    } catch {
+      toast.error(`Couldn't copy automatically. Link: ${inviteUrl}`, { duration: 8000 });
+    }
   };
 
   const stats = {
