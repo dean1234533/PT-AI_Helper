@@ -525,3 +525,42 @@ export async function generateCheckInAdjustment({ profile, analysis, currentPlan
 
   return { result, updatedPlan };
 }
+
+export function buildMealSwapPrompt(meal, profile, analysis, avoidNames = []) {
+  return `
+You are a sports dietitian. Suggest a single meal replacement for "${meal.name}" that matches these macros:
+- Calories: ~${meal.usdaCalories ?? meal.calories} kcal
+- Protein: ~${meal.usdaProtein ?? meal.macros?.protein}g
+- Carbs: ~${meal.usdaCarbs ?? meal.macros?.carbs}g
+- Fat: ~${meal.usdaFat ?? meal.macros?.fat}g
+- Body type: ${analysis?.bodyType || 'balanced'}
+- Goal: ${profile.goal}
+- Dietary restrictions: ${profile.dietaryRestrictions || 'none'}
+- Allergies: ${profile.allergies?.join(', ') || 'none'}
+- Dislikes: ${profile.foodsDisliked || 'none'}
+- Do not suggest any of these meals again: ${[meal.name, ...avoidNames].filter(Boolean).join(', ') || 'none'}
+
+Rules:
+- Keep calories within 15% of the target.
+- Keep protein within 10g of the target.
+- Use realistic UK-friendly foods.
+- Include gram/ml weights for every ingredient.
+- Include prep and whyThisMeal.
+
+Return ONLY a valid JSON object:
+{
+  "name": "Meal name",
+  "time": "${meal.time || 'Same time'}",
+  "calories": 500,
+  "macros": { "protein": 40, "carbs": 55, "fat": 12 },
+  "ingredients": ["150g ingredient with weight", "2 eggs"],
+  "prep": "How to prepare this meal.",
+  "whyThisMeal": "Why this replacement fits the user's goal."
+}`;
+}
+
+/** Fetches one macro-matched replacement meal via AI. Returns the parsed replacement object. */
+export async function generateMealSwap(meal, profile, analysis, avoidNames, callAI) {
+  const text = await callAI(buildMealSwapPrompt(meal, profile, analysis, avoidNames));
+  return parseAIJson(text);
+}

@@ -5,7 +5,7 @@ import { useGemini } from '../contexts/GeminiContext';
 import { normalizePlan } from '../hooks/usePlans';
 import {
   generateAnalysis, generateFullPlan, generateWorkoutPlan, generateNutritionPlan,
-  generateCheckInAdjustment, planHasRenderableContent,
+  generateCheckInAdjustment, generateMealSwap, planHasRenderableContent,
 } from '../utils/planGeneration';
 import Layout from '../components/Layout';
 import ProgressSparkline from '../components/ProgressSparkline';
@@ -13,7 +13,8 @@ import {
   Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
   Loader2, Calendar, X, Copy, Weight, Zap, Smile,
-  Palette, Upload, Save, Sparkles, TrendingUp, Eye, EyeOff, Dumbbell, Apple
+  Palette, Upload, Save, Sparkles, TrendingUp, Eye, EyeOff, Dumbbell, Apple,
+  Shuffle, MessageSquarePlus, ChevronRight
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
@@ -106,7 +107,101 @@ function InviteClientModal({ onClose, onInvite }) {
   );
 }
 
-function ClientPlanPreview({ plan, dayIdx, setDayIdx }) {
+function TrainerSwapModal({ meal, dayName, profile, analysis, callAI, onSwap, onClose }) {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [replacement, setReplacement] = useState(null);
+  const [attemptedNames, setAttemptedNames] = useState([]);
+
+  const fetchReplacement = async () => {
+    setLoading(true);
+    try {
+      const next = await generateMealSwap(meal, profile, analysis, attemptedNames, callAI);
+      setReplacement(next);
+      setAttemptedNames((current) => [...current, next.name].filter(Boolean));
+    } catch (err) {
+      toast.error(err.message || 'Could not fetch a replacement.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchReplacement(); }, []);
+
+  const handleUse = async () => {
+    setSaving(true);
+    try {
+      await onSwap(replacement);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-start shrink-0">
+          <div>
+            <h3 className="font-extrabold text-slate-100 text-base">Swap Meal</h3>
+            <p className="text-slate-500 text-xs mt-0.5">{dayName} — replacing <span className="text-brand-400">{meal.name}</span></p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-xs border border-slate-700 rounded-lg px-2 py-1">✕ Cancel</button>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center py-8 gap-3">
+            <Loader2 className="w-8 h-8 text-brand-400 animate-spin" />
+            <p className="text-slate-400 text-xs">Finding a macro-matched replacement…</p>
+          </div>
+        ) : replacement ? (
+          <div className="space-y-4 overflow-y-auto py-4 pr-2">
+            <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 space-y-3">
+              <h4 className="font-bold text-slate-100 text-sm">{replacement.name}</h4>
+              <ul className="space-y-1">
+                {replacement.ingredients?.map((ing, i) => (
+                  <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
+                    <ChevronRight className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                    {ing}
+                  </li>
+                ))}
+              </ul>
+              {replacement.prep && (
+                <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2">
+                  {replacement.prep}
+                </p>
+              )}
+              {replacement.whyThisMeal && (
+                <p className="text-[10px] text-emerald-400 leading-relaxed">{replacement.whyThisMeal}</p>
+              )}
+              <div className="flex gap-3 text-[10px] font-bold bg-slate-950/60 px-3 py-2 rounded-xl border border-slate-800">
+                <span className="text-white">{replacement.calories} kcal</span>
+                <span className="text-blue-400">P: {replacement.macros?.protein}g</span>
+                <span className="text-emerald-400">C: {replacement.macros?.carbs}g</span>
+                <span className="text-amber-400">F: {replacement.macros?.fat}g</span>
+              </div>
+            </div>
+            <div className="flex gap-2 sticky bottom-0 bg-slate-900 pt-2">
+              <button onClick={fetchReplacement} className="flex-1 py-2.5 text-xs font-semibold border border-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors">
+                Try Another
+              </button>
+              <button
+                onClick={handleUse}
+                disabled={saving}
+                className="flex-1 py-2.5 text-xs font-semibold bg-gradient-to-r from-brand-600 to-emerald-600 text-white rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                {saving ? 'Saving…' : 'Use This Meal'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ClientPlanPreview({ plan, dayIdx, setDayIdx, onSwapMeal }) {
   const { workoutPlan, nutritionPlan, weeklyMealPlan } = plan || {};
   const days = workoutPlan?.days || [];
   const mealDays = weeklyMealPlan || [];
@@ -163,8 +258,18 @@ function ClientPlanPreview({ plan, dayIdx, setDayIdx }) {
             <div className="space-y-1.5">
               {mealDay.meals.map((meal, i) => (
                 <div key={i} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800/60 pb-1.5 last:border-0">
-                  <span className="text-slate-300 font-medium">{meal.name}</span>
-                  <span className="text-slate-500 shrink-0">{meal.calories} kcal</span>
+                  <span className="text-slate-300 font-medium min-w-0 truncate">{meal.name}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className="text-slate-500">{meal.calories} kcal</span>
+                    {onSwapMeal && (
+                      <button
+                        onClick={() => onSwapMeal({ meal, dayIdx, mealIdx: i })}
+                        className="flex items-center gap-1 px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[9px] font-semibold rounded-md transition-all"
+                      >
+                        <Shuffle className="w-2.5 h-2.5" />Swap
+                      </button>
+                    )}
+                  </span>
                 </div>
               ))}
             </div>
@@ -194,6 +299,7 @@ function ActiveClientDetails({ clientUid }) {
   const [planDayIdx, setPlanDayIdx] = useState(0);
   const [mealRequests, setMealRequests] = useState([]);
   const [resolvingId, setResolvingId] = useState(null);
+  const [swapRequest, setSwapRequest] = useState(null); // { meal, dayIdx, mealIdx }
 
   useEffect(() => {
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
@@ -250,6 +356,17 @@ function ActiveClientDetails({ clientUid }) {
       body: JSON.stringify({ clientUid, ...payload }),
     });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to save');
+  };
+
+  const handleSwapMeal = async (replacement) => {
+    if (!swapRequest) return;
+    const updatedWeeklyMealPlan = (currentPlan?.weeklyMealPlan || []).map((day, dIdx) =>
+      dIdx === swapRequest.dayIdx
+        ? { ...day, meals: day.meals.map((m, mIdx) => (mIdx === swapRequest.mealIdx ? { ...replacement } : m)) }
+        : day
+    );
+    await saveToClient({ plan: { weeklyMealPlan: updatedWeeklyMealPlan } });
+    toast.success('Meal swapped!');
   };
 
   const handleGeneratePlan = async (scope = 'both') => {
@@ -384,7 +501,7 @@ function ActiveClientDetails({ clientUid }) {
       </div>
 
       {showPlan && currentPlan && (
-        <ClientPlanPreview plan={currentPlan} dayIdx={planDayIdx} setDayIdx={setPlanDayIdx} />
+        <ClientPlanPreview plan={currentPlan} dayIdx={planDayIdx} setDayIdx={setPlanDayIdx} onSwapMeal={setSwapRequest} />
       )}
 
       {mealRequests.length > 0 && (
@@ -475,6 +592,18 @@ function ActiveClientDetails({ clientUid }) {
         </div>
       ) : null}
     </div>
+
+    {swapRequest && (
+      <TrainerSwapModal
+        meal={swapRequest.meal}
+        dayName={currentPlan?.weeklyMealPlan?.[swapRequest.dayIdx]?.dayName || `Day ${swapRequest.dayIdx + 1}`}
+        profile={profile}
+        analysis={analysis}
+        callAI={callAI}
+        onSwap={handleSwapMeal}
+        onClose={() => setSwapRequest(null)}
+      />
+    )}
     </div>
   );
 }

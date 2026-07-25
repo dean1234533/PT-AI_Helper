@@ -9,8 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
 import { enrichMealPlanWithUSDA } from '../utils/usda';
 import { downloadWorkoutPDF, downloadNutritionPDF } from '../utils/pdfExport';
-import { parseAIJson } from '../utils/json';
-import { generateFullPlan } from '../utils/planGeneration';
+import { generateFullPlan, generateMealSwap } from '../utils/planGeneration';
 import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
@@ -83,39 +82,7 @@ function SwapModal({ meal, dayName, onSwap, onClose, callAI, profile, analysis }
   const fetchReplacement = async () => {
     setLoading(true);
     try {
-      const avoidNames = [meal.name, ...attemptedNames].filter(Boolean);
-      const prompt = `
-You are a sports dietitian. Suggest a single meal replacement for "${meal.name}" that matches these macros:
-- Calories: ~${meal.usdaCalories ?? meal.calories} kcal
-- Protein: ~${meal.usdaProtein ?? meal.macros?.protein}g
-- Carbs: ~${meal.usdaCarbs ?? meal.macros?.carbs}g
-- Fat: ~${meal.usdaFat ?? meal.macros?.fat}g
-- Body type: ${analysis?.bodyType || 'balanced'}
-- Goal: ${profile.goal}
-- Dietary restrictions: ${profile.dietaryRestrictions || 'none'}
-- Allergies: ${profile.allergies?.join(', ') || 'none'}
-- Dislikes: ${profile.foodsDisliked || 'none'}
-- Do not suggest any of these meals again: ${avoidNames.join(', ') || 'none'}
-
-Rules:
-- Keep calories within 15% of the target.
-- Keep protein within 10g of the target.
-- Use realistic UK-friendly foods.
-- Include gram/ml weights for every ingredient.
-- Include prep and whyThisMeal.
-
-Return ONLY a valid JSON object:
-{
-  "name": "Meal name",
-  "time": "${meal.time || 'Same time'}",
-  "calories": 500,
-  "macros": { "protein": 40, "carbs": 55, "fat": 12 },
-  "ingredients": ["150g ingredient with weight", "2 eggs"],
-  "prep": "How to prepare this meal.",
-  "whyThisMeal": "Why this replacement fits the user's goal."
-}`;
-      const text = await callAI(prompt);
-      const nextReplacement = parseAIJson(text);
+      const nextReplacement = await generateMealSwap(meal, profile, analysis, attemptedNames, callAI);
       setReplacement(nextReplacement);
       setAttemptedNames((current) => [...current, nextReplacement.name].filter(Boolean));
     } catch (err) {
