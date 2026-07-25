@@ -633,13 +633,13 @@ export default function Clients() {
               { label: 'Awaiting Signup', value: stats.invited, Icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
               { label: 'Active', value: stats.active, Icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
             ].map(({ label, value, Icon, color, bg }) => (
-              <div key={label} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
-                  <p className="text-2xl font-black text-slate-100 mt-1">{value}</p>
+              <div key={label} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-2 overflow-hidden">
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold truncate">{label}</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-100 mt-1">{value}</p>
                 </div>
-                <div className={`p-2.5 rounded-xl border ${bg}`}>
-                  <Icon className={`w-5 h-5 ${color}`} />
+                <div className={`p-2 sm:p-2.5 rounded-xl border shrink-0 ${bg}`}>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${color}`} />
                 </div>
               </div>
             ))}
