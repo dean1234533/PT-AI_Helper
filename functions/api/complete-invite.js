@@ -34,7 +34,10 @@ export async function onRequestPost(ctx) {
     const normalizedEmail = email?.trim().toLowerCase();
     const match = clients.find((doc) => {
       const f = doc.fields || {};
-      if (f.status?.stringValue !== 'invited') return false;
+      // Not already linked to a different account. Covers the new invite
+      // flow ('invited') and legacy manually-added client records that
+      // predate the invite system entirely (no status field at all).
+      if (f.status?.stringValue === 'active' || f.clientUid?.stringValue) return false;
       if (inviteToken) return f.inviteToken?.stringValue === inviteToken;
       return f.email?.stringValue?.trim().toLowerCase() === normalizedEmail;
     });
