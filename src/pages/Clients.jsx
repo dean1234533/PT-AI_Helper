@@ -26,6 +26,11 @@ import SEO from '../components/SEO';
 
 const db = getFirestore(app);
 
+// Hardcoded rather than window.location.origin so invite links always point
+// at the canonical domain, even if the trainer is browsing from an old
+// bookmark/PWA shortcut still pointing at a previous Pages domain.
+const APP_ORIGIN = 'https://app.dbworkouts.co.uk';
+
 const CHECKIN_FREQUENCY_PRESETS = [
   { label: 'Weekly', days: 7 },
   { label: 'Every 2 weeks', days: 14 },
@@ -949,7 +954,7 @@ export default function Clients() {
       createdAt: new Date().toISOString(),
     });
 
-    const inviteUrl = `${window.location.origin}/#/register?invite=${inviteToken}`;
+    const inviteUrl = `${APP_ORIGIN}/#/register?invite=${inviteToken}`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
@@ -977,7 +982,7 @@ export default function Clients() {
   };
 
   const handleCopyLink = async (client) => {
-    const inviteUrl = `${window.location.origin}/#/register?invite=${client.inviteToken}`;
+    const inviteUrl = `${APP_ORIGIN}/#/register?invite=${client.inviteToken}`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast.success(`Invite link copied for ${client.name}`);
