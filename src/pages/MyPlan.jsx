@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useProfile } from '../hooks/useProfile';
 import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
@@ -13,9 +15,64 @@ import {
   Sparkles, Dumbbell, Apple, Download, RefreshCw, Loader2,
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
   Shuffle, ChevronDown, ChevronUp, Leaf, Flame, Zap, Beef,
-  FileText, CheckCircle, ArrowLeft, Moon, Droplets, FlaskConical
+  FileText, CheckCircle, ArrowLeft, Moon, Droplets, FlaskConical,
+  MessageSquarePlus, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// ─── Suggest a meal change modal ─────────────────────────────────────────────
+function MealRequestModal({ meal, dayName, onSubmit, onClose }) {
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!message.trim()) return;
+    setSaving(true);
+    try {
+      await onSubmit(message.trim());
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-extrabold text-slate-100 text-lg">Suggest a change</h3>
+            <p className="text-xs text-slate-500 mt-1">{dayName} — {meal?.name}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors shrink-0">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="e.g. Can I swap this for something without dairy? / I don't like salmon, can we change this?"
+          rows={4}
+          className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-100 text-sm outline-none transition-all resize-none"
+        />
+        <p className="text-[11px] text-slate-500">Your trainer will see this and update your plan.</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 border border-slate-700 text-slate-400 hover:text-white rounded-xl text-sm font-semibold transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!message.trim() || saving}
+            className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquarePlus className="w-4 h-4" />}
+            {saving ? 'Sending…' : 'Send to Trainer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Meal swap modal ─────────────────────────────────────────────────────────
 function SwapModal({ meal, dayName, onSwap, onClose, callAI, profile, analysis }) {
@@ -227,7 +284,7 @@ function TimedSteps({ steps, fallback }) {
 }
 
 // ─── Meal card ───────────────────────────────────────────────────────────────
-function MealCard({ meal, onSwap }) {
+function MealCard({ meal, onSwap, onRequestChange }) {
   const [showIngredients, setShowIngredients] = useState(false);
   const cal    = meal.usdaCalories  ?? meal.calories;
   const prot   = meal.usdaProtein   ?? meal.macros?.protein;
@@ -259,6 +316,14 @@ function MealCard({ meal, onSwap }) {
             className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[10px] font-semibold rounded-xl transition-all shrink-0"
           >
             <Shuffle className="w-3 h-3" />Swap
+          </button>
+        )}
+        {onRequestChange && (
+          <button
+            onClick={() => onRequestChange(meal)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[10px] font-semibold rounded-xl transition-all shrink-0"
+          >
+            <MessageSquarePlus className="w-3 h-3" />Suggest change
           </button>
         )}
       </div>
@@ -449,6 +514,34 @@ export default function MyPlan() {
   const [exporting, setExporting] = useState('');
   const [error, setError] = useState(null);
   const [swapMeal, setSwapMeal] = useState(null); // { meal, dayIdx }
+  const [requestMeal, setRequestMeal] = useState(null); // { meal, dayName }
+
+  const submitMealRequest = async (message) => {
+    if (!user || !requestMeal) return;
+    await addDoc(collection(db, 'users', user.uid, 'mealRequests'), {
+      dayName: requestMeal.dayName,
+      mealName: requestMeal.meal?.name || '',
+      message,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    });
+    if (profile?.trainerId) {
+      fetch('/api/notify-trainer-mealrequest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trainerId: profile.trainerId,
+          trainerEmail: profile.trainerEmail,
+          trainerName: profile.trainerName,
+          clientName: profile.name,
+          dayName: requestMeal.dayName,
+          mealName: requestMeal.meal?.name || '',
+          message,
+        }),
+      }).catch(() => {});
+    }
+    toast.success('Sent to your trainer!');
+  };
 
   // ── Generate full plan ──────────────────────────────────────────────────────
   const generatePlan = async () => {
@@ -858,6 +951,7 @@ export default function MyPlan() {
                       key={mIdx}
                       meal={meal}
                       onSwap={isManagedClient ? undefined : (m) => setSwapMeal({ meal: m, dayIdx: activeNutDayIdx, mealIdx: mIdx })}
+                      onRequestChange={isManagedClient ? (m) => setRequestMeal({ meal: m, dayName: todayMealDay.dayName }) : undefined}
                     />
                   ))}
                 </div>
@@ -922,6 +1016,16 @@ export default function MyPlan() {
           callAI={callAI}
           profile={profile}
           analysis={analysis}
+        />
+      )}
+
+      {/* Suggest a meal change modal */}
+      {requestMeal && (
+        <MealRequestModal
+          meal={requestMeal.meal}
+          dayName={requestMeal.dayName}
+          onSubmit={submitMealRequest}
+          onClose={() => setRequestMeal(null)}
         />
       )}
     </div>

@@ -192,6 +192,8 @@ function ActiveClientDetails({ clientUid }) {
   const [showScopeMenu, setShowScopeMenu] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
   const [planDayIdx, setPlanDayIdx] = useState(0);
+  const [mealRequests, setMealRequests] = useState([]);
+  const [resolvingId, setResolvingId] = useState(null);
 
   useEffect(() => {
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
@@ -207,8 +209,31 @@ function ActiveClientDetails({ clientUid }) {
     const unsubCheckIns = onSnapshot(q, (snap) => {
       setCheckIns(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-    return () => { unsubProfile(); unsubAnalysis(); unsubPlan(); unsubCheckIns(); };
+    const mrQuery = query(collection(db, 'users', clientUid, 'mealRequests'), where('status', '==', 'pending'));
+    const unsubMealRequests = onSnapshot(mrQuery, (snap) => {
+      const requests = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setMealRequests(requests);
+    });
+    return () => { unsubProfile(); unsubAnalysis(); unsubPlan(); unsubCheckIns(); unsubMealRequests(); };
   }, [clientUid]);
+
+  const handleResolveMealRequest = async (requestId) => {
+    setResolvingId(requestId);
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/resolve-meal-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ clientUid, requestId }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to resolve');
+    } catch (err) {
+      toast.error(err.message || 'Failed to resolve request');
+    } finally {
+      setResolvingId(null);
+    }
+  };
 
   const latest = checkIns[0] || null;
   const previousCheckIn = checkIns[1] || null;
@@ -360,6 +385,32 @@ function ActiveClientDetails({ clientUid }) {
 
       {showPlan && currentPlan && (
         <ClientPlanPreview plan={currentPlan} dayIdx={planDayIdx} setDayIdx={setPlanDayIdx} />
+      )}
+
+      {mealRequests.length > 0 && (
+        <div className="bg-amber-950/20 border border-amber-900/30 rounded-xl p-4 space-y-3">
+          <p className="text-[10px] text-amber-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+            <MessageSquarePlus className="w-3.5 h-3.5" /> Meal Change Requests ({mealRequests.length})
+          </p>
+          {mealRequests.map((req) => (
+            <div key={req.id} className="flex items-start justify-between gap-3 bg-slate-950/40 border border-slate-800 rounded-lg p-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-slate-200">
+                  {req.dayName}{req.dayName && req.mealName ? ' — ' : ''}{req.mealName}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">{req.message}</p>
+              </div>
+              <button
+                onClick={() => handleResolveMealRequest(req.id)}
+                disabled={resolvingId === req.id}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 text-emerald-400 hover:text-emerald-300 text-[10px] font-semibold rounded-lg transition-all shrink-0 disabled:opacity-50"
+              >
+                {resolvingId === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                Resolved
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
