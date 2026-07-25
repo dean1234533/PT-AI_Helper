@@ -87,7 +87,7 @@ async function callProvider(provider, key, systemPrompt, userText, photoUrl, cfE
   };
 
   if (provider.name === 'OpenRouter') {
-    headers['HTTP-Referer'] = cfEnv.APP_URL || 'https://dbs-app.pages.dev';
+    headers['HTTP-Referer'] = cfEnv.APP_URL || 'https://app.dbworkouts.co.uk';
     headers['X-Title'] = "DB's AI";
   }
 
