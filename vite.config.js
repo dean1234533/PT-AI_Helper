@@ -10,8 +10,8 @@ export default defineConfig({
       injectRegister: null,
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: "DB's AI",
-        short_name: "DB's AI",
+        name: "DB's Workouts",
+        short_name: "DB's Workouts",
         description: 'AI-powered nutrition and workout plans',
         start_url: '/',
         display: 'standalone',

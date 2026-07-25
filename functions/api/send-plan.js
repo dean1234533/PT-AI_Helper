@@ -163,7 +163,7 @@ function buildEmailHtml({ clientName, trainerNotes, plan }) {
     </div>
 
     <div style="text-align:center;padding:20px">
-      <p style="font-size:12px;color:#9ca3af;margin:0">This plan was created with DB's AI. Please consult your trainer with any questions.</p>
+      <p style="font-size:12px;color:#9ca3af;margin:0">This plan was created with DB's Workouts. Please consult your trainer with any questions.</p>
     </div>
   </div>
 </body>
@@ -201,7 +201,7 @@ export async function onRequestPost(ctx) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || "DB's AI <onboarding@resend.dev>",
+        from: env.RESEND_FROM_EMAIL || "DB's Workouts <onboarding@resend.dev>",
         to: [clientEmail],
         subject: `Your Personalised Fitness & Nutrition Plan — ${clientName}`,
         html,

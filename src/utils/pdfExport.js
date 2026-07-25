@@ -49,7 +49,7 @@ function addPageHeader(doc, centerText, pageNum, palette) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   stc(doc, C.accentLight);
-  doc.text("DB's AI", 10, 10);
+  doc.text("DB's Workouts", 10, 10);
 
   stc(doc, C.midGrey);
   doc.setFont('helvetica', 'normal');
@@ -94,7 +94,7 @@ function drawCoverPage(doc, title, subtitle, profile, palette) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   stc(doc, C.accentLight);
-  doc.text("DB's AI", 20, 20);
+  doc.text("DB's Workouts", 20, 20);
 
   // Title
   const midY = H / 2 - 30;
@@ -127,7 +127,7 @@ function drawCoverPage(doc, title, subtitle, profile, palette) {
   doc.line(20, H - 20, W - 20, H - 20);
   doc.setFontSize(8);
   stc(doc, C.midGrey);
-  doc.text("Powered by DB's AI · AI-generated personalised training", 20, H - 12);
+  doc.text("Powered by DB's Workouts · Personalised training & nutrition", 20, H - 12);
 }
 
 function formatSteps(steps, fallback) {

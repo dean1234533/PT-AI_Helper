@@ -72,7 +72,7 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:#9ca3af;padding:0 20px">
-      This check-in was sent by ${trainerName} via DB's AI. Your responses are private and go directly to your trainer.
+      This check-in was sent by ${trainerName} via DB's Workouts. Your responses are private and go directly to your trainer.
     </p>
   </div>
 </body>
@@ -134,7 +134,7 @@ export async function onRequestPost(ctx) {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || "DB's AI <onboarding@resend.dev>",
+        from: env.RESEND_FROM_EMAIL || "DB's Workouts <onboarding@resend.dev>",
         to: [clientEmail],
         reply_to: trainerEmail,
         subject: `Quick check-in from ${trainerName} — how are you getting on? 💪`,

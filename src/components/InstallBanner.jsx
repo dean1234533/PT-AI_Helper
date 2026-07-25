@@ -69,7 +69,7 @@ export default function InstallBanner() {
             <Download className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0 pr-4">
-            <p className="font-bold text-white text-sm">Install DB's AI</p>
+            <p className="font-bold text-white text-sm">Install DB's Workouts</p>
             <p className="text-slate-400 text-xs mt-0.5">
               Add to your home screen for the full app experience — works offline too.
             </p>

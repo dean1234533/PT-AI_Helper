@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useGemini } from '../contexts/GeminiContext';
 import {
@@ -25,6 +26,7 @@ import SEO from '../components/SEO';
 export default function BodyAnalysis() {
   const navigate = useNavigate();
   const { profile, saveProfile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { analysis, saveAnalysis } = usePlans();
   const { callAI } = useGemini();
   const [loading, setLoading] = useState(false);
@@ -125,9 +127,9 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
       console.error(err);
       const msg = err.message || '';
       if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('settings')) {
-        setError('Your AI key needs to be set up. Please go to Settings and add your API key.');
+        setError(isManagedClient ? 'Something needs to be set up — please contact your trainer.' : 'Your AI key needs to be set up. Please go to Settings and add your API key.');
       } else if (msg.toLowerCase().includes('busy') || msg.toLowerCase().includes('rate')) {
-        setError('The AI service is busy right now. Please wait a moment and try again.');
+        setError(isManagedClient ? 'The service is busy right now. Please wait a moment and try again.' : 'The AI service is busy right now. Please wait a moment and try again.');
       } else {
         setError('We couldn\'t complete the analysis right now. Please try again.');
       }
@@ -155,7 +157,9 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
               Analyzing Body Type & Metrics
             </h2>
             <p className="text-slate-400 text-sm mt-2">
-              Gemini AI is examining your height, weight, goals, and photo to formulate your custom bio-blueprint...
+              {isManagedClient
+                ? "Your trainer's process is examining your height, weight, goals, and photo to formulate your custom bio-blueprint..."
+                : 'Gemini AI is examining your height, weight, goals, and photo to formulate your custom bio-blueprint...'}
             </p>
           </div>
           <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl text-left text-xs text-slate-500">
@@ -214,10 +218,12 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
         <div className="border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              Your AI Bio-Blueprint
+              {isManagedClient ? 'Your Bio-Blueprint' : 'Your AI Bio-Blueprint'}
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              Gemini Vision & metrics evaluation: somatic diagnosis and baseline metrics.
+              {isManagedClient
+                ? "Your trainer's evaluation: somatic diagnosis and baseline metrics."
+                : 'Gemini Vision & metrics evaluation: somatic diagnosis and baseline metrics.'}
             </p>
           </div>
           <button
@@ -236,7 +242,9 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
             Full Body Photo (Recommended)
           </h3>
           <p className="text-slate-500 text-xs mb-4">
-            Upload a full body photo so Gemini Vision can visually confirm your body type. A front-facing, full-length photo in fitted clothing gives the most accurate result.
+            {isManagedClient
+              ? "Upload a full body photo so your trainer's process can visually confirm your body type. A front-facing, full-length photo in fitted clothing gives the most accurate result."
+              : 'Upload a full body photo so Gemini Vision can visually confirm your body type. A front-facing, full-length photo in fitted clothing gives the most accurate result.'}
           </p>
           <div className="flex items-center gap-6">
             {imagePreview ? (
@@ -267,7 +275,7 @@ Ensure the protein, carbs, and fat values in "macros" sum up to exactly 100. Pro
             <div className="space-y-2 text-xs text-slate-400">
               <p>• Stand facing the camera, arms slightly away from body</p>
               <p>• Use good lighting — natural light works best</p>
-              <p>• Fitted clothing helps the AI assess your build accurately</p>
+              <p>• {isManagedClient ? 'Fitted clothing helps ensure an accurate assessment' : 'Fitted clothing helps the AI assess your build accurately'}</p>
               <p>• JPG or PNG, max 5MB</p>
               <p className="text-brand-400 font-semibold">Your photo is only stored locally on your device — never uploaded to any server.</p>
             </div>

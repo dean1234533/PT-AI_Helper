@@ -137,7 +137,7 @@ export default function ResetPassword() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
             <Dumbbell className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">DB's AI</h1>
+          <h1 className="text-2xl font-bold text-white">DB's Workouts</h1>
           <p className="text-white/45 mt-1 text-sm">Reset your password</p>
         </div>
 

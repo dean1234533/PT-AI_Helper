@@ -23,7 +23,7 @@ messaging.onBackgroundMessage((payload) => {
     ? { title: payload.notification.title, body: payload.notification.body, url: payload.data?.url }
     : { title: payload.data?.title, body: payload.data?.body, url: payload.data?.url };
 
-  self.registration.showNotification(title || "DB's AI", {
+  self.registration.showNotification(title || "DB's Workouts", {
     body: body || '',
     icon: '/icon-192.png',
     badge: '/icon-192.png',

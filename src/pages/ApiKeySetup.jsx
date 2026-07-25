@@ -44,7 +44,7 @@ export default function ApiKeySetup() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
             <Dumbbell className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">DB's AI</h1>
+          <h1 className="text-2xl font-bold text-white">DB's Workouts</h1>
           <p className="text-white/45 mt-1 text-sm">Step 1 of 2 — Connect AI</p>
         </div>
 
@@ -56,7 +56,7 @@ export default function ApiKeySetup() {
             <h2 className="text-xl font-bold text-white">Add Your Gemini API Key</h2>
           </div>
           <p className="text-white/45 text-sm mb-6">
-            DB's AI uses Google Gemini to analyze your body type and generate personalized plans. Your key is stored securely on your device only.
+            DB's Workouts uses Google Gemini to analyze your body type and generate personalized plans. Your key is stored securely on your device only.
           </p>
 
           <div className="bg-white/4 border border-white/8 rounded-xl p-4 mb-6 space-y-2">

@@ -45,7 +45,7 @@ function buildCallInviteEmail({ clientName, trainerName, videoCallLink, callNote
     <p style="font-size:13px;color:#166534;margin:0">💪 <strong>Keep up the great work</strong> — your trainer is here to support you every step of the way.</p>
   </div>
 
-  <p style="text-align:center;font-size:12px;color:#9ca3af">DB's AI — Video Call System</p>
+  <p style="text-align:center;font-size:12px;color:#9ca3af">DB's Workouts — Video Call System</p>
 </div>
 </body></html>`;
 }

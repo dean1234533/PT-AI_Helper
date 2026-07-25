@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useAuth } from '../contexts/AuthContext';
 import { useGemini } from '../contexts/GeminiContext';
@@ -83,7 +84,7 @@ Return ONLY a valid JSON object:
         {loading ? (
           <div className="flex flex-col items-center py-8 gap-3">
             <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-            <p className="text-slate-400 text-xs">AI is finding a macro-matched replacement…</p>
+            <p className="text-slate-400 text-xs">{profile?.trainerId ? 'Finding a macro-matched replacement…' : 'AI is finding a macro-matched replacement…'}</p>
           </div>
         ) : replacement ? (
           <div className="space-y-4 overflow-y-auto py-4 pr-2 custom-scrollbar">
@@ -433,6 +434,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 export default function MyPlan() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { currentPlan, savePlan, analysis, loading: plansLoading } = usePlans();
   const { callAI } = useGemini();
   const { user } = useAuth();
@@ -615,9 +617,9 @@ Rules:
       console.error(err);
       const msg = err.message || '';
       if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('settings')) {
-        setError('Your AI key needs to be set up. Please go to Settings and add your API key.');
+        setError(isManagedClient ? 'Something needs to be set up — please contact your trainer.' : 'Your AI key needs to be set up. Please go to Settings and add your API key.');
       } else if (msg.toLowerCase().includes('busy') || msg.toLowerCase().includes('rate') || msg.toLowerCase().includes('unavailable')) {
-        setError('The AI service is busy right now. Please wait a moment and try again.');
+        setError(isManagedClient ? 'The service is busy right now. Please wait a moment and try again.' : 'The AI service is busy right now. Please wait a moment and try again.');
       } else {
         setError('We couldn\'t generate your plan right now. Please try again.');
       }
@@ -691,7 +693,7 @@ Rules:
               Generating Your 7-Day Plan
             </h2>
             <p className="text-slate-400 text-sm mt-2">
-              AI is calibrating workouts, progressive overload, and 7 days of personalised meals…
+              {isManagedClient ? 'Calibrating' : 'AI is calibrating'} workouts, progressive overload, and 7 days of personalised meals…
             </p>
           </div>
         </div>

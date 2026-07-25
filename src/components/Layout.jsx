@@ -11,7 +11,7 @@ import AIChat from './AIChat';
 import InstallBanner from './InstallBanner';
 import WorkoutReminder from './WorkoutReminder';
 
-const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20PT%20AI%20Helper%20app';
+const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20DB%27s%20Workouts%20app';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -49,7 +49,7 @@ function Sidebar({ onClose }) {
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="DB's Workouts" className="w-10 h-10 rounded-xl object-contain shrink-0" />
           <div>
-            <p className="text-white font-bold text-sm leading-tight">DB's AI</p>
+            <p className="text-white font-bold text-sm leading-tight">DB's Workouts</p>
             <p className="text-white/40 text-xs">Personal Trainer</p>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function Layout({ children }) {
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="DB's Workouts" className="w-8 h-8 rounded-lg object-contain" />
-            <span className="font-bold text-white text-sm">DB's AI</span>
+            <span className="font-bold text-white text-sm">DB's Workouts</span>
           </div>
           <button
             onClick={() => window.history.back()}

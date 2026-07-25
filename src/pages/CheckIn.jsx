@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useGemini } from '../contexts/GeminiContext';
@@ -30,6 +31,7 @@ import SEO from '../components/SEO';
 export default function CheckIn() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { currentPlan, savePlan, analysis } = usePlans();
   const { checkIns, saveCheckIn, latestCheckIn } = useCheckIns();
   const { callAI } = useGemini();
@@ -328,7 +330,9 @@ Rules:
       } catch {
         result = {
           motivationalMessage: '',
-          adjustments: 'Check-in saved. The AI plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.',
+          adjustments: isManagedClient
+            ? 'Check-in saved. Your plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.'
+            : 'Check-in saved. The AI plan update was incomplete, so your current plan was kept unchanged. Use Regenerate on the plan page if you want a fresh full plan.',
           workoutDayAdjustments: [],
           mealAdjustments: [],
         };
@@ -627,7 +631,11 @@ Rules:
                   )}
                   <div className="text-xxs text-slate-500">
                     <p className="font-semibold text-slate-400">Track visual gains</p>
-                    <p className="mt-0.5">Gemini uses this image to cross-examine bodyfat ratios and adjust training.</p>
+                    <p className="mt-0.5">
+                      {isManagedClient
+                        ? 'Your trainer uses this image to track visual changes and adjust your plan.'
+                        : 'Gemini uses this image to cross-examine bodyfat ratios and adjust training.'}
+                    </p>
                   </div>
                 </div>
               </div>

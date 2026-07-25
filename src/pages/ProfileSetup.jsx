@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
@@ -76,6 +77,7 @@ export default function ProfileSetup() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, saveProfile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { user, deleteAccount } = useAuth();
   const { clearPlans } = usePlans();
   const { clearCheckIns } = useCheckIns();
@@ -310,7 +312,9 @@ export default function ProfileSetup() {
             <p className="text-slate-400 text-sm mt-1">
               {isEditMode
                 ? 'Keep your personal statistics and nutrition preferences up to date'
-                : 'Help Gemini customize your workouts, macro distributions, and diets'}
+                : isManagedClient
+                  ? "Help your trainer customize your workouts, macro distributions, and diets"
+                  : 'Help Gemini customize your workouts, macro distributions, and diets'}
             </p>
           </div>
           {isEditMode && (
@@ -780,9 +784,11 @@ export default function ProfileSetup() {
               <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800/60 flex gap-4">
                 <AlertCircle className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-400 space-y-1">
-                  <h4 className="font-semibold text-slate-200">Optional: AI Body Type Vision Analysis</h4>
+                  <h4 className="font-semibold text-slate-200">Optional: Body Type Photo Analysis</h4>
                   <p>
-                    Uploading a clear, full-body photo allows Gemini Vision to identify your body structure (ectomorph, mesomorph, endomorph, or combination) to perfectly calibrate your dietary plans, macro proportions, and timelines.
+                    {isManagedClient
+                      ? "Uploading a clear, full-body photo helps your trainer identify your body structure (ectomorph, mesomorph, endomorph, or combination) to perfectly calibrate your dietary plans, macro proportions, and timelines."
+                      : 'Uploading a clear, full-body photo allows Gemini Vision to identify your body structure (ectomorph, mesomorph, endomorph, or combination) to perfectly calibrate your dietary plans, macro proportions, and timelines.'}
                   </p>
                   <p className="text-[10px] text-brand-400/80">
                     Your photo is processed locally in your browser and saved to your device's local storage. No data is sent to external databases.

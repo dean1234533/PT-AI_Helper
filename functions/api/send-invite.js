@@ -36,7 +36,7 @@ function buildInviteEmail({ clientName, trainerName, inviteUrl }) {
         <p style="font-size:12px;color:#9ca3af;margin:12px 0 0">Or paste: <span style="color:#2563eb">${inviteUrl}</span></p>
       </div>
     </div>
-    <p style="text-align:center;font-size:12px;color:#9ca3af;padding:0 20px">Sent by ${trainer} via DB's AI.</p>
+    <p style="text-align:center;font-size:12px;color:#9ca3af;padding:0 20px">Sent by ${trainer} via DB's Workouts.</p>
   </div>
 </body>
 </html>`;
@@ -74,9 +74,9 @@ export async function onRequestPost(ctx) {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || "DB's AI <onboarding@resend.dev>",
+        from: env.RESEND_FROM_EMAIL || "DB's Workouts <onboarding@resend.dev>",
         to: [clientEmail],
-        subject: `${trainerName || 'Your trainer'} invited you to DB's AI 💪`,
+        subject: `${trainerName || 'Your trainer'} invited you to DB's Workouts 💪`,
         html,
       }),
     });

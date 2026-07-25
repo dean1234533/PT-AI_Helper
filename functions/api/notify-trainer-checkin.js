@@ -48,7 +48,7 @@ function buildEmail({ trainerName, clientName, checkinData }) {
       <p style="font-size:14px;color:#4338ca;font-weight:600;margin:0">Log in to review their full history and progress photo.</p>
     </div>
   </div>
-  <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:16px">DB's AI — Check-in System</p>
+  <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:16px">DB's Workouts — Check-in System</p>
 </div>
 </body></html>`;
 }
@@ -87,7 +87,7 @@ export async function onRequestPost(ctx) {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: env.RESEND_FROM_EMAIL || "DB's AI <onboarding@resend.dev>",
+        from: env.RESEND_FROM_EMAIL || "DB's Workouts <onboarding@resend.dev>",
         to: [trainerEmail],
         subject: `${clientName} has checked in 📬`,
         html,

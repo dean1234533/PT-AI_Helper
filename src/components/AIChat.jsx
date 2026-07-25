@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Trash2, Bot, User, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useGemini } from '../contexts/GeminiContext';
 import { useProfile } from '../hooks/useProfile';
+import { useIsManagedClient } from '../hooks/useIsManagedClient';
 import { usePlans } from '../hooks/usePlans';
 import { useCheckIns } from '../hooks/useCheckIns';
 import { useChat } from '../hooks/useChat';
@@ -74,6 +75,7 @@ export default function AIChat() {
 
   const { callAI } = useGemini();
   const { profile } = useProfile();
+  const isManagedClient = useIsManagedClient();
   const { currentPlan, analysis } = usePlans();
   const { latestCheckIn } = useCheckIns();
   const { messages, addMessage, clearHistory } = useChat();
@@ -191,7 +193,7 @@ export default function AIChat() {
       addMessage('assistant', reply.trim());
     } catch (err) {
       const isKeyError = err.message?.toLowerCase().includes('api key') || err.message?.toLowerCase().includes('settings');
-      addMessage('assistant', isKeyError
+      addMessage('assistant', isKeyError && !isManagedClient
         ? 'I need an API key to work. Please add your Gemini API key in Settings.'
         : 'Sorry, I had trouble connecting right now. Please try again in a moment.');
     } finally {
@@ -217,7 +219,7 @@ export default function AIChat() {
             ? 'bg-gray-700 rotate-0 scale-90'
             : 'bg-gradient-to-br from-brand-500 to-brand-700 hover:scale-110'
         }`}
-        aria-label="Toggle AI Chat"
+        aria-label="Toggle coach chat"
       >
         {open ? <X className="w-5 h-5 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
         {!open && messages.length === 0 && (
@@ -235,7 +237,7 @@ export default function AIChat() {
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-white font-semibold text-sm">DB's AI Coach</p>
+                <p className="text-white font-semibold text-sm">DB's Workouts Coach</p>
                 <p className="text-brand-200 text-xs">Ask me anything about your plan</p>
               </div>
             </div>
@@ -271,7 +273,7 @@ export default function AIChat() {
                 <div className="text-center py-10 animate-fade-in">
                   <Bookmark className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-gray-500">No saved notes yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Tap "Save note" under any AI reply</p>
+                  <p className="text-xs text-gray-400 mt-1">Tap "Save note" under any {isManagedClient ? 'reply' : 'AI reply'}</p>
                 </div>
               ) : (
                 <div className="space-y-3 animate-fade-in">
@@ -338,7 +340,7 @@ export default function AIChat() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
                 rows={1}
-                placeholder="Ask your AI coach..."
+                placeholder={isManagedClient ? 'Ask your coach...' : 'Ask your AI coach...'}
                 className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all max-h-24 min-h-[40px]"
                 style={{ height: 'auto' }}
                 onInput={(e) => {

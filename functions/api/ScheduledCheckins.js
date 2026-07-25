@@ -129,7 +129,7 @@ function buildCheckInEmail({ clientName, trainerName, greeting, questions, check
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:#9ca3af;padding:0 20px">
-      Sent by ${trainerName} via DB's AI. Your responses go directly to your trainer.
+      Sent by ${trainerName} via DB's Workouts. Your responses go directly to your trainer.
     </p>
   </div>
 </body>
@@ -171,7 +171,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
     method: 'POST',
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: getenv('RESEND_FROM_EMAIL', env) || "DB's AI <onboarding@resend.dev>",
+      from: getenv('RESEND_FROM_EMAIL', env) || "DB's Workouts <onboarding@resend.dev>",
       to: [email],
       reply_to: trainerEmail,
       subject: `Your weekly check-in from ${trainerName || 'your trainer'} 💪`,
@@ -210,7 +210,7 @@ async function sendReminderToLinkedClient(client, env) {
     method: 'POST',
     headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: getenv('RESEND_FROM_EMAIL', env) || "DB's AI <onboarding@resend.dev>",
+      from: getenv('RESEND_FROM_EMAIL', env) || "DB's Workouts <onboarding@resend.dev>",
       to: [email],
       subject: `Time for your weekly check-in, ${name} 💪`,
       html,

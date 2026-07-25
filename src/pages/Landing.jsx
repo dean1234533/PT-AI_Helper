@@ -34,7 +34,7 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet">
               <Dumbbell className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-lg tracking-tight">DB's AI</span>
+            <span className="font-bold text-lg tracking-tight">DB's Workouts</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
@@ -163,10 +163,10 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-white/5 py-8 text-center text-white/25 text-xs px-4">
-        <p>DB's AI — Personal AI Fitness Coach. Your data is stored locally on your device only.</p>
+        <p>DB's Workouts — Personal Fitness Coaching. Your data is stored locally on your device only.</p>
         <p className="mt-3">
           <a
-            href="https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20PT%20AI%20Helper%20app"
+            href="https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20DB%27s%20Workouts%20app"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[#25D366]/60 hover:text-[#25D366] transition-colors font-medium"

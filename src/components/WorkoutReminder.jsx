@@ -90,7 +90,7 @@ export default function WorkoutReminder() {
       const delay = msUntil(h, m);
       if (delay === 0) return;
       const id = setTimeout(() => {
-        fireNotification("DB's AI — Workout Reminder", pickMessage(name, focus));
+        fireNotification("DB's Workouts — Workout Reminder", pickMessage(name, focus));
       }, delay);
       timersRef.current.push(id);
     });
@@ -120,7 +120,7 @@ export default function WorkoutReminder() {
 
       // Browser notification
       if (Notification.permission === 'granted') {
-        fireNotification("DB's AI — Workout Day!", message);
+        fireNotification("DB's Workouts — Workout Day!", message);
         scheduleReminders(profile.name, todayPlan.focus);
       } else if (
         Notification.permission !== 'denied' &&
@@ -180,7 +180,7 @@ export default function WorkoutReminder() {
             <div className="relative flex items-center gap-3 px-4 py-3 pr-3">
               <Bell className="w-4 h-4 text-violet-400 flex-shrink-0" />
               <p className="flex-1 text-white/80 text-xs leading-snug">
-                Enable notifications so DB's AI can remind you to train throughout the day.
+                Enable notifications so DB's Workouts can remind you to train throughout the day.
               </p>
               <div className="flex gap-2 flex-shrink-0">
                 <button
