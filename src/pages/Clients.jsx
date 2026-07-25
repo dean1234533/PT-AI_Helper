@@ -18,13 +18,22 @@ import {
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
-  doc, query, where, orderBy, limit
+  doc, query, where, orderBy, limit, updateDoc
 } from 'firebase/firestore';
 import app, { auth } from '../firebase/config';
 import toast from 'react-hot-toast';
 import SEO from '../components/SEO';
 
 const db = getFirestore(app);
+
+const CHECKIN_FREQUENCY_PRESETS = [
+  { label: 'Weekly', days: 7 },
+  { label: 'Every 2 weeks', days: 14 },
+  { label: 'Every 4 weeks (Monthly)', days: 28 },
+  { label: 'Every 6 weeks', days: 42 },
+  { label: 'Every 2 months', days: 60 },
+  { label: 'Every 3 months', days: 90 },
+];
 
 function generateInviteToken() {
   return crypto.randomUUID().replace(/-/g, '');
@@ -286,7 +295,7 @@ function ClientPlanPreview({ plan, dayIdx, setDayIdx, onSwapMeal }) {
   );
 }
 
-function ActiveClientDetails({ clientUid }) {
+function ActiveClientDetails({ clientUid, clientDocId }) {
   const { callAI } = useGemini();
   const [profile, setProfile] = useState(null);
   const [checkIns, setCheckIns] = useState([]);
@@ -300,8 +309,20 @@ function ActiveClientDetails({ clientUid }) {
   const [mealRequests, setMealRequests] = useState([]);
   const [resolvingId, setResolvingId] = useState(null);
   const [swapRequest, setSwapRequest] = useState(null); // { meal, dayIdx, mealIdx }
+  const [checkInFrequencyDays, setCheckInFrequencyDays] = useState(7);
+  const [savingFrequency, setSavingFrequency] = useState(false);
+  const [customFrequencyMode, setCustomFrequencyMode] = useState(false);
+  const [customFrequencyDays, setCustomFrequencyDays] = useState('7');
 
   useEffect(() => {
+    setCustomFrequencyMode(!CHECKIN_FREQUENCY_PRESETS.some((p) => p.days === checkInFrequencyDays));
+    setCustomFrequencyDays(String(checkInFrequencyDays));
+  }, [checkInFrequencyDays]);
+
+  useEffect(() => {
+    const unsubClientDoc = onSnapshot(doc(db, 'clients', clientDocId), (snap) => {
+      setCheckInFrequencyDays(snap.exists() ? (snap.data().checkInFrequencyDays || 7) : 7);
+    });
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
       setProfile(snap.exists() ? snap.data() : null);
     });
@@ -321,8 +342,20 @@ function ActiveClientDetails({ clientUid }) {
       requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setMealRequests(requests);
     });
-    return () => { unsubProfile(); unsubAnalysis(); unsubPlan(); unsubCheckIns(); unsubMealRequests(); };
-  }, [clientUid]);
+    return () => { unsubClientDoc(); unsubProfile(); unsubAnalysis(); unsubPlan(); unsubCheckIns(); unsubMealRequests(); };
+  }, [clientUid, clientDocId]);
+
+  const handleFrequencyChange = async (days) => {
+    setSavingFrequency(true);
+    try {
+      await updateDoc(doc(db, 'clients', clientDocId), { checkInFrequencyDays: days });
+      toast.success('Check-in schedule updated');
+    } catch (err) {
+      toast.error(err.message || 'Failed to update check-in schedule');
+    } finally {
+      setSavingFrequency(false);
+    }
+  };
 
   const handleResolveMealRequest = async (requestId) => {
     setResolvingId(requestId);
@@ -498,6 +531,44 @@ function ActiveClientDetails({ clientUid }) {
             {showPlan ? 'Hide Plan' : 'View Plan'}
           </button>
         )}
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2">
+        <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold shrink-0">Check-in every</span>
+        <select
+          value={customFrequencyMode ? 'custom' : checkInFrequencyDays}
+          onChange={(e) => {
+            if (e.target.value === 'custom') { setCustomFrequencyMode(true); return; }
+            setCustomFrequencyMode(false);
+            handleFrequencyChange(Number(e.target.value));
+          }}
+          disabled={savingFrequency}
+          className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none disabled:opacity-50"
+        >
+          {CHECKIN_FREQUENCY_PRESETS.map((p) => (
+            <option key={p.days} value={p.days}>{p.label}</option>
+          ))}
+          <option value="custom">Custom…</option>
+        </select>
+        {customFrequencyMode && (
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min="1"
+              value={customFrequencyDays}
+              onChange={(e) => setCustomFrequencyDays(e.target.value)}
+              onBlur={() => {
+                const n = parseInt(customFrequencyDays, 10);
+                if (n > 0 && n !== checkInFrequencyDays) handleFrequencyChange(n);
+              }}
+              disabled={savingFrequency}
+              className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 outline-none disabled:opacity-50"
+            />
+            <span className="text-[10px] text-slate-500">days</span>
+          </div>
+        )}
+        {savingFrequency && <Loader2 className="w-3 h-3 animate-spin text-slate-500" />}
       </div>
 
       {showPlan && currentPlan && (
@@ -712,7 +783,7 @@ function ClientCard({ client, onDelete, onCopyLink }) {
       {expanded && (
         <div className="border-t border-slate-800/60 p-5">
           {isActive ? (
-            <ActiveClientDetails clientUid={client.clientUid} />
+            <ActiveClientDetails clientUid={client.clientUid} clientDocId={client.id} />
           ) : (
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <Clock className="w-4 h-4 text-amber-400" />

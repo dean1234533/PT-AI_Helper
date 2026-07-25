@@ -183,16 +183,21 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   return { checkInId, checkInUrl, clientName: name };
 }
 
-const SIX_DAYS_MS = 6 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 async function sendReminderToLinkedClient(client, env) {
-  const { name, email, clientUid, trainerName } = client;
+  const { name, email, clientUid, trainerName, checkInFrequencyDays } = client;
   const resendKey = getenv('RESEND_API_KEY', env);
   if (!resendKey) throw new Error('Email service is not configured on the server.');
 
+  // Fire a day early relative to the trainer's chosen cadence so a daily cron
+  // run reliably catches the due date even with run-time drift.
+  const frequencyDays = Math.max(Number(checkInFrequencyDays) || 7, 1);
+  const thresholdMs = Math.max(frequencyDays - 1, 1) * DAY_MS;
+
   const profileDoc = await firestoreGet(`users/${clientUid}/data/profile`, env);
   const lastCheckInAt = profileDoc?.fields?.lastCheckInAt?.stringValue;
-  if (lastCheckInAt && Date.now() - new Date(lastCheckInAt).getTime() < SIX_DAYS_MS) {
+  if (lastCheckInAt && Date.now() - new Date(lastCheckInAt).getTime() < thresholdMs) {
     return { skipped: true, clientName: name };
   }
 
@@ -291,6 +296,7 @@ async function runScheduledCheckins(env) {
         bodyType: f.planSummary.mapValue.fields.bodyType?.stringValue,
       } : null,
       autoCheckIn: f.autoCheckIn?.booleanValue !== false,
+      checkInFrequencyDays: f.checkInFrequencyDays?.integerValue ? Number(f.checkInFrequencyDays.integerValue) : 7,
     };
 
     if (client.clientUid) {
