@@ -144,7 +144,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
   if (!geminiKey) throw new Error('Gemini API is not configured on the server.');
 
   const checkInId = generateCheckInId();
-  const appUrl = getenv('APP_URL', env) || 'https://pt-ai-helper.pages.dev';
+  const appUrl = getenv('APP_URL', env) || 'https://dbs-app.pages.dev';
   const checkInUrl = `${appUrl}/#/checkin/${checkInId}`;
 
   const { greeting, questions } = await generateCheckInQuestions(geminiKey, name, planSummary);
@@ -201,7 +201,7 @@ async function sendReminderToLinkedClient(client, env) {
     return { skipped: true, clientName: name };
   }
 
-  const appUrl = getenv('APP_URL', env) || 'https://pt-ai-helper.pages.dev';
+  const appUrl = getenv('APP_URL', env) || 'https://dbs-app.pages.dev';
   const checkInUrl = `${appUrl}/#/checkin`;
   const html = buildReminderEmail({ clientName: name, trainerName: trainerName || 'Your trainer', checkInUrl });
 

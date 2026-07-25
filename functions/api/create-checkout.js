@@ -23,7 +23,7 @@ export async function onRequestPost(ctx) {
     if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID) return Response.json({ error: 'Stripe is not configured on the server.' }, { status: 500, headers: CORS });
     if (!env.STRIPE_PRICE_ID.startsWith('price_')) return Response.json({ error: 'STRIPE_PRICE_ID must be a Stripe price ID that starts with price_.' }, { status: 500, headers: CORS });
 
-    const base = env.STRIPE_PORTAL_RETURN_URL || 'https://pt-ai-helper.pages.dev/#/dashboard';
+    const base = env.STRIPE_PORTAL_RETURN_URL || 'https://dbs-app.pages.dev/#/dashboard';
 
     const params = new URLSearchParams({
       mode: 'subscription',

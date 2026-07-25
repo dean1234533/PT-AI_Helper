@@ -1,8 +1,8 @@
 # Cloudflare Pages config
-# Deploy via: wrangler pages deploy dist --project-name=dbs-ai
+# Deploy via: wrangler pages deploy dist --project-name=dbs-app
 # Or connect to GitHub in the Cloudflare Pages dashboard (recommended).
 
-name = "dbs-ai"
+name = "dbs-app"
 compatibility_date = "2024-09-23"
 pages_build_output_dir = "dist"
 

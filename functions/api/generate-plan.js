@@ -87,7 +87,7 @@ async function callProvider(provider, key, systemPrompt, userText, photoUrl, cfE
   };
 
   if (provider.name === 'OpenRouter') {
-    headers['HTTP-Referer'] = cfEnv.APP_URL || 'https://pt-ai-helper.pages.dev';
+    headers['HTTP-Referer'] = cfEnv.APP_URL || 'https://dbs-app.pages.dev';
     headers['X-Title'] = "DB's AI";
   }
 
