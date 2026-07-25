@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
+import { useTrainerBranding } from '../hooks/useTrainerBranding';
+import { applyBrandColor } from '../utils/color';
 import toast from 'react-hot-toast';
 import AIChat from './AIChat';
 import InstallBanner from './InstallBanner';
@@ -24,7 +26,7 @@ const adminNavItems = [
   { to: '/clients',   label: 'Clients',    icon: Users },
 ];
 
-function Sidebar({ onClose }) {
+function Sidebar({ onClose, brandName, brandLogo }) {
   const { user, logout } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
@@ -47,9 +49,9 @@ function Sidebar({ onClose }) {
       {/* Logo */}
       <div className="p-5 border-b border-white/8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="DB's Workouts" className="w-10 h-10 rounded-xl object-contain shrink-0" />
+          <img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} className="w-10 h-10 rounded-xl object-contain shrink-0" />
           <div>
-            <p className="text-white font-bold text-sm leading-tight">DB's Workouts</p>
+            <p className="text-white font-bold text-sm leading-tight">{brandName || "DB's Workouts"}</p>
             <p className="text-white/40 text-xs">Personal Trainer</p>
           </div>
         </div>
@@ -129,6 +131,8 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { brandName, brandColor, brandLogoBase64 } = useTrainerBranding();
+  const brandLogo = brandLogoBase64 || null; // stored as a full data: URI (see ProfileSetup's logo upload)
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -138,11 +142,16 @@ export default function Layout({ children }) {
     return () => document.body.classList.remove('sidebar-open');
   }, [sidebarOpen]);
 
+  useEffect(() => {
+    applyBrandColor(brandColor);
+    return () => applyBrandColor(null);
+  }, [brandColor]);
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex shrink-0">
-        <Sidebar />
+        <Sidebar brandName={brandName} brandLogo={brandLogo} />
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -150,7 +159,7 @@ export default function Layout({ children }) {
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <div className="relative animate-slide-left">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
+            <Sidebar onClose={() => setSidebarOpen(false)} brandName={brandName} brandLogo={brandLogo} />
           </div>
         </div>
       )}
@@ -178,8 +187,8 @@ export default function Layout({ children }) {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="DB's Workouts" className="w-8 h-8 rounded-lg object-contain" />
-            <span className="font-bold text-white text-sm">DB's Workouts</span>
+            <img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} className="w-8 h-8 rounded-lg object-contain" />
+            <span className="font-bold text-white text-sm">{brandName || "DB's Workouts"}</span>
           </div>
           <button
             onClick={() => window.history.back()}

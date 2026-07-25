@@ -5,6 +5,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default brand-red RGB triplets — overridden at runtime per managed client
+   with a custom brand color (see src/utils/color.js + useTrainerBranding). */
+:root {
+  --brand-50-rgb: 255 241 242;
+  --brand-100-rgb: 255 228 230;
+  --brand-200-rgb: 254 205 211;
+  --brand-300-rgb: 253 164 175;
+  --brand-400-rgb: 251 113 133;
+  --brand-500-rgb: 224 0 27;
+  --brand-600-rgb: 179 0 24;
+  --brand-700-rgb: 156 0 21;
+  --brand-800-rgb: 122 0 17;
+  --brand-900-rgb: 76 0 11;
+  --brand-950-rgb: 45 0 7;
+}
+
 @layer base {
   * { box-sizing: border-box; }
 

@@ -7,19 +7,21 @@ export default {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // DB's Workouts brand red
+        // DB's Workouts brand red — driven by CSS variables (see src/index.css
+        // for defaults) so a managed client's trainer's brand color can override
+        // it at runtime via useTrainerBranding + src/utils/color.js.
         brand: {
-          50:  '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#e0001b',
-          600: '#b30018',
-          700: '#9c0015',
-          800: '#7a0011',
-          900: '#4c000b',
-          950: '#2d0007',
+          50:  'rgb(var(--brand-50-rgb) / <alpha-value>)',
+          100: 'rgb(var(--brand-100-rgb) / <alpha-value>)',
+          200: 'rgb(var(--brand-200-rgb) / <alpha-value>)',
+          300: 'rgb(var(--brand-300-rgb) / <alpha-value>)',
+          400: 'rgb(var(--brand-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--brand-500-rgb) / <alpha-value>)',
+          600: 'rgb(var(--brand-600-rgb) / <alpha-value>)',
+          700: 'rgb(var(--brand-700-rgb) / <alpha-value>)',
+          800: 'rgb(var(--brand-800-rgb) / <alpha-value>)',
+          900: 'rgb(var(--brand-900-rgb) / <alpha-value>)',
+          950: 'rgb(var(--brand-950-rgb) / <alpha-value>)',
         },
         accent: {
           300: '#6ee7b7',

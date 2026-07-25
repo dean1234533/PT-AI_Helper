@@ -30,6 +30,9 @@ const defaultProfile = {
   trainerName: null,
   trainerEmail: null,
   lastCheckInAt: null,
+  brandName: null,
+  brandColor: null,
+  brandLogoBase64: null,
 };
 
 export function useProfile() {

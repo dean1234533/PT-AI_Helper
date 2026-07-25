@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from '../hooks/useProfile';
 import Layout from '../components/Layout';
 import ProgressSparkline from '../components/ProgressSparkline';
 import {
   Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
-  Loader2, Calendar, X, Send, Copy, Weight, Zap, Smile
+  Loader2, Calendar, X, Send, Copy, Weight, Zap, Smile,
+  Palette, Upload, Save
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
@@ -234,6 +236,125 @@ function ClientCard({ client, onDelete, onCopyLink }) {
   );
 }
 
+function resizeImageFile(file, maxSize = 256) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function BrandingCard() {
+  const { profile, saveProfile } = useProfile();
+  const [brandName, setBrandName] = useState(profile.brandName || '');
+  const [brandColor, setBrandColor] = useState(profile.brandColor || '#e0001b');
+  const [logoPreview, setLogoPreview] = useState(profile.brandLogoBase64 || null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setBrandName(profile.brandName || '');
+    setBrandColor(profile.brandColor || '#e0001b');
+    setLogoPreview(profile.brandLogoBase64 || null);
+  }, [profile.brandName, profile.brandColor, profile.brandLogoBase64]);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+    try {
+      const dataUrl = await resizeImageFile(file);
+      setLogoPreview(dataUrl);
+    } catch { toast.error('Failed to read image'); }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveProfile({ brandName: brandName.trim(), brandColor, brandLogoBase64: logoPreview });
+      toast.success('Branding saved — your clients will see it applied.');
+    } catch {
+      toast.error('Failed to save branding');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Palette className="w-4 h-4 text-brand-400" />
+        <h3 className="font-bold text-slate-200 text-sm">Client Portal Branding</h3>
+      </div>
+      <p className="text-xs text-slate-500">
+        Your invited clients see your logo, business name, and accent color instead of DB's Workouts branding.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+        <div className="flex items-center gap-3">
+          <label className="w-14 h-14 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-500/40 flex items-center justify-center cursor-pointer overflow-hidden shrink-0">
+            {logoPreview
+              ? <img src={logoPreview} alt="Logo preview" className="w-full h-full object-contain" />
+              : <Upload className="w-5 h-5 text-slate-500" />}
+            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+          </label>
+          <div className="text-[10px] text-slate-500">Click to upload<br />your logo</div>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Business Name</label>
+          <input
+            type="text"
+            value={brandName}
+            onChange={(e) => setBrandName(e.target.value)}
+            placeholder="Your Business Name"
+            className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2 text-slate-100 text-sm outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Accent Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={brandColor}
+              onChange={(e) => setBrandColor(e.target.value)}
+              className="w-9 h-9 rounded-lg border border-slate-800 bg-transparent cursor-pointer shrink-0"
+            />
+            <input
+              type="text"
+              value={brandColor}
+              onChange={(e) => setBrandColor(e.target.value)}
+              className="w-full bg-slate-950/80 border border-slate-800 focus:border-brand-500 rounded-xl px-3 py-2 text-slate-100 text-sm outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+        Save Branding
+      </button>
+    </div>
+  );
+}
+
 export default function Clients() {
   const { user } = useAuth();
   const [clients, setClients] = useState([]);
@@ -323,6 +444,8 @@ export default function Clients() {
               Invite Client
             </button>
           </div>
+
+          <BrandingCard />
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
