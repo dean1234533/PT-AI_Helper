@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -20,6 +22,26 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await login(form.email, form.password);
+
+      // Self-heal accounts whose invite-linking failed at signup time (e.g.
+      // created before a server-side fix) — harmless no-op otherwise.
+      try {
+        const res = await fetch('/api/complete-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email, clientUid: result.user.uid }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          await setDoc(
+            doc(db, 'users', result.user.uid, 'data', 'profile'),
+            { trainerId: data.trainerId, trainerName: data.trainerName, trainerEmail: data.trainerEmail },
+            { merge: true }
+          );
+          toast.success(`Connected with ${data.trainerName}!`);
+        }
+      } catch { /* best-effort, ignore */ }
+
       // Admin goes straight to dashboard, regular users check setup flow
       navigate('/dashboard');
     } catch (err) {

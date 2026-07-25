@@ -1,9 +1,12 @@
 /**
  * POST /api/complete-invite
- * Public endpoint — called right after a client finishes registering via an
- * invite link. Looks up the pending `clients` doc by inviteToken and links it
- * to the new account. Returns the trainer's identity so the frontend can
- * stamp it onto the new user's own profile doc.
+ * Called right after a client registers via an invite link (matched by
+ * inviteToken), and also re-tried on every login (matched by email as a
+ * fallback) to self-heal any account whose linking failed at signup time —
+ * e.g. accounts created before the server-side Firestore auth fix, when this
+ * endpoint's writes were silently rejected. Looks up the pending `clients`
+ * doc and links it to the account. Returns the trainer's identity so the
+ * frontend can stamp it onto the user's own profile doc.
  * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
  */
 
@@ -22,15 +25,18 @@ export async function onRequestOptions() {
 export async function onRequestPost(ctx) {
   const env = ctx.env;
   try {
-    const { inviteToken, clientUid } = await ctx.request.json();
-    if (!inviteToken || !clientUid) {
-      return Response.json({ error: 'inviteToken and clientUid are required' }, { status: 400, headers: CORS });
+    const { inviteToken, email, clientUid } = await ctx.request.json();
+    if ((!inviteToken && !email) || !clientUid) {
+      return Response.json({ error: 'inviteToken or email, and clientUid, are required' }, { status: 400, headers: CORS });
     }
 
     const clients = await firestoreList('clients', env);
+    const normalizedEmail = email?.trim().toLowerCase();
     const match = clients.find((doc) => {
       const f = doc.fields || {};
-      return f.inviteToken?.stringValue === inviteToken && f.status?.stringValue === 'invited';
+      if (f.status?.stringValue !== 'invited') return false;
+      if (inviteToken) return f.inviteToken?.stringValue === inviteToken;
+      return f.email?.stringValue?.trim().toLowerCase() === normalizedEmail;
     });
 
     if (!match) {
