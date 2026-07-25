@@ -62,7 +62,7 @@ export default function Login() {
             <Dumbbell className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">DB's Workouts</h1>
-          <p className="text-white/45 mt-1 text-sm">Your personal AI fitness coach</p>
+          <p className="text-white/45 mt-1 text-sm">Your personal fitness coach</p>
         </div>
 
         {/* Card */}
