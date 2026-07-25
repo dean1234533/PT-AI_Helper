@@ -603,7 +603,7 @@ export default function Clients() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-950 text-white pb-20">
+      <div className="min-h-screen bg-slate-950 text-white pb-32">
       <SEO title="Clients" noIndex />
         <div className="max-w-5xl mx-auto px-4 pt-10 space-y-8">
 

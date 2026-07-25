@@ -299,7 +299,7 @@ export default function ProfileSetup() {
   const StepIcon = STEPS[currentStep].icon;
 
   const content = (
-    <div className="min-h-screen bg-slate-950 text-white pb-16 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
       <SEO title="Profile" noIndex />
       {/* Background glow effects */}
       <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/5 rounded-full blur-3xl pointer-events-none"></div>

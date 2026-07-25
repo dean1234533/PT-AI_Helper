@@ -162,7 +162,7 @@ export default function BodyAnalysis() {
   const { bodyType, explanation, eat, avoid, macros, workoutStyle, timeline } = analysis;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
       <SEO title="Body Analysis" noIndex />
       {/* Glow decorations */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-600/5 rounded-full blur-3xl pointer-events-none"></div>
