@@ -13,7 +13,7 @@ import {
   Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
   Loader2, Calendar, X, Copy, Weight, Zap, Smile,
-  Palette, Upload, Save, Sparkles, TrendingUp
+  Palette, Upload, Save, Sparkles, TrendingUp, Eye, EyeOff, Dumbbell, Apple
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
@@ -106,6 +106,81 @@ function InviteClientModal({ onClose, onInvite }) {
   );
 }
 
+function ClientPlanPreview({ plan, dayIdx, setDayIdx }) {
+  const { workoutPlan, nutritionPlan, weeklyMealPlan } = plan || {};
+  const days = workoutPlan?.days || [];
+  const mealDays = weeklyMealPlan || [];
+  const day = days[dayIdx];
+  const mealDay = mealDays[dayIdx];
+
+  return (
+    <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-4">
+      {days.length > 0 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {days.map((d, i) => (
+            <button
+              key={i}
+              onClick={() => setDayIdx(i)}
+              className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-colors ${
+                i === dayIdx ? 'bg-brand-600/30 text-brand-300 border border-brand-500/40' : 'text-slate-500 hover:text-slate-300 border border-slate-800'
+              }`}
+            >
+              {d.dayName?.split(' - ')[0] || `Day ${i + 1}`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {day && (
+        <div>
+          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-200 mb-1">
+            <Dumbbell className="w-3.5 h-3.5 text-brand-400" /> {day.dayName || `Day ${dayIdx + 1}`}
+          </p>
+          {day.focus && <p className="text-[11px] text-slate-500 mb-2">{day.focus}</p>}
+          {day.isRestDay ? (
+            <p className="text-xs text-slate-400">Rest day</p>
+          ) : (day.exercises || []).length > 0 ? (
+            <div className="space-y-1.5">
+              {day.exercises.map((ex, i) => (
+                <div key={i} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800/60 pb-1.5 last:border-0">
+                  <span className="text-slate-300 font-medium">{ex.name}</span>
+                  <span className="text-slate-500 shrink-0">{ex.sets}x{ex.reps} · {ex.rest}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">No exercises for this day yet.</p>
+          )}
+        </div>
+      )}
+
+      {(nutritionPlan || mealDay) && (
+        <div className="pt-2 border-t border-slate-800/60">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-200 mb-1">
+            <Apple className="w-3.5 h-3.5 text-emerald-400" /> Nutrition{nutritionPlan?.dailyTargetCalories ? ` — ${nutritionPlan.dailyTargetCalories} kcal/day` : ''}
+          </p>
+          {mealDay?.meals?.length > 0 ? (
+            <div className="space-y-1.5">
+              {mealDay.meals.map((meal, i) => (
+                <div key={i} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800/60 pb-1.5 last:border-0">
+                  <span className="text-slate-300 font-medium">{meal.name}</span>
+                  <span className="text-slate-500 shrink-0">{meal.calories} kcal</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">No meals for this day yet.</p>
+          )}
+        </div>
+      )}
+
+      {!day && !mealDay && (
+        <p className="text-xs text-slate-500">This plan doesn't have any content yet.</p>
+      )}
+    </div>
+  );
+}
+
 function ActiveClientDetails({ clientUid }) {
   const { callAI } = useGemini();
   const [profile, setProfile] = useState(null);
@@ -115,6 +190,8 @@ function ActiveClientDetails({ clientUid }) {
   const [working, setWorking] = useState(null); // null | 'generating' | 'adjusting'
   const [progressText, setProgressText] = useState('');
   const [showScopeMenu, setShowScopeMenu] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
+  const [planDayIdx, setPlanDayIdx] = useState(0);
 
   useEffect(() => {
     const unsubProfile = onSnapshot(doc(db, 'users', clientUid, 'data', 'profile'), (snap) => {
@@ -270,7 +347,20 @@ function ActiveClientDetails({ clientUid }) {
             {working === 'adjusting' ? (progressText || 'Working…') : 'Apply Check-in Update'}
           </button>
         )}
+        {currentPlan && (
+          <button
+            onClick={() => setShowPlan((v) => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/25 text-slate-300 hover:text-slate-200 text-xs font-semibold rounded-xl transition-all"
+          >
+            {showPlan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {showPlan ? 'Hide Plan' : 'View Plan'}
+          </button>
+        )}
       </div>
+
+      {showPlan && currentPlan && (
+        <ClientPlanPreview plan={currentPlan} dayIdx={planDayIdx} setDayIdx={setPlanDayIdx} />
+      )}
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-2">
