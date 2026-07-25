@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Dumbbell, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -58,9 +58,7 @@ export default function Login() {
       <div className="relative w-full max-w-md my-auto animate-fade-in-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet mb-4">
-            <Dumbbell className="w-7 h-7 text-white" />
-          </div>
+          <img src="/logo.png" alt="DB's Workouts" className="w-16 h-16 rounded-2xl object-contain shadow-glow-violet mb-4" />
           <h1 className="text-2xl font-bold text-white">DB's Workouts</h1>
           <p className="text-white/45 mt-1 text-sm">Your personal fitness coach</p>
         </div>
