@@ -6,12 +6,12 @@ import ProgressSparkline from '../components/ProgressSparkline';
 import {
   Users, Plus, CheckCircle, Clock,
   Trash2, ChevronDown, ChevronUp,
-  Loader2, Calendar, X, Send, Copy, Weight, Zap, Smile,
+  Loader2, Calendar, X, Copy, Weight, Zap, Smile,
   Palette, Upload, Save
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
-  deleteDoc, doc, query, where, orderBy, limit
+  updateDoc, doc, query, where, orderBy, limit
 } from 'firebase/firestore';
 import app from '../firebase/config';
 import toast from 'react-hot-toast';
@@ -48,8 +48,9 @@ function InviteClientModal({ onClose, onInvite }) {
         </div>
 
         <p className="text-xs text-slate-400 leading-relaxed">
-          They'll get an email with a link to create their own account, fill out their profile,
-          and start weekly check-ins you can follow right here.
+          Creates an invite link you copy and send yourself (text, WhatsApp, email — whatever's
+          easiest). They'll create their own account, fill out their profile, and start weekly
+          check-ins you can follow right here.
         </p>
 
         <div className="space-y-4">
@@ -84,8 +85,8 @@ function InviteClientModal({ onClose, onInvite }) {
             disabled={saving}
             className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {saving ? 'Sending...' : 'Send Invite'}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+            {saving ? 'Creating...' : 'Create & Copy Link'}
           </button>
         </div>
       </div>
@@ -366,7 +367,7 @@ export default function Clients() {
     const unsub = onSnapshot(
       query(collection(db, 'clients'), where('trainerId', '==', user.uid)),
       (snap) => {
-        setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => !c.archived));
         setLoading(false);
       },
       (err) => { toast.error('Failed to load clients'); console.error(err); setLoading(false); }
@@ -389,23 +390,14 @@ export default function Clients() {
     });
 
     const inviteUrl = `${window.location.origin}/#/register?invite=${inviteToken}`;
-    try {
-      const res = await fetch('/api/send-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientEmail: form.email, clientName: form.name, trainerName, inviteUrl }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      toast.success(`Invite sent to ${form.name}!`);
-    } catch (err) {
-      toast.error(`Invite created, but email failed to send. Copy the link instead. (${err.message})`);
-    }
+    await navigator.clipboard.writeText(inviteUrl);
+    toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
   };
 
   const handleDeleteClient = async (clientId) => {
-    if (!confirm('Remove this client?')) return;
+    if (!confirm('Remove this client from your list?')) return;
     try {
-      await deleteDoc(doc(db, 'clients', clientId));
+      await updateDoc(doc(db, 'clients', clientId), { archived: true });
       toast.success('Client removed');
     } catch { toast.error('Failed to remove client'); }
   };

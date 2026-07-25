@@ -9,15 +9,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(userId)/data/profile).data.trainerId == request.auth.uid;
     }
 
-    // Trainer-managed client records — reads/creates scoped to the owning trainer.
-    // Updates stay open to `request.auth != null` (server functions patch these via
-    // REST using only an API key, not a user auth token, so this must not be tightened
-    // further without re-verifying those flows). Deletes are blocked; clients are
-    // archived, not removed.
+    // Trainer-managed client records — read/create/update scoped to the owning
+    // trainer. Server functions (ScheduledCheckins, complete-invite, etc.)
+    // authenticate as a service account and bypass these rules entirely, so
+    // this doesn't need to stay open for them. Deletes are blocked; clients
+    // are archived (see `archived` field), not removed.
     match /clients/{doc} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.trainerId;
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.trainerId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.trainerId;
-      allow update: if request.auth != null;
       allow delete: if false;
     }
 
