@@ -12,6 +12,7 @@
  */
 
 import { firestoreGet, firestorePatch, toFirestoreFields } from '../_shared/firestore.js';
+import { sendPushToUid } from '../_shared/fcm.js';
 
 function getenv(name, env) {
   return env[name] || env[`VITE_${name}`];
@@ -82,6 +83,19 @@ export async function onRequestPost(ctx) {
         Object.keys(planFields),
         env
       );
+
+      const hasWorkout = !!plan.workoutPlan;
+      const hasNutrition = !!(plan.nutritionPlan || plan.weeklyMealPlan);
+      const body = hasWorkout && hasNutrition
+        ? 'Your trainer just updated your full plan — take a look!'
+        : hasWorkout
+          ? 'Your trainer just updated your workout plan.'
+          : 'Your trainer just updated your nutrition plan.';
+      await sendPushToUid(clientUid, {
+        title: 'Your plan has been updated',
+        body,
+        url: '/#/plan',
+      }, env).catch((err) => console.error('Push error:', err.message));
     }
 
     return Response.json({ success: true }, { headers: CORS });

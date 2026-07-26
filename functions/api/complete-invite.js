@@ -11,6 +11,7 @@
  */
 
 import { firestoreList, firestorePatch } from '../_shared/firestore.js';
+import { sendPushToUid } from '../_shared/fcm.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -62,6 +63,15 @@ export async function onRequestPost(ctx) {
       ['clientUid', 'status', 'activatedAt'],
       env
     );
+
+    if (trainerId) {
+      const clientName = f.name?.stringValue || 'A client';
+      await sendPushToUid(trainerId, {
+        title: `${clientName} joined!`,
+        body: `${clientName} signed up using your invite link.`,
+        url: '/#/clients',
+      }, env).catch((err) => console.error('Push error:', err.message));
+    }
 
     return Response.json({ success: true, trainerId, trainerName, trainerEmail }, { headers: CORS });
   } catch (err) {

@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import AIChat from './AIChat';
 import InstallBanner from './InstallBanner';
 import WorkoutReminder from './WorkoutReminder';
+import PushNotificationSetup from './PushNotificationSetup';
 
 const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20DB%27s%20Workouts%20app';
 
@@ -204,12 +205,17 @@ export default function Layout({ children }) {
         </main>
         {/* The AI coach chat + workout reminder are personal-fitness features —
             they don't belong on the trainer's client-management admin page,
-            and the floating chat button otherwise overlaps its short content. */}
-        {location.pathname !== '/clients' && (
+            and the floating chat button otherwise overlaps its short content.
+            WorkoutReminder also owns push-permission request + token
+            registration for every other page, so /clients needs its own
+            generic opt-in or the trainer would never get a token at all. */}
+        {location.pathname !== '/clients' ? (
           <>
             <WorkoutReminder />
             <AIChat />
           </>
+        ) : (
+          <PushNotificationSetup />
         )}
         <InstallBanner />
       </div>
