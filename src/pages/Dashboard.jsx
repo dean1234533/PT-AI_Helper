@@ -15,7 +15,10 @@ import {
   Weight,
   Cpu,
   Loader2,
-  Radio
+  Radio,
+  Youtube,
+  ExternalLink,
+  ChevronDown
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,6 +40,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [testingAI, setTestingAI] = useState(false);
+  const [expandedExercise, setExpandedExercise] = useState(null);
+  const [expandedMeal, setExpandedMeal] = useState(null);
   const [planDayIndex, setPlanDayIndex] = useState(() => {
     const d = new Date().getDay();
     return d === 0 ? 6 : d - 1;
@@ -70,6 +75,8 @@ export default function Dashboard() {
     return day === 0 ? 6 : day - 1;
   }, []);
 
+  const todayWorkout = currentPlan?.workoutPlan?.days?.[todayIndex];
+
   const progressSummary = useMemo(() => {
     if (!profile.weight) return { change: 0, text: 'No starting weight' };
     const currentWeight = latestCheckIn ? latestCheckIn.weight : profile.weight;
@@ -98,31 +105,52 @@ export default function Dashboard() {
         <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-600/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-accent-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="max-w-5xl mx-auto px-4 pt-10 space-y-8">
+        <div className="app-page space-y-8">
           {/* Header Greeting */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          <div className="dashboard-hero">
+            <div className="dashboard-hero-grid">
+            <div className="dashboard-hero-copy">
+              <p className="relative z-10 text-[#ff756a] text-[10px] font-bold uppercase tracking-[.22em] mb-4">Today’s briefing</p>
+              <h1 className="relative z-10 text-3xl sm:text-5xl font-extrabold text-[#f7f2ea] tracking-[-.055em]">
                 {greeting}, {profile.name || user?.displayName?.split(' ')[0] || 'Athlete'}
               </h1>
-              <p className="text-slate-400 text-xs mt-1">
-                Welcome back to your personalized coaching studio. Here's your focus today.
+              <p className="relative z-10 text-white/45 text-sm mt-3">
+                Your training, nutrition and progress — distilled for today.
               </p>
-            </div>
-            
-            <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-4 py-2.5 rounded-2xl backdrop-blur-md">
-              <Award className="w-5 h-5 text-amber-500 shrink-0" />
-              <div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Bio Somatotype</p>
-                <p className="text-xs font-bold text-slate-200 capitalize">{analysis?.bodyType || 'Analyzing...'}</p>
+              <div className="dashboard-hero-actions">
+                <button onClick={() => navigate('/plan')} className="dashboard-primary-action">
+                  <Dumbbell className="w-4 h-4" /> Open today’s plan <ChevronRight className="w-4 h-4" />
+                </button>
+                <button onClick={() => navigate('/checkin')} className="dashboard-secondary-action">
+                  <CheckSquare className="w-4 h-4" /> Log progress
+                </button>
               </div>
+            </div>
+            <div className="dashboard-brief-card relative z-10">
+              <div className="dashboard-brief-date">
+                <Calendar className="w-4 h-4" />
+                <span>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+              </div>
+              <div className="dashboard-brief-workout">
+                <span>{todayWorkout?.isRestDay ? 'Recovery day' : 'Today’s session'}</span>
+                <strong>{todayWorkout?.isRestDay ? 'Rest & reset' : (todayWorkout?.dayName || 'Your plan is being prepared')}</strong>
+                <small>{todayWorkout?.focus || 'Stay consistent and keep moving forward.'}</small>
+              </div>
+              <div className="hero-profile flex items-center gap-3">
+                <Award className="w-5 h-5 text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-[9px] text-white/35 font-bold uppercase tracking-[.16em]">Body profile</p>
+                  <p className="text-xs font-bold text-white capitalize">{analysis?.bodyType || 'Analyzing...'}</p>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="metric-strip">
             {/* Weight Stat */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md flex items-center justify-between">
+            <div className="premium-card rounded-2xl p-5 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Current Weight</span>
                 <h3 className="text-xl font-extrabold text-slate-100 mt-1">
@@ -130,13 +158,13 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-1.5 font-medium">{progressSummary.text}</p>
               </div>
-              <div className="p-3 bg-brand-600/10 border border-brand-500/20 text-brand-400 rounded-xl">
+              <div className="metric-icon p-3 bg-brand-600/10 border border-brand-500/20 text-brand-500 rounded-xl">
                 <Weight className="w-5 h-5" />
               </div>
             </div>
 
             {/* Streak / Frequency Stat */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md flex items-center justify-between">
+            <div className="premium-card rounded-2xl p-5 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Weekly Target</span>
                 <h3 className="text-xl font-extrabold text-slate-100 mt-1">
@@ -144,13 +172,13 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-1.5 font-medium">{profile.sessionDuration || '60'} mins / session</p>
               </div>
-              <div className="p-3 bg-accent-500/10 border border-accent-500/20 text-accent-500 rounded-xl">
+              <div className="metric-icon p-3 bg-accent-500/10 border border-accent-500/20 text-accent-600 rounded-xl">
                 <Dumbbell className="w-5 h-5" />
               </div>
             </div>
 
             {/* Check-ins Stat */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md flex items-center justify-between">
+            <div className="premium-card rounded-2xl p-5 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Check-ins Logged</span>
                 <h3 className="text-xl font-extrabold text-slate-100 mt-1">
@@ -160,13 +188,13 @@ export default function Dashboard() {
                   {latestCheckIn ? `Last: ${new Date(latestCheckIn.date).toLocaleDateString()}` : 'No logs yet'}
                 </p>
               </div>
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl">
+              <div className="metric-icon p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-xl">
                 <CheckSquare className="w-5 h-5" />
               </div>
             </div>
 
             {/* Caloric Intake Target */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md flex items-center justify-between">
+            <div className="premium-card rounded-2xl p-5 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Daily Calories</span>
                 <h3 className="text-xl font-extrabold text-slate-100 mt-1">
@@ -176,7 +204,7 @@ export default function Dashboard() {
                   P:{currentPlan?.nutritionPlan?.dailyMacros?.protein || '--'}g · C:{currentPlan?.nutritionPlan?.dailyMacros?.carbs || '--'}g · F:{currentPlan?.nutritionPlan?.dailyMacros?.fat || '--'}g
                 </p>
               </div>
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl">
+              <div className="metric-icon p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-xl">
                 <Apple className="w-5 h-5" />
               </div>
             </div>
@@ -192,11 +220,11 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {/* Day selector */}
                 {currentPlan && (
-                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                  <div className="dashboard-day-picker flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
                     {DAY_LABELS.map((label, i) => (
                       <button
                         key={i}
-                        onClick={() => setPlanDayIndex(i)}
+                        onClick={() => { setPlanDayIndex(i); setExpandedExercise(null); setExpandedMeal(null); }}
                         className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                           planDayIndex === i
                             ? 'bg-brand-600 text-white shadow-lg'
@@ -214,7 +242,7 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Workout Column */}
-                  <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
+                  <div className="premium-card dashboard-plan-panel lg:col-span-2 rounded-3xl p-6 sm:p-7">
                     <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-4">
                       <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-brand-400" />
@@ -262,17 +290,37 @@ export default function Dashboard() {
 
                         <div className="space-y-2">
                           {(selectedWorkout?.exercises || []).map((ex, idx) => (
-                            <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3">
-                              <div className="flex justify-between items-start gap-2">
-                                <span className="font-semibold text-slate-200 text-xs">{ex.name}</span>
-                                <span className="text-[10px] text-brand-400 font-bold shrink-0">{ex.sets} × {ex.reps}</span>
+                            <div key={idx} className={`dashboard-exercise-card bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-3 ${expandedExercise === idx ? 'is-open' : ''}`}>
+                              <button
+                                type="button"
+                                className="dashboard-card-toggle"
+                                onClick={() => setExpandedExercise(expandedExercise === idx ? null : idx)}
+                                aria-expanded={expandedExercise === idx}
+                              >
+                                <span className="font-semibold text-slate-200 text-xs text-left">{ex.name}</span>
+                                <span className="dashboard-card-summary">
+                                  <span className="text-[10px] text-brand-400 font-bold shrink-0">{ex.sets} × {ex.reps}</span>
+                                  <ChevronDown className="dashboard-accordion-chevron" />
+                                </span>
+                              </button>
+                              <div className="dashboard-exercise-details">
+                                {(ex.rest || ex.tempo) && (
+                                  <p className="text-[10px] text-slate-500 mt-1">
+                                    {ex.rest && `Rest: ${ex.rest}`}{ex.rest && ex.tempo && ' · '}{ex.tempo && `Tempo: ${ex.tempo}`}
+                                  </p>
+                                )}
+                                {ex.notes && <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{ex.notes}</p>}
+                                {ex.videoUrl && (
+                                  <a
+                                    href={ex.videoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-2.5 py-1.5 text-[10px] font-bold text-brand-700 hover:bg-red-100 transition-colors"
+                                  >
+                                    <Youtube className="w-3.5 h-3.5" /> Watch demo <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
                               </div>
-                              {(ex.rest || ex.tempo) && (
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                  {ex.rest && `Rest: ${ex.rest}`}{ex.rest && ex.tempo && ' · '}{ex.tempo && `Tempo: ${ex.tempo}`}
-                                </p>
-                              )}
-                              {ex.notes && <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{ex.notes}</p>}
                             </div>
                           ))}
                         </div>
@@ -301,7 +349,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Meals Column */}
-                  <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-md">
+                  <div className="premium-card dashboard-plan-panel dashboard-nutrition-panel rounded-3xl p-6 sm:p-7">
                     <h3 className="font-extrabold text-slate-200 text-sm uppercase tracking-wider border-b border-slate-800/60 pb-3 mb-4 flex items-center gap-2">
                       <Apple className="w-4 h-4 text-emerald-400" />
                       {planDayIndex === todayIndex ? "Today's Nutrition" : `${DAY_LABELS[planDayIndex]} Nutrition`}
@@ -321,25 +369,35 @@ export default function Dashboard() {
                           const carb = meal.usdaCarbs    ?? meal.macros?.carbs;
                           const fat  = meal.usdaFat      ?? meal.macros?.fat;
                           return (
-                            <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-xl p-3 space-y-1.5">
-                              <div className="flex justify-between items-start gap-2">
-                                <h4 className="font-bold text-slate-200 text-xs leading-tight">{meal.name}</h4>
-                                <span className="text-[10px] text-emerald-400 font-bold shrink-0">{cal ?? '—'} kcal</span>
+                            <div key={idx} className={`dashboard-meal-card bg-slate-950/40 border border-slate-800 rounded-xl p-3 ${expandedMeal === idx ? 'is-open' : ''}`}>
+                              <button
+                                type="button"
+                                className="dashboard-card-toggle"
+                                onClick={() => setExpandedMeal(expandedMeal === idx ? null : idx)}
+                                aria-expanded={expandedMeal === idx}
+                              >
+                                <h4 className="font-bold text-slate-200 text-xs leading-tight text-left">{meal.name}</h4>
+                                <span className="dashboard-card-summary">
+                                  <span className="text-[10px] text-emerald-400 font-bold shrink-0">{cal ?? '—'} kcal</span>
+                                  <ChevronDown className="dashboard-accordion-chevron" />
+                                </span>
+                              </button>
+                              <div className="dashboard-meal-details space-y-1.5">
+                                <div className="flex gap-2 text-[10px] text-slate-500">
+                                  <span>P <span className="text-slate-300">{prot ?? '—'}g</span></span>
+                                  <span>C <span className="text-slate-300">{carb ?? '—'}g</span></span>
+                                  <span>F <span className="text-slate-300">{fat ?? '—'}g</span></span>
+                                </div>
+                                {(() => {
+                                  const ings = (meal.enrichedIngredients?.length ? meal.enrichedIngredients : meal.ingredients) || [];
+                                  const labels = ings.map(i => typeof i === 'string' ? i : (i.ingredient || i.name || i.item || i.food || i.description || '')).filter(Boolean);
+                                  return labels.length > 0 ? (
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                      {labels.join(' · ')}
+                                    </p>
+                                  ) : null;
+                                })()}
                               </div>
-                              <div className="flex gap-2 text-[10px] text-slate-500">
-                                <span>P <span className="text-slate-300">{prot ?? '—'}g</span></span>
-                                <span>C <span className="text-slate-300">{carb ?? '—'}g</span></span>
-                                <span>F <span className="text-slate-300">{fat ?? '—'}g</span></span>
-                              </div>
-                              {(() => {
-                                const ings = (meal.enrichedIngredients?.length ? meal.enrichedIngredients : meal.ingredients) || [];
-                                const labels = ings.map(i => typeof i === 'string' ? i : (i.ingredient || i.name || i.item || i.food || i.description || '')).filter(Boolean);
-                                return labels.length > 0 ? (
-                                  <p className="text-[10px] text-slate-500 leading-relaxed">
-                                    {labels.join(' · ')}
-                                  </p>
-                                ) : null;
-                              })()}
                             </div>
                           );
                         })}
@@ -363,9 +421,9 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
                 onClick={() => navigate('/plan')}
-                className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
+                className="dashboard-shortcut bg-slate-900/30 border border-slate-850 p-5 rounded-2xl flex items-center gap-4 text-left"
               >
-                <div className="p-3 bg-brand-600/10 text-brand-400 rounded-xl">
+                <div className="premium-action-icon bg-brand-600/10 text-brand-500">
                   <Dumbbell className="w-5 h-5" />
                 </div>
                 <div>
@@ -376,9 +434,9 @@ export default function Dashboard() {
 
               <button
                 onClick={() => navigate('/checkin')}
-                className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
+                className="dashboard-shortcut bg-slate-900/30 border border-slate-850 p-5 rounded-2xl flex items-center gap-4 text-left"
               >
-                <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                <div className="premium-action-icon bg-emerald-500/10 text-emerald-600">
                   <CheckSquare className="w-5 h-5" />
                 </div>
                 <div>
@@ -391,9 +449,9 @@ export default function Dashboard() {
 
               <button
                 onClick={() => navigate('/analysis')}
-                className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
+                className="dashboard-shortcut bg-slate-900/30 border border-slate-850 p-5 rounded-2xl flex items-center gap-4 text-left"
               >
-                <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
+                <div className="premium-action-icon bg-amber-500/10 text-amber-600">
                   <Activity className="w-5 h-5" />
                 </div>
                 <div>
@@ -404,9 +462,9 @@ export default function Dashboard() {
 
               <button
                 onClick={() => navigate('/profile')}
-                className="bg-slate-900/30 border border-slate-850 hover:border-slate-700 p-5 rounded-2xl flex items-center gap-4 text-left transition-all hover:scale-[1.01]"
+                className="dashboard-shortcut bg-slate-900/30 border border-slate-850 p-5 rounded-2xl flex items-center gap-4 text-left"
               >
-                <div className="p-3 bg-pink-500/10 text-pink-400 rounded-xl">
+                <div className="premium-action-icon bg-brand-500/10 text-brand-500">
                   <User className="w-5 h-5" />
                 </div>
                 <div>

@@ -15,7 +15,7 @@ import {
   Calendar, Clock, ChevronRight, TrendingUp, AlertCircle,
   Shuffle, ChevronDown, ChevronUp, Leaf, Flame, Zap, Beef,
   FileText, CheckCircle, ArrowLeft, Moon, Droplets, FlaskConical,
-  MessageSquarePlus, X
+  MessageSquarePlus, X, Youtube, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -219,6 +219,16 @@ function ExerciseRow({ ex, idx }) {
               <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Progressive Overload</p>
               <p className="text-xs text-slate-300 leading-relaxed">{ex.progressionNote}</p>
             </div>
+          )}
+          {ex.videoUrl && (
+            <a
+              href={ex.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-brand-700 text-xs font-bold hover:bg-red-100 transition-colors"
+            >
+              <Youtube className="w-4 h-4" /> Watch exercise demonstration <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           )}
         </div>
       )}
@@ -662,14 +672,14 @@ export default function MyPlan() {
   const hasRenderableMeals = (weeklyMealPlan || []).some((day) => (day.meals || []).length > 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
+    <div className="my-plan-page min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
       {/* Background glows */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto px-4 pt-12">
+      <div className="app-page">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-800 pb-6 mb-8 gap-4">
+        <div className="plan-hero flex flex-col md:flex-row md:items-center md:justify-between pb-6 mb-8 gap-4">
           <div>
             <button
               onClick={() => navigate('/dashboard')}
@@ -686,11 +696,11 @@ export default function MyPlan() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="plan-header-actions flex flex-wrap items-center gap-2">
             <button
               onClick={handleWorkoutPDF}
               disabled={exporting === 'workout'}
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/25 rounded-xl text-xs font-semibold text-blue-400 hover:text-blue-300 transition-all disabled:opacity-50"
+              className="plan-download-action flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
             >
               {exporting === 'workout' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               Workout PDF
@@ -698,7 +708,7 @@ export default function MyPlan() {
             <button
               onClick={handleNutritionPDF}
               disabled={exporting === 'nutrition'}
-              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/25 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-all disabled:opacity-50"
+              className="plan-download-action flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
             >
               {exporting === 'nutrition' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
               Nutrition PDF
@@ -706,7 +716,7 @@ export default function MyPlan() {
             {!isManagedClient && (
               <button
                 onClick={generatePlan}
-                className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
+                className="plan-regenerate-action flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl transition-all"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Regenerate
               </button>
@@ -715,12 +725,12 @@ export default function MyPlan() {
         </div>
 
         {/* Tab selector */}
-        <div className="flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl max-w-sm mb-8">
+        <div className="plan-main-tabs flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl max-w-sm mb-8">
           <button
             onClick={() => setActiveTab('workout')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'workout'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                ? 'bg-brand-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -730,7 +740,7 @@ export default function MyPlan() {
             onClick={() => setActiveTab('nutrition')}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'nutrition'
-                ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md'
+                ? 'bg-brand-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -742,8 +752,8 @@ export default function MyPlan() {
         {activeTab === 'workout' && (
           <div className="space-y-6">
             {/* Focus card */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-5 backdrop-blur-xl shadow-xl flex gap-4">
-              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="plan-focus-card bg-slate-900/40 border border-slate-800/80 rounded-3xl p-5 shadow-xl flex gap-4">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Weekly Training Focus</h3>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">{workoutPlan?.focus}</p>
@@ -767,7 +777,7 @@ export default function MyPlan() {
             )}
 
             {/* Day selector */}
-            {hasRenderableWorkout && <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {hasRenderableWorkout && <div className="plan-week-days flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {workoutPlan?.days?.map((day, idx) => (
                 <button
                   key={idx}
@@ -776,7 +786,7 @@ export default function MyPlan() {
                     activeDayIdx === idx
                       ? day.isRestDay
                         ? 'bg-emerald-600 border-transparent text-white'
-                        : 'bg-blue-600 border-transparent text-white'
+                        : 'bg-brand-600 border-transparent text-white'
                       : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -788,7 +798,7 @@ export default function MyPlan() {
 
             {/* Active day card */}
             {hasRenderableWorkout && todayWorkoutDay && (
-              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl space-y-5">
+              <div className="plan-day-detail bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 shadow-xl space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-600/10 rounded-xl text-blue-400">

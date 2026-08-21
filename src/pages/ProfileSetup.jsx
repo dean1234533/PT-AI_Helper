@@ -306,7 +306,7 @@ export default function ProfileSetup() {
       <div className="absolute bottom-1/3 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Profile Setup / Edit Header */}
-      <div className="max-w-4xl mx-auto px-4 pt-12">
+      <div className="app-page max-w-5xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
@@ -323,9 +323,10 @@ export default function ProfileSetup() {
           {isEditMode && (
             <button
               onClick={() => navigate('/dashboard')}
-              className="self-start sm:self-center px-4 py-2 border border-slate-800 hover:border-slate-700 bg-slate-900/60 rounded-xl text-xs font-semibold hover:text-white text-slate-350 transition-colors"
+              className="profile-dashboard-button self-start sm:self-center flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
             >
-              Cancel & Dashboard
+              <ArrowLeft className="w-4 h-4" />
+              Back to dashboard
             </button>
           )}
         </div>
@@ -883,18 +884,21 @@ export default function ProfileSetup() {
         </div>
 
         {isEditMode && (
-          <div className="mt-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
-            <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
-              <div className="p-2 bg-pink-500/10 rounded-xl text-pink-400">
-                <Lock className="w-6 h-6" />
+          <div className="profile-security-card mt-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-8">
+            <div className="profile-security-intro">
+              <div className="profile-security-icon">
+                <Lock className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-100">Account Security</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Modify or update your login credentials securely.</p>
+                <p className="text-xs text-slate-500 mt-1">Set a new password for your DB's Workouts account.</p>
+              </div>
+              <div className="profile-security-note">
+                Use at least 6 characters. For better security, combine letters, numbers and symbols.
               </div>
             </div>
 
-            <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+            <form onSubmit={handlePasswordChange} className="profile-security-form">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
                   New Password
@@ -926,7 +930,7 @@ export default function ProfileSetup() {
               <button
                 type="submit"
                 disabled={pwLoading}
-                className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-500 hover:to-pink-600 text-white text-sm font-semibold rounded-2xl shadow-lg transition-all"
+                className="profile-password-button flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-all"
               >
                 {pwLoading ? (
                   <>
@@ -943,17 +947,19 @@ export default function ProfileSetup() {
           </div>
         )}
       {isEditMode && (
-        <div className="mt-8 border border-red-900/40 rounded-2xl p-6 bg-red-950/10">
-          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-1">Danger Zone</h3>
-          <p className="text-xs text-white/40 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
+        <div className="profile-danger-zone mt-5 border border-red-900/40 rounded-2xl p-5 bg-red-950/10">
+          <div>
+            <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-1">Delete account</h3>
+            <p className="text-xs text-white/40">Permanently remove your account, plans, check-ins and associated data. This cannot be undone.</p>
+          </div>
           <button
             type="button"
             onClick={handleDeleteAccount}
             disabled={deleteLoading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-red-900/30 hover:bg-red-900/60 border border-red-800/50 text-red-400 hover:text-red-300 text-sm font-semibold rounded-xl transition-all disabled:opacity-50"
+            className="profile-delete-button flex items-center justify-center gap-2 px-5 py-2.5 border border-red-800/50 text-red-400 text-sm font-semibold rounded-xl transition-all disabled:opacity-50"
           >
             {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {deleteLoading ? 'Deleting…' : 'Delete My Account & All Data'}
+            {deleteLoading ? 'Deleting…' : 'Delete account'}
           </button>
         </div>
       )}

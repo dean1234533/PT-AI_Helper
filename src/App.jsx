@@ -15,6 +15,7 @@ import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
 import PublicCheckIn from './pages/PublicCheckIn';
+import Layout from './components/Layout';
 
 function AppRoutes() {
   return (
@@ -47,7 +48,7 @@ function AppRoutes() {
         path="/analysis"
         element={
           <ProtectedRoute>
-            <BodyAnalysis />
+            <Layout><BodyAnalysis /></Layout>
           </ProtectedRoute>
         }
       />
@@ -65,7 +66,7 @@ function AppRoutes() {
         path="/plan"
         element={
           <ProtectedRoute>
-            <MyPlan />
+            <Layout><MyPlan /></Layout>
           </ProtectedRoute>
         }
       />
@@ -73,7 +74,7 @@ function AppRoutes() {
         path="/checkin"
         element={
           <ProtectedRoute>
-            <CheckIn />
+            <Layout><CheckIn /></Layout>
           </ProtectedRoute>
         }
       />

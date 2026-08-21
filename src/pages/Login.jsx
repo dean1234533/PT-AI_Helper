@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Check, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
@@ -70,27 +70,56 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 py-10 sm:p-4 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-md my-auto animate-fade-in-up">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="DB's Workouts" className="w-16 h-16 rounded-2xl object-contain shadow-glow-violet mb-4" />
-          <h1 className="text-2xl font-bold text-white">DB's Workouts</h1>
-          <p className="text-white/45 mt-1 text-sm">Your personal fitness coach</p>
+    <div className="login-grid min-h-screen text-white grid lg:grid-cols-[1.08fr_.92fr] relative overflow-hidden">
+      <section className="hidden lg:flex min-h-screen relative p-14 xl:p-20 flex-col justify-between border-r border-white/[.07]">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[.05] flex items-center justify-center">
+            <img src="/logo.png" alt="DB's Workouts" className="w-10 h-10 rounded-xl object-contain" />
+          </div>
+          <div>
+            <p className="font-bold text-base">DB's Workouts</p>
+            <p className="text-white/35 text-[10px] uppercase tracking-[.2em]">Private coaching</p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="bg-dark-600/80 border border-white/8 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+        <div className="max-w-xl">
+          <div className="inline-flex items-center gap-2 text-brand-300 text-xs font-bold uppercase tracking-[.18em] mb-7">
+            <Sparkles className="w-4 h-4" /> Built around your goals
+          </div>
+          <h1 className="text-5xl xl:text-6xl font-extrabold tracking-[-.055em] leading-[1.03] text-[#f7f2ea]">
+            Coaching that moves at your pace.
+          </h1>
+          <p className="mt-6 text-lg leading-relaxed text-white/45 max-w-lg">
+            One focused place for your training plan, nutrition, weekly check-ins and direct AI support.
+          </p>
+          <div className="mt-10 grid grid-cols-2 gap-4 max-w-lg">
+            {['Adaptive weekly plans', 'Progress in one view', 'Personal nutrition', 'Private and secure'].map((item) => (
+              <div key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                <span className="w-5 h-5 rounded-full bg-brand-500/15 text-brand-300 flex items-center justify-center"><Check className="w-3 h-3" /></span>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-white/30 text-xs">
+          <ShieldCheck className="w-4 h-4" /> Your coaching data stays protected.
+        </div>
+      </section>
+
+      <section className="min-h-screen flex items-center justify-center px-5 py-10 sm:px-10 bg-black/10">
+      <div className="relative w-full max-w-[460px] my-auto animate-fade-in-up">
+        <div className="lg:hidden flex items-center gap-3 mb-10">
+          <img src="/logo.png" alt="DB's Workouts" className="w-11 h-11 rounded-xl object-contain" />
+          <div><p className="font-bold">DB's Workouts</p><p className="text-white/35 text-xs">Private coaching</p></div>
+        </div>
+
+        <div className="premium-card rounded-[28px] p-6 sm:p-9">
           {resetMode ? (
             <>
-              <h2 className="text-xl font-bold text-white mb-2">Reset Password</h2>
-              <p className="text-white/50 text-xs mb-6">Enter your email and we'll send you a password reset link.</p>
+              <p className="text-brand-400 text-[10px] font-bold uppercase tracking-[.2em] mb-3">Account recovery</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Reset your password</h2>
+              <p className="text-white/45 text-sm mb-7">Enter your email and we'll send you a secure reset link.</p>
               <form onSubmit={handleResetSubmit} className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-white/70 block mb-1.5">Email address</label>
@@ -122,7 +151,9 @@ export default function Login() {
             </>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-white mb-6">Welcome back</h2>
+              <p className="text-brand-400 text-[10px] font-bold uppercase tracking-[.2em] mb-3">Member access</p>
+              <h2 className="text-3xl font-bold text-[#f7f2ea] mb-2">Welcome back</h2>
+              <p className="text-white/40 text-sm mb-8">Sign in to continue your coaching programme.</p>
               <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="text-sm font-medium text-white/70 block mb-1.5">Email address</label>
@@ -133,7 +164,7 @@ export default function Login() {
                     placeholder="you@example.com"
                     required
                     autoComplete="off"
-                    className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
@@ -155,7 +186,7 @@ export default function Login() {
                       placeholder="••••••••"
                       required
                       autoComplete="new-password"
-                      className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 pr-11 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3.5 pr-11 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-all"
                     />
                     <button
                       type="button"
@@ -180,7 +211,7 @@ export default function Login() {
                       </svg>
                       Signing in...
                     </span>
-                  ) : 'Sign in'}
+                  ) : <span className="flex items-center justify-center gap-2">Sign in <ArrowRight className="w-4 h-4" /></span>}
                 </button>
               </form>
               <p className="text-center text-sm text-white/40 mt-6">
@@ -190,7 +221,9 @@ export default function Login() {
             </>
           )}
         </div>
+        <p className="text-center text-white/20 text-xs mt-6">Secure member portal · DB's Workouts</p>
       </div>
+      </section>
     </div>
   );
 }

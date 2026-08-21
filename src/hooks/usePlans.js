@@ -28,6 +28,7 @@ function normalizeExercise(exercise) {
     targetMuscles: exercise.targetMuscles || exercise.muscles || '',
     notes: exercise.notes || exercise.description || '',
     progressionNote: exercise.progressionNote || exercise.progression || '',
+    videoUrl: exercise.videoUrl || '',
   };
 }
 

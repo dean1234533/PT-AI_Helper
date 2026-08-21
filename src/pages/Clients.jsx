@@ -14,7 +14,7 @@ import {
   Trash2, ChevronDown, ChevronUp,
   Loader2, Calendar, X, Copy, Weight, Zap, Smile,
   Palette, Upload, Save, Sparkles, TrendingUp, Eye, EyeOff, Dumbbell, Apple,
-  Shuffle, MessageSquarePlus, ChevronRight
+  Shuffle, MessageSquarePlus, ChevronRight, Youtube, ExternalLink, Link2
 } from 'lucide-react';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
@@ -215,86 +215,244 @@ function TrainerSwapModal({ meal, dayName, profile, analysis, callAI, onSwap, on
   );
 }
 
-function ClientPlanPreview({ plan, dayIdx, setDayIdx, onSwapMeal }) {
+function isYouTubeUrl(value) {
+  if (!value) return true;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    return url.protocol.startsWith('http') && (
+      host === 'youtu.be' || host === 'youtube.com' || host.endsWith('.youtube.com') ||
+      host === 'youtube-nocookie.com' || host.endsWith('.youtube-nocookie.com')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function ExerciseVideoEditor({ exercise, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [url, setUrl] = useState(exercise.videoUrl || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setUrl(exercise.videoUrl || ''), [exercise.videoUrl]);
+
+  const save = async (nextUrl = url.trim()) => {
+    if (nextUrl && !isYouTubeUrl(nextUrl)) {
+      toast.error('Please enter a valid YouTube link.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave(nextUrl);
+      setEditing(false);
+    } catch (err) {
+      toast.error(err.message || 'Could not save the video link.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="exercise-video-editor mt-2 rounded-xl border border-red-200 bg-red-50/70 p-3 space-y-2">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-700">YouTube demonstration</label>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-500" />
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              className="w-full bg-white border border-red-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 outline-none focus:border-brand-500"
+            />
+          </div>
+          <button onClick={() => save()} disabled={saving} className="px-3 py-2 bg-brand-600 text-white text-xs font-semibold rounded-lg disabled:opacity-50">
+            {saving ? 'Saving…' : 'Save video'}
+          </button>
+          <button onClick={() => { setUrl(exercise.videoUrl || ''); setEditing(false); }} className="px-3 py-2 border border-slate-300 text-slate-600 text-xs font-semibold rounded-lg">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      {exercise.videoUrl && (
+        <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer" className="exercise-video-preview inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-brand-700 text-[10px] font-bold hover:bg-red-100 transition-colors">
+          <Youtube className="w-3.5 h-3.5" /> Preview video <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
+      <button onClick={() => setEditing(true)} className="exercise-video-action inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 text-slate-600 text-[10px] font-semibold hover:border-brand-300 hover:text-brand-700 transition-colors">
+        <Link2 className="w-3.5 h-3.5" /> {exercise.videoUrl ? 'Edit YouTube link' : 'Add YouTube video'}
+      </button>
+      {exercise.videoUrl && (
+        <button onClick={() => save('')} disabled={saving} className="text-[10px] font-semibold text-slate-500 hover:text-red-600 disabled:opacity-50">
+          Remove
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ClientPlanPreview({ plan, dayIdx, setDayIdx, onSwapMeal, onSaveExerciseVideo }) {
   const { workoutPlan, nutritionPlan, weeklyMealPlan } = plan || {};
   const days = workoutPlan?.days || [];
   const mealDays = weeklyMealPlan || [];
+  const [viewMode, setViewMode] = useState(days.length ? 'workout' : 'nutrition');
+  const [openNutritionDay, setOpenNutritionDay] = useState(0);
   const day = days[dayIdx];
-  const mealDay = mealDays[dayIdx];
 
   return (
-    <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-4">
-      {days.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {days.map((d, i) => (
-            <button
-              key={i}
-              onClick={() => setDayIdx(i)}
-              className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-colors ${
-                i === dayIdx ? 'bg-brand-600/30 text-brand-300 border border-brand-500/40' : 'text-slate-500 hover:text-slate-300 border border-slate-800'
-              }`}
-            >
-              {d.dayName?.split(' - ')[0] || `Day ${i + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="client-plan-panel bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-4">
+      <div className="plan-view-switch" role="tablist" aria-label="Client plan section">
+        <button type="button" role="tab" aria-selected={viewMode === 'workout'} onClick={() => setViewMode('workout')} disabled={!days.length} className={viewMode === 'workout' ? 'is-active' : ''}>
+          <Dumbbell className="w-4 h-4" /> Workout plan
+        </button>
+        <button type="button" role="tab" aria-selected={viewMode === 'nutrition'} onClick={() => setViewMode('nutrition')} disabled={!nutritionPlan && !mealDays.length} className={viewMode === 'nutrition' ? 'is-active' : ''}>
+          <Apple className="w-4 h-4" /> Full nutrition plan
+        </button>
+      </div>
 
-      {day && (
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-200 mb-1">
-            <Dumbbell className="w-3.5 h-3.5 text-brand-400" /> {day.dayName || `Day ${dayIdx + 1}`}
-          </p>
-          {day.focus && <p className="text-[11px] text-slate-500 mb-2">{day.focus}</p>}
-          {day.isRestDay ? (
-            <p className="text-xs text-slate-400">Rest day</p>
-          ) : (day.exercises || []).length > 0 ? (
-            <div className="space-y-1.5">
-              {day.exercises.map((ex, i) => (
-                <div key={i} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800/60 pb-1.5 last:border-0">
-                  <span className="text-slate-300 font-medium">{ex.name}</span>
-                  <span className="text-slate-500 shrink-0">{ex.sets}x{ex.reps} · {ex.rest}</span>
-                </div>
+      {viewMode === 'workout' && (
+        <>
+          <div className="video-demo-banner rounded-xl border border-red-500/25 bg-gradient-to-r from-red-950/45 to-slate-950/30 p-3">
+            <div className="flex items-start gap-3">
+              <span className="video-demo-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white">
+                <Youtube className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-bold text-white">Exercise video demos</p>
+                <p className="mt-0.5 text-[11px] leading-5 text-slate-400">
+                  Choose a workout day, then add a YouTube link beneath any exercise. Clients will see a Watch demo button in their plan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {days.length > 0 && (
+            <div className="plan-day-tabs flex gap-1.5 overflow-x-auto pb-1">
+              {days.map((d, i) => (
+                <button key={i} onClick={() => setDayIdx(i)} className={`plan-day-tab shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap ${i === dayIdx ? 'bg-brand-600/30 text-brand-300 border border-brand-500/40' : 'text-slate-500 border border-slate-800'}`}>
+                  {d.dayName?.split(' - ')[0] || `Day ${i + 1}`}
+                </button>
               ))}
             </div>
-          ) : (
-            <p className="text-xs text-slate-500">No exercises for this day yet.</p>
           )}
-        </div>
+
+          {day ? (
+            <div className="plan-workout-section">
+              <div className="plan-workout-heading">
+                <span className="plan-workout-icon"><Dumbbell className="w-4 h-4" /></span>
+                <div>
+                  <p className="text-xs font-bold text-slate-200">{day.dayName || `Day ${dayIdx + 1}`}</p>
+                  {day.focus && <p className="text-[11px] text-slate-500 mt-0.5">{day.focus}</p>}
+                </div>
+              </div>
+              {day.isRestDay ? (
+                <p className="text-xs text-slate-400">Rest day</p>
+              ) : (day.exercises || []).length > 0 ? (
+                <div className="client-exercise-grid">
+                  {day.exercises.map((ex, i) => (
+                    <div key={i} className="client-exercise-card text-xs">
+                      <div className="flex items-start gap-3">
+                        <span className="exercise-number">{String(i + 1).padStart(2, '0')}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-slate-300 font-bold leading-5">{ex.name}</span>
+                          <span className="exercise-prescription block text-slate-500 mt-0.5">{ex.sets} sets · {ex.reps} reps · {ex.rest} rest</span>
+                        </div>
+                      </div>
+                      {onSaveExerciseVideo && <ExerciseVideoEditor exercise={ex} onSave={(videoUrl) => onSaveExerciseVideo(dayIdx, i, videoUrl)} />}
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-slate-500">No exercises for this day yet.</p>}
+            </div>
+          ) : <p className="text-xs text-slate-500">This client does not have a workout plan yet.</p>}
+        </>
       )}
 
-      {(nutritionPlan || mealDay) && (
-        <div className="pt-2 border-t border-slate-800/60">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-200 mb-1">
-            <Apple className="w-3.5 h-3.5 text-emerald-400" /> Nutrition{nutritionPlan?.dailyTargetCalories ? ` — ${nutritionPlan.dailyTargetCalories} kcal/day` : ''}
-          </p>
-          {mealDay?.meals?.length > 0 ? (
-            <div className="space-y-1.5">
-              {mealDay.meals.map((meal, i) => (
-                <div key={i} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800/60 pb-1.5 last:border-0">
-                  <span className="text-slate-300 font-medium min-w-0 truncate">{meal.name}</span>
-                  <span className="flex items-center gap-2 shrink-0">
-                    <span className="text-slate-500">{meal.calories} kcal</span>
-                    {onSwapMeal && (
-                      <button
-                        onClick={() => onSwapMeal({ meal, dayIdx, mealIdx: i })}
-                        className="flex items-center gap-1 px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white text-[9px] font-semibold rounded-md transition-all"
-                      >
-                        <Shuffle className="w-2.5 h-2.5" />Swap
-                      </button>
-                    )}
-                  </span>
-                </div>
+      {viewMode === 'nutrition' && (
+        <div className="full-nutrition-view">
+          <div className="nutrition-plan-header">
+            <div>
+              <span className="nutrition-eyebrow">Seven-day nutrition plan</span>
+              <h3>{nutritionPlan?.dailyTargetCalories ? `${nutritionPlan.dailyTargetCalories} kcal per day` : 'Nutrition targets'}</h3>
+              {nutritionPlan?.focus && <p>{nutritionPlan.focus}</p>}
+            </div>
+            {nutritionPlan?.dailyMacros && (
+              <div className="nutrition-macro-row">
+                <span><small>Protein</small><strong>{nutritionPlan.dailyMacros.protein || '—'}g</strong></span>
+                <span><small>Carbs</small><strong>{nutritionPlan.dailyMacros.carbs || '—'}g</strong></span>
+                <span><small>Fat</small><strong>{nutritionPlan.dailyMacros.fat || '—'}g</strong></span>
+              </div>
+            )}
+          </div>
+
+          {mealDays.length > 0 ? (
+            <div className="nutrition-week-grid">
+              {mealDays.map((mealDay, mealDayIndex) => (
+                <section key={mealDayIndex} className={`nutrition-day-card ${openNutritionDay === mealDayIndex ? 'is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="nutrition-day-heading"
+                    onClick={() => setOpenNutritionDay(openNutritionDay === mealDayIndex ? -1 : mealDayIndex)}
+                    aria-expanded={openNutritionDay === mealDayIndex}
+                    aria-controls={`nutrition-day-${mealDayIndex}`}
+                  >
+                    <span>{String(mealDayIndex + 1).padStart(2, '0')}</span>
+                    <h4>{mealDay.dayName || `Day ${mealDayIndex + 1}`}</h4>
+                    <small>{(mealDay.meals || []).length} meals</small>
+                    <ChevronDown className="nutrition-day-chevron w-4 h-4" />
+                  </button>
+                  <div id={`nutrition-day-${mealDayIndex}`} className="nutrition-day-body">
+                  <div className="nutrition-meal-list">
+                    {(mealDay.meals || []).map((meal, mealIndex) => (
+                      <div key={mealIndex} className="nutrition-meal-row">
+                        <div className="nutrition-meal-content min-w-0">
+                          <div className="nutrition-meal-topline">
+                            <div>
+                              <strong>{meal.name}</strong>
+                              <small>{[meal.time, meal.calories ? `${meal.calories} kcal` : null].filter(Boolean).join(' · ') || 'Meal details'}</small>
+                            </div>
+                            {onSwapMeal && (
+                              <button onClick={() => onSwapMeal({ meal, dayIdx: mealDayIndex, mealIdx: mealIndex })} aria-label={`Swap ${meal.name}`}>
+                                <Shuffle className="w-3 h-3" /> Swap
+                              </button>
+                            )}
+                          </div>
+                          {meal.ingredients?.length > 0 && (
+                            <ul className="nutrition-ingredients">
+                              {meal.ingredients.map((ingredient, ingredientIndex) => <li key={ingredientIndex}>{ingredient}</li>)}
+                            </ul>
+                          )}
+                          {meal.macros && (
+                            <div className="meal-macro-line">
+                              <span>P {meal.macros.protein ?? '—'}g</span>
+                              <span>C {meal.macros.carbs ?? '—'}g</span>
+                              <span>F {meal.macros.fat ?? '—'}g</span>
+                            </div>
+                          )}
+                          {meal.prep && <p className="meal-prep"><b>Preparation:</b> {meal.prep}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  </div>
+                </section>
               ))}
             </div>
-          ) : (
-            <p className="text-xs text-slate-500">No meals for this day yet.</p>
+          ) : <p className="text-xs text-slate-500">No meals have been added yet.</p>}
+
+          {nutritionPlan?.generalAdvice && (
+            <div className="nutrition-guidance">
+              <span>Coach guidance</span>
+              <p>{nutritionPlan.generalAdvice}</p>
+            </div>
           )}
         </div>
-      )}
-
-      {!day && !mealDay && (
-        <p className="text-xs text-slate-500">This plan doesn't have any content yet.</p>
       )}
     </div>
   );
@@ -405,6 +563,22 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
     );
     await saveToClient({ plan: { weeklyMealPlan: updatedWeeklyMealPlan } });
     toast.success('Meal swapped!');
+  };
+
+  const handleSaveExerciseVideo = async (dayIndex, exerciseIndex, videoUrl) => {
+    const workoutPlan = currentPlan?.workoutPlan;
+    if (!workoutPlan?.days?.[dayIndex]) throw new Error('Workout day not found.');
+    const updatedWorkoutPlan = {
+      ...workoutPlan,
+      days: workoutPlan.days.map((day, dIdx) => dIdx === dayIndex ? {
+        ...day,
+        exercises: (day.exercises || []).map((exercise, eIdx) =>
+          eIdx === exerciseIndex ? { ...exercise, videoUrl } : exercise
+        ),
+      } : day),
+    };
+    await saveToClient({ plan: { workoutPlan: updatedWorkoutPlan } });
+    toast.success(videoUrl ? 'Exercise video saved.' : 'Exercise video removed.');
   };
 
   const handleGeneratePlan = async (scope = 'both') => {
@@ -533,7 +707,7 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/25 text-slate-300 hover:text-slate-200 text-xs font-semibold rounded-xl transition-all"
           >
             {showPlan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            {showPlan ? 'Hide Plan' : 'View Plan'}
+            {showPlan ? 'Hide plan & videos' : 'Manage plan & videos'}
           </button>
         )}
       </div>
@@ -577,7 +751,13 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
       </div>
 
       {showPlan && currentPlan && (
-        <ClientPlanPreview plan={currentPlan} dayIdx={planDayIdx} setDayIdx={setPlanDayIdx} onSwapMeal={setSwapRequest} />
+        <ClientPlanPreview
+          plan={currentPlan}
+          dayIdx={planDayIdx}
+          setDayIdx={setPlanDayIdx}
+          onSwapMeal={setSwapRequest}
+          onSaveExerciseVideo={handleSaveExerciseVideo}
+        />
       )}
 
       {mealRequests.length > 0 && (
@@ -750,7 +930,7 @@ function ClientCard({ client, onDelete, onCopyLink }) {
   const isActive = client.status === 'active' && client.clientUid;
 
   return (
-    <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
+    <div className="client-card bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
       <div className="p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
@@ -858,7 +1038,7 @@ function BrandingCard() {
   };
 
   return (
-    <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+    <div className="branding-card bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Palette className="w-4 h-4 text-brand-400" />
         <h3 className="font-bold text-slate-200 text-sm">Client Portal Branding</h3>
@@ -1001,10 +1181,10 @@ export default function Clients() {
     <Layout>
       <div className="min-h-screen bg-slate-950 text-white pb-32">
       <SEO title="Clients" noIndex />
-        <div className="max-w-5xl mx-auto px-4 pt-10 space-y-8">
+        <div className="app-page space-y-8">
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-6">
+          <div className="clients-hero flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 Client Management
@@ -1023,7 +1203,7 @@ export default function Clients() {
           <BrandingCard />
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="client-stats grid grid-cols-3 gap-4">
             {[
               { label: 'Total Clients', value: stats.total, Icon: Users, color: 'text-brand-400', bg: 'bg-brand-600/10 border-brand-500/20' },
               { label: 'Awaiting Signup', value: stats.invited, Icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
@@ -1042,7 +1222,7 @@ export default function Clients() {
           </div>
 
           {/* Info banner */}
-          <div className="bg-brand-950/30 border border-brand-900/40 rounded-2xl p-4 flex items-start gap-3">
+          <div className="checkin-banner bg-brand-950/30 border border-brand-900/40 rounded-2xl p-4 flex items-start gap-3">
             <Calendar className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-brand-300">Automated Weekly Check-ins</p>

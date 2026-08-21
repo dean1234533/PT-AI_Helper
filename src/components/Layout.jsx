@@ -46,55 +46,56 @@ function Sidebar({ onClose, brandName, brandLogo }) {
     : user?.email?.[0]?.toUpperCase() || '?';
 
   return (
-    <div className="flex flex-col h-full w-64 bg-dark-800 border-r border-white/5">
+    <div className="app-sidebar premium-sidebar flex flex-col h-full w-[280px] border-r">
       {/* Logo */}
-      <div className="p-5 border-b border-white/8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} className="w-10 h-10 rounded-xl object-contain shrink-0" />
-          <div>
-            <p className="text-white font-bold text-sm leading-tight">{brandName || "DB's Workouts"}</p>
-            <p className="text-white/40 text-xs">Personal Trainer</p>
+      <div className="sidebar-brand px-5 h-[104px] flex items-center justify-between">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="sidebar-brand-mark">
+            <img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} className="w-10 h-10 object-contain shrink-0" />
+            <span className="sidebar-brand-status" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-white font-bold text-[15px] leading-tight truncate">{brandName || "DB's Workouts"}</p>
+            <p className="sidebar-brand-label">Private coaching</p>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors lg:hidden">
+          <button onClick={onClose} aria-label="Close menu" className="w-10 h-10 rounded-xl flex items-center justify-center text-[#b4b4b8] hover:text-white hover:bg-white/10 transition-colors lg:hidden">
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="sidebar-navigation flex-1 px-4 py-7 space-y-1.5 overflow-y-auto">
+        <p className="sidebar-section-label">Training room</p>
         {[...navItems, ...(showClientsNav ? adminNavItems : [])].map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             onClick={onClose}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
-                isActive
-                  ? 'bg-brand-600/25 text-brand-300 shadow-inner-glow'
-                  : 'text-white/50 hover:text-white hover:bg-white/8'
-              }`
-            }
+            className={({ isActive }) => `sidebar-nav-link group ${isActive ? 'is-active' : ''}`}
           >
-            <Icon className="w-4 h-4 shrink-0" />
+            <span className="sidebar-active-rail" />
+            <span className="app-nav-icon">
+              <Icon className="w-4 h-4 shrink-0" />
+            </span>
             <span>{label}</span>
           </NavLink>
         ))}
       </nav>
 
       {/* User info + logout */}
-      <div className="p-4 border-t border-white/8">
-        <div className="flex items-center gap-3 px-2 py-2 mb-2 rounded-xl">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+      <div className="sidebar-footer p-4">
+        <div className="sidebar-account flex items-center gap-3 px-3 py-3 mb-2 rounded-2xl">
+          <div className="sidebar-avatar">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium truncate">
               {user?.displayName || 'Athlete'}
             </p>
-            <p className="text-white/35 text-xs truncate">{user?.email}</p>
+            <p className="text-[#8d8d92] text-xs truncate">{user?.email}</p>
           </div>
         </div>
         <a
@@ -113,13 +114,13 @@ function Sidebar({ onClose, brandName, brandLogo }) {
           href="https://dbworkouts.co.uk/privacy-policy"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-white/30 hover:text-white/60 hover:bg-white/5 text-xs transition-all"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#8d8d92] hover:text-white hover:bg-white/5 text-xs transition-all"
         >
           Privacy Policy
         </a>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-white/40 hover:text-white hover:bg-white/8 text-sm transition-all"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#a5a5aa] hover:text-white hover:bg-white/10 text-sm transition-all"
         >
           <LogOut className="w-4 h-4" /> Sign out
         </button>
@@ -134,6 +135,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { brandName, brandColor, brandLogoBase64 } = useTrainerBranding();
   const brandLogo = brandLogoBase64 || null; // stored as a full data: URI (see ProfileSetup's logo upload)
+  const currentPage = [...navItems, ...adminNavItems].find((item) => item.to === location.pathname)?.label || 'Coaching';
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -149,7 +151,7 @@ export default function Layout({ children }) {
   }, [brandColor]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="app-shell flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex shrink-0">
         <Sidebar brandName={brandName} brandLogo={brandLogo} />
@@ -167,33 +169,35 @@ export default function Layout({ children }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="hidden lg:flex items-center justify-between px-6 py-4 bg-dark-800 border-b border-white/8 shrink-0">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/8 transition-colors text-white/60 hover:text-white"
-            title="Go back"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+        <div className="app-topbar premium-desktop-topbar hidden lg:flex items-center justify-between px-8 h-[72px] border-b shrink-0">
+          <div className="desktop-page-identity">
+            <span className="desktop-page-marker" />
+            <div>
+              <span>DB'S WORKOUTS</span>
+              <strong>{currentPage}</strong>
+            </div>
+          </div>
+          <button onClick={() => navigate(-1)} className="premium-nav-control premium-back-control" title="Go back">
+            <ArrowLeft className="w-4 h-4" /><span>Back</span>
           </button>
-          <div />
         </div>
 
         {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-dark-800 border-b border-white/8 shrink-0">
+        <div className="app-topbar premium-mobile-topbar lg:hidden flex items-center justify-between px-4 border-b shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white"
+            aria-label="Open menu"
+            className="premium-nav-control"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2">
-            <img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} className="w-8 h-8 rounded-lg object-contain" />
-            <span className="font-bold text-white text-sm">{brandName || "DB's Workouts"}</span>
+          <div className="mobile-brand">
+            <span className="mobile-brand-mark"><img src={brandLogo || '/logo.png'} alt={brandName || "DB's Workouts"} /></span>
+            <span className="mobile-brand-copy"><strong>{brandName || "DB's Workouts"}</strong><small>{currentPage}</small></span>
           </div>
           <button
             onClick={() => window.history.back()}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/8 transition-colors text-white/50 hover:text-white"
+            className="premium-nav-control"
             title="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -225,10 +229,11 @@ export default function Layout({ children }) {
 
 export function PageHeader({ title, subtitle, action }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-4 justify-between mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-end gap-5 justify-between mb-8 pb-6 border-b border-[#ded9d1]">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-gray-500 mt-1 text-sm">{subtitle}</p>}
+        <p className="page-kicker mb-2">Personal coaching</p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#181719] tracking-[-.045em]">{title}</h1>
+        {subtitle && <p className="text-[#77716a] mt-2 text-sm">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

@@ -1,8 +1,8 @@
 const variants = {
-  primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
-  secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm',
+  primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-[0_9px_22px_rgba(130,15,15,.18)]',
+  secondary: 'bg-[#fffdf9] hover:bg-[#f1ede6] text-[#252326] border border-[#d8d2ca]',
   danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm',
-  ghost: 'hover:bg-gray-100 text-gray-600',
+  ghost: 'hover:bg-[#ece8e1] text-[#65615c]',
   success: 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm',
 };
 
@@ -23,7 +23,7 @@ export default function Button({
 }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || loading}
       {...props}
     >

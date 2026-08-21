@@ -1,6 +1,6 @@
 export default function Card({ children, className = '', padding = true }) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${padding ? 'p-6' : ''} ${className}`}>
+    <div className={`bg-[#fffdf9] rounded-2xl border border-[#ded9d1] shadow-[0_14px_35px_rgba(53,45,35,.055)] ${padding ? 'p-6' : ''} ${className}`}>
       {children}
     </div>
   );
