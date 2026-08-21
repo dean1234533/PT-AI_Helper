@@ -218,6 +218,9 @@ export default function Login() {
                 Don't have an account?{' '}
                 <Link to="/register" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">Sign up</Link>
               </p>
+              <p className="text-center mt-3">
+                <Link to="/pricing" className="text-xs text-white/45 hover:text-white font-semibold transition-colors">View membership options</Link>
+              </p>
             </>
           )}
         </div>

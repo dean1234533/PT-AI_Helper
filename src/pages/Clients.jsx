@@ -1134,7 +1134,7 @@ export default function Clients() {
       createdAt: new Date().toISOString(),
     });
 
-    const inviteUrl = `${APP_ORIGIN}/#/register?invite=${inviteToken}`;
+    const inviteUrl = `${APP_ORIGIN}/register?invite=${inviteToken}`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast.success(`Invite created and link copied — send it to ${form.name} yourself.`);
@@ -1162,7 +1162,7 @@ export default function Clients() {
   };
 
   const handleCopyLink = async (client) => {
-    const inviteUrl = `${APP_ORIGIN}/#/register?invite=${client.inviteToken}`;
+    const inviteUrl = `${APP_ORIGIN}/register?invite=${client.inviteToken}`;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       toast.success(`Invite link copied for ${client.name}`);

@@ -105,7 +105,7 @@ async function callProvider(provider, key, systemPrompt, userText, photoUrl) {
 
   // OpenRouter requires these headers to identify the app
   if (provider.name === 'OpenRouter') {
-    headers['HTTP-Referer'] = env('APP_URL') || 'https://pt-ai-helper.vercel.app';
+    headers['HTTP-Referer'] = env('APP_URL') || 'https://app.dbworkouts.co.uk';
     headers['X-Title'] = 'PT AI Helper';
   }
 

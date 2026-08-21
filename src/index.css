@@ -52,6 +52,118 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: 3px;
 }
 
+/* ── Native app pricing ───────────────────────────────── */
+.pricing-page {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(207, 28, 24, .22), transparent 32rem),
+    linear-gradient(180deg, #111114 0%, #09090b 100%);
+}
+.pricing-nav {
+  position: relative; z-index: 2; max-width: 1240px; min-height: 88px; margin: 0 auto;
+  padding: 18px 28px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.pricing-brand, .pricing-brand > span:last-child, .pricing-nav-actions, .pricing-back-link, .pricing-site-link {
+  display: flex; align-items: center;
+}
+.pricing-brand { gap: 12px; color: #fff; text-decoration: none; }
+.pricing-brand > span:first-child {
+  width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px;
+  background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.11);
+  box-shadow: 0 14px 30px rgba(0,0,0,.34);
+}
+.pricing-brand img { width: 40px; height: 40px; object-fit: contain; }
+.pricing-brand > span:last-child { align-items: flex-start; flex-direction: column; }
+.pricing-brand strong { font: 800 15px/1.1 'Manrope', sans-serif; }
+.pricing-brand small { margin-top: 5px; color: #85858c; font-size: 9px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.pricing-nav-actions { gap: 10px; }
+.pricing-back-link, .pricing-site-link {
+  gap: 8px; min-height: 44px; padding: 0 15px; border-radius: 13px; font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: .2s ease;
+}
+.pricing-back-link { color: #171719; background: #f7f5f1; border: 1px solid #fff; }
+.pricing-site-link { color: #aaaab0; border: 1px solid rgba(255,255,255,.09); }
+.pricing-back-link:hover, .pricing-site-link:hover { transform: translateY(-2px); }
+.pricing-site-link:hover { color: #fff; border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.05); }
+.pricing-back-link svg, .pricing-site-link svg { width: 15px; height: 15px; }
+.pricing-main { max-width: 1184px; margin: 0 auto; padding: 82px 28px 72px; }
+.pricing-hero { max-width: 810px; margin: 0 auto 56px; text-align: center; }
+.pricing-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 22px; color: #ff746d;
+  font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+}
+.pricing-eyebrow svg { width: 15px; height: 15px; }
+.pricing-hero h1 { margin: 0; color: #f7f5f1; font-size: clamp(2.7rem, 7vw, 5.3rem); line-height: .98; letter-spacing: -.065em; }
+.pricing-hero h1 span { color: #99999f; }
+.pricing-hero > p { max-width: 680px; margin: 27px auto 0; color: #a0a0a7; font-size: 17px; line-height: 1.7; }
+.pricing-trust-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 11px 25px; margin-top: 30px; }
+.pricing-trust-row span { display: inline-flex; align-items: center; gap: 7px; color: #c9c9cd; font-size: 12px; font-weight: 650; }
+.pricing-trust-row svg { width: 15px; height: 15px; color: #61cda3; }
+.app-pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; align-items: stretch; }
+.app-pricing-card {
+  position: relative; display: flex; flex-direction: column; min-width: 0; padding: 36px; overflow: hidden;
+  border-radius: 28px; color: #f5f4f1; border: 1px solid rgba(255,255,255,.11);
+  background: linear-gradient(155deg, rgba(255,255,255,.075), rgba(255,255,255,.025));
+  box-shadow: 0 28px 80px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.055);
+}
+.app-pricing-card::before { content: ''; position: absolute; inset: 0 30px auto; height: 2px; background: rgba(255,255,255,.18); }
+.app-pricing-card.is-featured { border-color: rgba(222,31,27,.54); background: linear-gradient(145deg, rgba(190,20,18,.17), rgba(255,255,255,.04) 45%, rgba(255,255,255,.022)); }
+.app-pricing-card.is-featured::before { background: #e32d27; box-shadow: 0 0 20px rgba(222,31,27,.7); }
+.pricing-choice {
+  position: absolute; top: 22px; right: 24px; padding: 7px 10px; border-radius: 999px;
+  color: #ffc4c0; background: rgba(222,31,27,.17); border: 1px solid rgba(244,61,51,.26);
+  font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+}
+.pricing-card-heading { display: flex; gap: 15px; align-items: center; padding-right: 90px; }
+.pricing-plan-icon { width: 50px; height: 50px; display: grid; place-items: center; flex: none; border-radius: 15px; color: #ff6b63; background: rgba(222,31,27,.12); border: 1px solid rgba(244,61,51,.2); }
+.pricing-plan-icon svg { width: 22px; height: 22px; }
+.pricing-card-heading small { color: #8f8f96; font-size: 9px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+.pricing-card-heading h2 { margin: 4px 0 0; font-size: 25px; }
+.pricing-plan-description { min-height: 70px; margin: 23px 0 0; color: #a7a7ad; font-size: 14px; line-height: 1.7; }
+.pricing-value { display: flex; align-items: flex-end; margin: 26px 0; }
+.pricing-value sup { align-self: flex-start; margin: 7px 4px 0 0; color: #bbbcc0; font-size: 20px; font-weight: 700; }
+.pricing-value strong { font: 800 52px/.9 'Manrope', sans-serif; letter-spacing: -.055em; }
+.pricing-value span { margin: 0 0 3px 9px; color: #7f7f86; font-size: 12px; }
+.pricing-divider { height: 1px; background: rgba(255,255,255,.085); }
+.app-pricing-card ul { display: grid; gap: 13px; flex: 1; margin: 26px 0 31px; padding: 0; list-style: none; }
+.app-pricing-card li { display: flex; gap: 10px; align-items: flex-start; color: #d0d0d4; font-size: 13px; line-height: 1.45; }
+.app-pricing-card li svg { width: 17px; height: 17px; flex: none; padding: 3px; border-radius: 50%; color: #fff; background: #c91817; }
+.app-pricing-card button {
+  min-height: 55px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  border-radius: 15px; color: #171719; background: #f7f5f1; border: 1px solid #fff;
+  font-size: 14px; font-weight: 800; box-shadow: 0 15px 30px rgba(0,0,0,.2); transition: .2s ease;
+}
+.app-pricing-card.is-featured button { color: #fff; background: #ce1917; border-color: #e52c27; box-shadow: 0 15px 34px rgba(139,13,11,.34); }
+.app-pricing-card button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+.app-pricing-card button:disabled { opacity: .65; cursor: wait; }
+.app-pricing-card button svg { width: 17px; height: 17px; }
+.pricing-footer-panel {
+  margin-top: 23px; min-height: 100px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  border: 1px solid rgba(255,255,255,.09); border-radius: 22px; background: rgba(255,255,255,.03);
+}
+.pricing-footer-panel div { display: flex; flex-direction: column; gap: 5px; }
+.pricing-footer-panel small { color: #85858c; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+.pricing-footer-panel strong { color: #e9e8e5; font-size: 16px; }
+.pricing-footer-panel a { display: inline-flex; align-items: center; gap: 8px; color: #ff6f68; font-size: 13px; font-weight: 750; text-decoration: none; }
+.pricing-footer-panel a svg { width: 16px; height: 16px; }
+
+@media (max-width: 720px) {
+  .pricing-nav { min-height: 76px; padding: 13px 17px; }
+  .pricing-site-link { display: none; }
+  .pricing-back-link { padding: 0 12px; font-size: 12px; }
+  .pricing-main { padding: 54px 16px 42px; }
+  .pricing-hero { margin-bottom: 36px; text-align: left; }
+  .pricing-hero h1 { font-size: clamp(2.6rem, 13vw, 4rem); }
+  .pricing-hero > p { margin-top: 21px; font-size: 16px; }
+  .pricing-trust-row { justify-content: flex-start; gap: 12px 18px; }
+  .app-pricing-grid { grid-template-columns: 1fr; }
+  .app-pricing-card { padding: 28px 22px; border-radius: 24px; }
+  .pricing-choice { top: 19px; right: 18px; }
+  .pricing-card-heading { padding-right: 78px; }
+  .pricing-plan-description { min-height: 0; }
+  .pricing-footer-panel { align-items: flex-start; flex-direction: column; }
+}
+
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1147,6 +1259,34 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .profile-security-note { margin-top: 0; padding-top: 18px; }
 }
 @media (max-width: 639px) {
+  .premium-mobile-topbar { height: 84px; padding-inline: 16px; }
+  .premium-nav-control { width: 46px; height: 46px; border-radius: 14px; }
+  .premium-nav-control svg { width: 22px; height: 22px; }
+  .mobile-brand { gap: 11px; }
+  .mobile-brand-mark { width: 45px; height: 45px; border-radius: 14px; }
+  .mobile-brand-mark img { width: 40px; height: 40px; }
+  .mobile-brand-copy strong { max-width: 160px; font-size: 15px; }
+  .mobile-brand-copy small { font-size: 10px; letter-spacing: .16em; }
+  .premium-sidebar { width: min(88vw, 330px) !important; }
+  .sidebar-brand { min-height: 108px; }
+  .sidebar-brand-mark { width: 54px; height: 54px; }
+  .sidebar-brand-label { font-size: 10px; }
+  .sidebar-nav-link { min-height: 58px; font-size: 16px; }
+  .app-nav-icon { width: 36px; height: 36px; }
+  .app-nav-icon svg { width: 19px; height: 19px; }
+  .sidebar-account p:first-child { font-size: 15px; }
+  .sidebar-account p:last-child { font-size: 13px; }
+  .app-shell main { font-size: 16px; line-height: 1.6; }
+  .app-shell main [class*="text-[9px]"],
+  .app-shell main [class*="text-[10px]"] { font-size: 14px !important; line-height: 1.5 !important; }
+  .app-shell main .text-xs { font-size: 15px !important; line-height: 1.55 !important; }
+  .app-shell main .text-sm { font-size: 16px !important; line-height: 1.55 !important; }
+  .app-shell main input,
+  .app-shell main select,
+  .app-shell main textarea { min-height: 50px; font-size: 16px !important; }
+  .app-shell main label { font-size: 14px !important; }
+  .app-shell main h1 { line-height: 1.08; }
+  .app-shell main h2 { line-height: 1.15; }
   .app-page { padding: 22px 16px 96px; }
   .dashboard-hero { padding: 28px 24px 24px; border-radius: 22px; }
   .dashboard-hero-grid { gap: 22px; }
@@ -1157,14 +1297,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .dashboard-brief-workout { padding-bottom: 15px; }
   .app-shell main .dashboard-brief-card .hero-profile { margin-top: 0; }
   .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .metric-strip > div { min-height: 142px; padding: 17px !important; border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; align-items: flex-start !important; }
+  .metric-strip > div { min-height: 150px; padding: 19px !important; border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line) !important; align-items: flex-start !important; }
+  .metric-strip h3 { font-size: 24px !important; line-height: 1.15 !important; }
+  .metric-strip p { font-size: 14px !important; line-height: 1.4 !important; }
   .metric-strip > div:nth-child(2n) { border-right: 0 !important; }
   .metric-strip > div:nth-child(n+3) { border-bottom: 0 !important; }
   .metric-strip > div::before { left: 16px; right: 16px; }
-  .metric-strip .metric-icon { width: 38px; height: 38px; }
-  .dashboard-day-picker button { min-height: 40px; padding-left: 14px !important; padding-right: 14px !important; }
+  .metric-strip .metric-icon { width: 42px; height: 42px; }
+  .metric-strip .metric-icon svg { width: 21px; height: 21px; }
+  .dashboard-day-picker button { min-height: 46px; padding-left: 16px !important; padding-right: 16px !important; font-size: 14px !important; }
   .dashboard-exercise-card,
-  .dashboard-meal-card { padding: 15px 16px !important; }
+  .dashboard-meal-card { padding: 16px !important; }
+  .app-shell main .dashboard-card-toggle { min-height: 46px; align-items: center; }
+  .dashboard-card-summary { gap: 10px; }
+  .dashboard-accordion-chevron { width: 21px; height: 21px; }
   .dashboard-exercise-details,
   .dashboard-meal-details { display: none; padding-top: 9px; margin-top: 10px; border-top: 1px solid #ddd7cf; }
   .dashboard-exercise-card.is-open .dashboard-exercise-details,

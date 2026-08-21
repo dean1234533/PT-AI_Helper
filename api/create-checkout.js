@@ -1,6 +1,6 @@
 /**
  * Cloudflare Pages Function — POST /api/create-checkout
- * Creates a Stripe Checkout session for the Pro plan.
+ * Creates a Stripe Checkout session for Personal or PT Pro.
  *
  * Env vars: STRIPE_SECRET_KEY, STRIPE_PRICE_ID, STRIPE_PORTAL_RETURN_URL
  */
@@ -22,33 +22,32 @@ export default async function handler(req, res) {
   
   
   try {
-    const { userId, userEmail, returnUrl } = req.body;
-    if (!userId || !userEmail) {
-      return res.status(400).json({ error: 'userId and userEmail required' });
-    }
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
-      return res.status(500).json({ error: 'Stripe is not configured on the server.' });
-    }
-    if (!process.env.STRIPE_PRICE_ID.startsWith('price_')) {
-      return res.status(500).json({ error: 'STRIPE_PRICE_ID must be a Stripe price ID that starts with price_.' });
-    }
+    const { plan = 'pt_pro', userId, userEmail } = req.body;
+    if (!['personal', 'pt_pro'].includes(plan)) return res.status(400).json({ error: 'Invalid plan.' });
+    const priceId = plan === 'personal'
+      ? process.env.STRIPE_PERSONAL_PRICE_ID
+      : (process.env.STRIPE_PT_PRO_PRICE_ID || process.env.STRIPE_PRICE_ID);
+    if (!process.env.STRIPE_SECRET_KEY || !priceId) return res.status(500).json({ error: 'Stripe is not configured for this plan.' });
+    if (!priceId.startsWith('price_')) return res.status(500).json({ error: 'The Stripe price ID is invalid.' });
 
-    const base = returnUrl || process.env.STRIPE_PORTAL_RETURN_URL || 'https://yourptaihelper.com';
+    const base = (process.env.APP_URL || 'https://app.dbworkouts.co.uk').replace(/\/$/, '');
 
     const params = new URLSearchParams({
       mode: 'subscription',
       'payment_method_types[]': 'card',
-      'line_items[0][price]': process.env.STRIPE_PRICE_ID,
+      'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      'success_url': `${base}/dashboard?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
+      'success_url': `${base}/${userId ? 'dashboard?upgraded=true' : 'register?subscription=success'}&session_id={CHECKOUT_SESSION_ID}`,
       'cancel_url': `${base}/pricing?cancelled=true`,
-      'client_reference_id': userId,
-      'customer_email': userEmail,
-      'metadata[userId]': userId,
-      'subscription_data[metadata][userId]': userId,
-      // Allow promotion codes
+      'metadata[plan]': plan,
       'allow_promotion_codes': 'true',
     });
+    if (userId) {
+      params.set('client_reference_id', userId);
+      params.set('metadata[userId]', userId);
+      params.set('subscription_data[metadata][userId]', userId);
+    }
+    if (userEmail) params.set('customer_email', userEmail);
 
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

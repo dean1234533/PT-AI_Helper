@@ -1,7 +1,8 @@
 /**
  * POST /api/create-checkout
- * Creates a Stripe Checkout session for the Pro plan.
- * Env vars: STRIPE_SECRET_KEY, STRIPE_PRICE_ID, STRIPE_PORTAL_RETURN_URL
+ * Creates a Stripe Checkout session for Personal or PT Pro.
+ * Env vars: STRIPE_SECRET_KEY, STRIPE_PERSONAL_PRICE_ID,
+ * STRIPE_PT_PRO_PRICE_ID (or legacy STRIPE_PRICE_ID), APP_URL
  */
 
 const CORS = {
@@ -17,27 +18,33 @@ export async function onRequestOptions() {
 export async function onRequestPost(ctx) {
   const env = ctx.env;
   try {
-    const { userId, userEmail } = await ctx.request.json();
-    if (!userId || !userEmail) return Response.json({ error: 'userId and userEmail required' }, { status: 400, headers: CORS });
+    const { plan = 'pt_pro', userId, userEmail } = await ctx.request.json();
+    if (!['personal', 'pt_pro'].includes(plan)) return Response.json({ error: 'Invalid plan.' }, { status: 400, headers: CORS });
 
-    if (!env.STRIPE_SECRET_KEY || !env.STRIPE_PRICE_ID) return Response.json({ error: 'Stripe is not configured on the server.' }, { status: 500, headers: CORS });
-    if (!env.STRIPE_PRICE_ID.startsWith('price_')) return Response.json({ error: 'STRIPE_PRICE_ID must be a Stripe price ID that starts with price_.' }, { status: 500, headers: CORS });
+    const priceId = plan === 'personal'
+      ? env.STRIPE_PERSONAL_PRICE_ID
+      : (env.STRIPE_PT_PRO_PRICE_ID || env.STRIPE_PRICE_ID);
+    if (!env.STRIPE_SECRET_KEY || !priceId) return Response.json({ error: 'Stripe is not configured for this plan.' }, { status: 500, headers: CORS });
+    if (!priceId.startsWith('price_')) return Response.json({ error: 'The Stripe price ID is invalid.' }, { status: 500, headers: CORS });
 
-    const base = env.STRIPE_PORTAL_RETURN_URL || 'https://app.dbworkouts.co.uk/#/dashboard';
+    const base = (env.APP_URL || 'https://app.dbworkouts.co.uk').replace(/\/$/, '');
 
     const params = new URLSearchParams({
       mode: 'subscription',
       'payment_method_types[]': 'card',
-      'line_items[0][price]': env.STRIPE_PRICE_ID,
+      'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      'success_url': `${base}/dashboard?upgraded=true&session_id={CHECKOUT_SESSION_ID}`,
+      'success_url': `${base}/${userId ? 'dashboard?upgraded=true' : 'register?subscription=success'}&session_id={CHECKOUT_SESSION_ID}`,
       'cancel_url': `${base}/pricing?cancelled=true`,
-      'client_reference_id': userId,
-      'customer_email': userEmail,
-      'metadata[userId]': userId,
-      'subscription_data[metadata][userId]': userId,
+      'metadata[plan]': plan,
       'allow_promotion_codes': 'true',
     });
+    if (userId) {
+      params.set('client_reference_id', userId);
+      params.set('metadata[userId]', userId);
+      params.set('subscription_data[metadata][userId]', userId);
+    }
+    if (userEmail) params.set('customer_email', userEmail);
 
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

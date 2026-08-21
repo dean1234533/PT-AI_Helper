@@ -189,7 +189,7 @@ export default async function handler(req, res) {
     }
 
     const { greeting, questions } = parsed;
-    const checkInUrl = `${appUrl || 'https://yourptaihelper.com'}/checkin/${checkInId}`;
+    const checkInUrl = `${appUrl || 'https://app.dbworkouts.co.uk'}/checkin/${checkInId}`;
     const html = buildCheckInEmail({ clientName, trainerName, greeting, questions, checkInUrl });
     const resendKey = env('RESEND_API_KEY');
     if (!resendKey) {

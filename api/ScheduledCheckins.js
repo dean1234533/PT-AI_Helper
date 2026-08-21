@@ -138,7 +138,7 @@ async function sendCheckInToClient(client) {
   if (!envVar('FIREBASE_PROJECT_ID') || !envVar('FIREBASE_API_KEY')) throw new Error('Firebase REST API is not configured on the server.');
 
   const checkInId = generateCheckInId();
-  const appUrl = envVar('APP_URL') || 'https://pt-ai-helper.vercel.app';
+  const appUrl = envVar('APP_URL') || 'https://app.dbworkouts.co.uk';
   const checkInUrl = `${appUrl}/checkin/${checkInId}`;
 
   // Generate AI questions

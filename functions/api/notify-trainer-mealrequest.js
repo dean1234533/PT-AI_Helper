@@ -62,7 +62,7 @@ export async function onRequestPost(ctx) {
       await sendPushToUid(trainerId, {
         title: `${clientName} suggested a meal change`,
         body: message.length > 100 ? `${message.slice(0, 100)}…` : message,
-        url: '/#/clients',
+        url: '/clients',
       }, env).catch((err) => console.error('Push error:', err.message));
     }
 

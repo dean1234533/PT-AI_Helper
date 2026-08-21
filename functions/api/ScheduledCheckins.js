@@ -145,7 +145,7 @@ async function sendCheckInToClient(client, env, { linkOnly = false } = {}) {
 
   const checkInId = generateCheckInId();
   const appUrl = getenv('APP_URL', env) || 'https://app.dbworkouts.co.uk';
-  const checkInUrl = `${appUrl}/#/checkin/${checkInId}`;
+  const checkInUrl = `${appUrl}/checkin/${checkInId}`;
 
   const { greeting, questions } = await generateCheckInQuestions(geminiKey, name, planSummary);
 
@@ -202,13 +202,13 @@ async function sendReminderToLinkedClient(client, env) {
   }
 
   const appUrl = getenv('APP_URL', env) || 'https://app.dbworkouts.co.uk';
-  const checkInUrl = `${appUrl}/#/checkin`;
+  const checkInUrl = `${appUrl}/checkin`;
   const html = buildReminderEmail({ clientName: name, trainerName: trainerName || 'Your trainer', checkInUrl });
 
   await sendPushToUid(clientUid, {
     title: 'Time for your weekly check-in',
     body: `${trainerName || 'Your trainer'} wants to know how your week went.`,
-    url: '/#/checkin',
+    url: '/checkin',
   }, env).catch((err) => console.error('Push error:', err.message));
 
   const emailRes = await fetch('https://api.resend.com/emails', {
@@ -263,7 +263,7 @@ async function sendWorkoutDayPush(clientUid, env) {
   await sendPushToUid(clientUid, {
     title: 'Workout day!',
     body: today.focus || "Today's session is waiting for you.",
-    url: '/#/plan',
+    url: '/plan',
   }, env).catch((err) => console.error('Push error:', err.message));
 }
 

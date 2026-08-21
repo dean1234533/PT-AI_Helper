@@ -69,7 +69,7 @@ export async function onRequestPost(ctx) {
       await sendPushToUid(trainerId, {
         title: `${clientName} joined!`,
         body: `${clientName} signed up using your invite link.`,
-        url: '/#/clients',
+        url: '/clients',
       }, env).catch((err) => console.error('Push error:', err.message));
     }
 

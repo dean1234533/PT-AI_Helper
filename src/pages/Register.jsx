@@ -11,6 +11,9 @@ export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
+  const selectedPlan = ['personal', 'pt_pro'].includes(searchParams.get('plan'))
+    ? searchParams.get('plan')
+    : null;
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
@@ -60,13 +63,31 @@ export default function Register() {
         }
       }
 
+      if (selectedPlan) {
+        const checkoutResponse = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: selectedPlan,
+            userId: cred.user.uid,
+            userEmail: cred.user.email,
+          }),
+        });
+        const checkout = await checkoutResponse.json();
+        if (!checkoutResponse.ok || !checkout.url) {
+          throw new Error(checkout.error || 'Your account was created, but checkout could not be opened.');
+        }
+        window.location.assign(checkout.url);
+        return;
+      }
+
       toast.success('Account created! Let\'s set up your API key.');
       navigate('/setup/api-key');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         toast.error('Email already in use');
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error(err.message || 'Registration failed. Please try again.');
       }
     } finally {
       setLoading(false);

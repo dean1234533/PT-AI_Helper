@@ -94,7 +94,7 @@ export async function onRequestPost(ctx) {
       await sendPushToUid(clientUid, {
         title: 'Your plan has been updated',
         body,
-        url: '/#/plan',
+        url: '/plan',
       }, env).catch((err) => console.error('Push error:', err.message));
     }
 

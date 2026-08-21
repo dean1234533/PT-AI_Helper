@@ -75,7 +75,7 @@ export async function onRequestPost(ctx) {
       await sendPushToUid(trainerId, {
         title: `${clientName} checked in`,
         body: `Weight: ${checkinData?.weight ?? '—'} kg · Energy ${checkinData?.energy ?? '—'}/10 · Mood ${checkinData?.mood ?? '—'}/10`,
-        url: '/#/clients',
+        url: '/clients',
       }, env).catch((err) => console.error('Push error:', err.message));
     }
 

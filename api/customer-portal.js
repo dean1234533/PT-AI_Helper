@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     const params = new URLSearchParams({
       customer: stripeCustomerId,
-      return_url: returnUrl || process.env.STRIPE_PORTAL_RETURN_URL || 'https://yourptaihelper.com/dashboard',
+      return_url: returnUrl || process.env.STRIPE_PORTAL_RETURN_URL || 'https://app.dbworkouts.co.uk/dashboard',
     });
 
     const stripeRes = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {

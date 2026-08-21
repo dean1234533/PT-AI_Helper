@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, CheckSquare, User, Users,
-  LogOut, Menu, X, ArrowLeft,
+  LogOut, Menu, X, ArrowLeft, ExternalLink, CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
@@ -110,6 +110,21 @@ function Sidebar({ onClose, brandName, brandLogo }) {
           </svg>
           Help & Support
         </a>
+        <a
+          href="https://dbworkouts.co.uk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#a5a5aa] hover:text-white hover:bg-white/5 text-sm transition-all"
+        >
+          <ExternalLink className="w-4 h-4" /> DB's Workouts website
+        </a>
+        <NavLink
+          to="/pricing"
+          onClick={onClose}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#a5a5aa] hover:text-white hover:bg-white/5 text-sm transition-all"
+        >
+          <CreditCard className="w-4 h-4" /> Membership & pricing
+        </NavLink>
         <a
           href="https://dbworkouts.co.uk/privacy-policy"
           target="_blank"

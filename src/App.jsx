@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
@@ -15,6 +15,7 @@ import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
 import PublicCheckIn from './pages/PublicCheckIn';
+import Pricing from './pages/Pricing';
 import Layout from './components/Layout';
 
 function AppRoutes() {
@@ -26,6 +27,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkin/:id" element={<PublicCheckIn />} />
+      <Route path="/pricing" element={<Pricing />} />
 
       {/* Protected Setup/Onboarding Routes */}
       <Route
@@ -107,9 +109,9 @@ export default function App() {
     <HelmetProvider>
       <AuthProvider>
         <GeminiProvider>
-          <HashRouter>
+          <BrowserRouter>
             <AppRoutes />
-          </HashRouter>
+          </BrowserRouter>
           <Toaster
             position="top-right"
             toastOptions={{
