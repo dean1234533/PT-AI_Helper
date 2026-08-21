@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Workout &amp; Nutrition Plans | DB's Workouts – East London</title>
+  <meta name="description" content="Personalised AI workout and nutrition plans designed by Dean Burt — REPs certified East London PT. Get started from £7.99/month or try the free generator.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://app.dbworkouts.co.uk/">
+  <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+  <link rel="icon" href="./pics/IMG_8101.JPG" type="image/png" sizes="128x128">
+
+  <meta property="og:title" content="AI Workout &amp; Nutrition Plans | DB's Workouts">
+  <meta property="og:description" content="Personalised AI workout and nutrition plans from £7.99/month. Built by Dean Burt, REPs certified East London PT.">
+  <meta property="og:url" content="https://dbworkouts.co.uk/ai-plans">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://dbworkouts.co.uk/pics/IMG_8723.JPG">
+  <meta property="og:site_name" content="DB's Workouts">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Workout &amp; Nutrition Plans | DB's Workouts">
+  <meta name="twitter:description" content="Personalised AI workout and nutrition plans from £7.99/month. Built by Dean Burt, REPs certified East London PT.">
+  <meta name="twitter:image" content="https://dbworkouts.co.uk/pics/IMG_8723.JPG">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="Styles/db.css?v=9">
+
+  <style>
+    /* ── Hero ── */
+    .article-hero{height:560px;position:relative;display:flex;align-items:flex-end;overflow:hidden}
+    .article-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(2,2,8,.96) 0%,rgba(2,2,8,.45) 55%,rgba(2,2,8,.2) 100%);pointer-events:none}
+    .article-hero-bg{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
+    .article-hero-bg svg{width:100%;height:100%;display:block}
+    .article-hero-content{position:relative;z-index:1;max-width:1200px;margin:0 auto;width:100%;padding:0 24px 68px}
+    .section-label{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);background:rgba(179,0,24,.12);border:1px solid rgba(179,0,24,.28);border-radius:100px;padding:7px 18px;margin-bottom:22px}
+    .article-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:22px}
+    .article-meta span{font-size:.82rem;color:rgba(255,255,255,.5)}
+    @media(min-width:601px) and (max-width:1023px){.article-hero{align-items:center}.article-hero-content{padding-bottom:0;padding-top:80px}}
+    @media(max-width:600px){.article-hero{height:420px}.article-hero-content{padding-bottom:48px}}
+
+    /* ── Stats strip ── */
+    .stats-strip{background:var(--card);border-bottom:1px solid var(--border)}
+    .stats-inner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+    .stat-item{padding:26px 16px;text-align:center;border-right:1px solid var(--border)}
+    .stat-item:last-child{border-right:none}
+    .stat-num{font-family:'Montserrat',sans-serif;font-size:2rem;font-weight:900;color:var(--accent);line-height:1}
+    .stat-desc{font-size:.73rem;color:var(--text-dim);margin-top:5px;letter-spacing:.04em}
+    @media(max-width:540px){
+      .stats-inner{grid-template-columns:repeat(2,1fr)}
+      .stat-item:nth-child(2){border-right:none}
+      .stat-item:nth-child(3){border-bottom:none}
+      .stat-item{border-bottom:1px solid var(--border)}
+      .stat-item:nth-child(4){border-right:none;border-bottom:none}
+    }
+
+    /* ── Hero CTA strip ── */
+    .hero-cta-strip{background:linear-gradient(180deg,var(--card) 0%,rgba(8,8,14,.98) 100%);border-bottom:1px solid var(--border);padding:52px 24px;text-align:center}
+    .hero-cta-strip p{color:var(--text-dim);margin:0 0 32px;font-size:1.02rem;line-height:1.72;max-width:480px;margin-left:auto;margin-right:auto}
+    .hero-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+
+    /* ── Shared ── */
+    .ai-section{padding:96px 24px}
+    .ai-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+    .ai-section-title{font-family:'Montserrat',sans-serif;font-size:clamp(1.65rem,4.5vw,2.7rem);font-weight:800;line-height:1.08;margin-bottom:18px}
+    .ai-section-sub{color:var(--text-dim);font-size:clamp(.9rem,2vw,1.02rem);max-width:520px;margin:0 auto 56px;line-height:1.7}
+    .ai-center{text-align:center}
+
+    /* ── Features ── */
+    .features-section{background:var(--surface);border-top:1px solid var(--border)}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:1040px;margin:0 auto}
+    .feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:34px;transition:border-color .3s,box-shadow .3s,transform .3s;position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .3s ease}
+    .feature-card:hover{border-color:rgba(179,0,24,.3);box-shadow:0 8px 40px rgba(179,0,24,.1),0 0 0 1px rgba(179,0,24,.1);transform:translateY(-3px)}
+    .feature-card:hover::before{transform:scaleY(1)}
+    .feature-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+    .feature-icon.fi-blue{background:rgba(59,130,246,.1)}
+    .feature-icon.fi-red{background:rgba(179,0,24,.1)}
+    .feature-card h3{font-size:1.02rem;font-weight:700;color:var(--text);margin:0 0 10px}
+    .feature-card p{font-size:.88rem;color:var(--text-dim);line-height:1.7;margin:0}
+
+    /* ── Credibility ── */
+    .credibility-section{background:var(--bg);border-top:1px solid var(--border)}
+    .credibility-inner{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+    .credibility-photo-wrap{position:relative}
+    .credibility-photo-wrap::before{content:'';position:absolute;inset:-16px;background:linear-gradient(135deg,rgba(179,0,24,.2),rgba(16,185,129,.08));border-radius:28px;filter:blur(28px);opacity:.8}
+    .credibility-photo{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--border);aspect-ratio:3/4;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+    .credibility-photo img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+    .credibility-badge{position:absolute;bottom:20px;left:16px;right:16px;background:rgba(5,8,16,.92);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px}
+    .credibility-badge-icon{font-size:22px}
+    .credibility-badge-text{font-size:13px;font-weight:700;color:var(--text)}
+    .credibility-badge-sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+    .credibility-text p{font-size:clamp(.92rem,2vw,1.06rem);line-height:1.8;color:rgba(255,255,255,.82);margin-bottom:18px}
+    .credibility-stats{display:flex;flex-wrap:wrap;gap:14px;margin:36px 0}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:14px;flex:1 1 160px;transition:border-color .25s}
+    .stat-card:hover{border-color:rgba(255,255,255,.14)}
+    .stat-stars{color:#f5c518;font-size:20px;letter-spacing:2px}
+    .stat-label{font-size:13px;font-weight:700;color:var(--text)}
+    .stat-sub{font-size:11px;color:var(--text-dim);margin-top:3px}
+    .visit-link{font-size:13px;color:var(--text-dim);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-top:10px;border:1px solid var(--border);border-radius:8px;padding:8px 16px;transition:color .2s,border-color .2s,background .2s}
+    .visit-link:hover{color:var(--accent);border-color:rgba(179,0,24,.4);background:rgba(179,0,24,.06)}
+
+    /* ── Pricing ── */
+    .pricing-section{position:relative;overflow:hidden;background:#0b0b0d;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+    .pricing-section::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(200,25,20,.12),transparent 34%),linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:auto,44px 44px,44px 44px;pointer-events:none}
+    .pricing-section>.ai-center,.pricing-section>.pricing-grid,.pricing-section>.pricing-note,.pricing-section>.app-access-panel{position:relative;z-index:1}
+    .pricing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:980px;margin:0 auto;align-items:stretch}
+    .pricing-card{display:flex;flex-direction:column;min-height:100%;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:34px;position:relative;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.045);transition:transform .25s,border-color .25s,box-shadow .25s}
+    .pricing-card::after{content:'';position:absolute;left:34px;right:34px;top:0;height:2px;background:rgba(255,255,255,.18)}
+    .pricing-card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.18);box-shadow:0 30px 75px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.06)}
+    .pricing-card.popular{border-color:rgba(210,35,29,.6);background:linear-gradient(155deg,rgba(201,28,23,.15) 0%,rgba(255,255,255,.045) 42%,rgba(255,255,255,.022) 100%);box-shadow:0 28px 80px rgba(117,11,9,.26),0 0 0 1px rgba(201,28,23,.12)}
+    .pricing-card.popular::after{background:#d2231d;box-shadow:0 0 18px rgba(210,35,29,.6)}
+    .popular-badge{position:absolute;top:22px;right:22px;background:#d2231d;color:white;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:7px 12px;border-radius:8px;white-space:nowrap;box-shadow:0 8px 20px rgba(130,15,13,.34)}
+    .pricing-card-top{padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,.09)}
+    .pricing-audience{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px;color:#a6a6ac;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+    .pricing-audience::before{content:'';width:7px;height:7px;border-radius:50%;background:#d2231d;box-shadow:0 0 10px rgba(210,35,29,.65)}
+    .pricing-name{font-family:'Montserrat',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);margin-bottom:7px}
+    .pricing-desc{max-width:390px;font-size:.84rem;color:#9b9ba1;margin:0;line-height:1.6}
+    .pricing-price-row{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:26px 0 4px}
+    .pricing-amount{font-family:'Montserrat',sans-serif;font-size:3.45rem;font-weight:900;color:var(--text);line-height:1;margin:0;letter-spacing:-.05em}
+    .pricing-amount .curr{font-size:1.2rem;color:#b8b8bd;vertical-align:top;margin-top:10px;margin-right:3px;display:inline-block;letter-spacing:0}
+    .pricing-amount .period{font-size:.85rem;color:#85858c;font-family:'Inter',sans-serif;font-weight:500;letter-spacing:0}
+    .pricing-price-meta{text-align:right;color:#85858c;font-size:.72rem;line-height:1.55}
+    .pricing-price-meta strong{display:block;color:#ececef;font-size:.8rem}
+    .pricing-features{list-style:none;padding:0;margin:26px 0 30px;flex:1}
+    .pricing-features li{display:flex;align-items:flex-start;gap:11px;font-size:.86rem;color:#d1d1d5;margin-bottom:13px;line-height:1.45}
+    .pricing-features li .tick{width:21px;height:21px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:0;border:1px solid rgba(210,35,29,.24)}
+    .tick-red{background:rgba(210,35,29,.12);color:#ff625b}
+    .btn-plan{width:100%;min-height:52px;padding:15px 20px;background:#d2231d;color:white;border:1px solid #eb4039;border-radius:14px;font-size:.9rem;font-weight:800;font-family:'Montserrat',sans-serif;cursor:pointer;transition:background .2s,box-shadow .2s,transform .2s;letter-spacing:.02em;box-shadow:0 12px 28px rgba(130,15,13,.3),inset 0 1px rgba(255,255,255,.18)}
+    .btn-plan:hover{background:#b91814;box-shadow:0 16px 34px rgba(130,15,13,.4);transform:translateY(-2px)}
+    .btn-plan:active{transform:translateY(0)}
+    .btn-plan:disabled{opacity:.6;cursor:not-allowed}
+    .pricing-note{text-align:center;font-size:.82rem;color:var(--text-dim);margin-top:24px}
+    .pricing-card:not(.popular) .btn-plan{background:#f4f2ee;color:#171719;border-color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.24),inset 0 1px #fff}
+    .pricing-card:not(.popular) .btn-plan:hover{background:#fff}
+    .app-access-panel{max-width:980px;margin:28px auto 0;padding:18px 20px;border:1px solid rgba(255,255,255,.1);border-radius:17px;background:rgba(255,255,255,.035);display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:inset 0 1px rgba(255,255,255,.035)}
+    .app-access-copy{display:flex;align-items:center;gap:13px;color:#aaaab0;font-size:.82rem;line-height:1.5}
+    .app-access-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(210,35,29,.12);border:1px solid rgba(210,35,29,.24);color:#ff625b;font-weight:900}
+    .app-access-copy strong{display:block;color:#f3f3f4;font-size:.88rem}
+    .app-access-actions{display:flex;gap:9px;flex:none}
+    .app-access-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:39px;padding:0 15px;border-radius:11px;text-decoration:none;font-size:.78rem;font-weight:750;transition:transform .2s,background .2s,border-color .2s}
+    .app-login{color:#f2f2f4;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055)}
+    .app-register{color:#fff;border:1px solid #d2231d;background:#c91c17}
+    .app-access-actions a:hover{transform:translateY(-1px)}
+
+    /* ── Service bar ── */
+    .service-bar{background:var(--surface);border-top:1px solid var(--border);padding:14px 20px;text-align:center}
+    .service-bar p{font-size:.68rem;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase;margin:0}
+    .service-bar a{color:var(--text-dim);text-decoration:none;transition:color .2s}
+    .service-bar a:hover{color:var(--accent)}
+
+    @media(max-width:768px){
+      .credibility-inner{grid-template-columns:1fr;gap:44px}
+      .credibility-photo{max-width:340px;margin:0 auto}
+      .hero-btns{flex-direction:column;align-items:stretch;padding:0 12px}
+      .ai-section{padding:64px 24px}
+      .pricing-card{padding:32px 24px}
+      .pricing-grid{grid-template-columns:1fr;gap:20px}
+      .pricing-card::after{left:24px;right:24px}
+      .popular-badge{top:18px;right:18px}
+      .app-access-panel{align-items:stretch;flex-direction:column}
+      .app-access-actions{display:grid;grid-template-columns:1fr 1fr}
+    }
+
+    /* ── 2026 full-page redesign: warm editorial coaching system ── */
+    body.ai-plans-redesign{background:#ece9e3;color:#181719}
+    .ai-plans-redesign .db-nav{background:rgba(15,15,17,.95);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+    .ai-plans-redesign .db-nav-inner{max-width:1240px}
+    .ai-plans-redesign .db-nav-logo img{width:52px;height:52px;object-fit:contain}
+    .ai-plans-redesign .db-nav-logo span{color:#fff}
+    .ai-plans-redesign .db-nav-cta{background:#cf211c;border-radius:12px;box-shadow:0 10px 24px rgba(130,15,13,.28)}
+
+    .ai-plans-redesign .article-hero{height:auto;min-height:700px;align-items:center;background:#ece9e3;color:#181719;border-bottom:1px solid #d4cfc7}
+    .ai-plans-redesign .article-hero::before{content:'';position:absolute;right:-170px;top:-220px;width:560px;height:560px;border:92px solid rgba(201,28,23,.13);border-radius:50%}
+    .ai-plans-redesign .article-hero::after{background:linear-gradient(90deg,rgba(201,28,23,.055) 0 5px,transparent 5px),radial-gradient(circle at 12% 12%,rgba(201,28,23,.09),transparent 26rem)}
+    .ai-plans-redesign .article-hero-bg{display:none}
+    .ai-plans-redesign .article-hero-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,.92fr);align-items:center;gap:72px;max-width:1240px;padding:150px 24px 84px}
+    .ai-plans-redesign .hero-copy{position:relative;z-index:2}
+    .ai-plans-redesign .section-label{color:#a5120f;background:rgba(201,28,23,.07);border-color:rgba(201,28,23,.18);font-size:.66rem;font-weight:800;letter-spacing:.2em;padding:8px 15px}
+    .ai-plans-redesign .article-hero h1{font-family:'Montserrat',sans-serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:.95;letter-spacing:-.065em;color:#171719;margin:0}
+    .ai-plans-redesign .article-hero h1 span{color:#c91c17}
+    .ai-plans-redesign .hero-lead{max-width:620px;margin:26px 0 0;color:#5d5954;font-size:1.02rem;line-height:1.75}
+    .ai-plans-redesign .hero-main-actions{justify-content:flex-start;margin-top:32px}
+    .ai-plans-redesign .hero-main-actions .db-btn-primary,.ai-plans-redesign .hero-main-actions .db-btn-outline{min-height:52px;display:inline-flex;align-items:center;justify-content:center;border-radius:13px;padding:0 22px;font-size:.86rem;font-weight:800;text-decoration:none}
+    .ai-plans-redesign .hero-main-actions .db-btn-primary{background:#c91c17;border:1px solid #d93630;box-shadow:0 14px 30px rgba(130,15,13,.28)}
+    .ai-plans-redesign .hero-main-actions .db-btn-outline{background:#f8f6f2;color:#181719;border:1px solid #cbc5bc;box-shadow:0 10px 22px rgba(45,39,32,.07)}
+    .ai-plans-redesign .article-meta{margin-top:22px;gap:9px}
+    .ai-plans-redesign .article-meta span{color:#7b766f;font-size:.73rem;font-weight:600}
+
+    .app-preview{position:relative;z-index:2;overflow:hidden;border-radius:29px;background:#111113;border:1px solid #2c2c30;box-shadow:0 38px 90px rgba(28,24,20,.27),0 0 0 8px rgba(255,255,255,.48);transform:rotate(1deg)}
+    .app-preview::before{content:'';position:absolute;right:-80px;top:-100px;width:260px;height:260px;border:46px solid rgba(201,28,23,.72);border-radius:50%;pointer-events:none}
+    .app-preview-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .app-preview-brand{display:flex;align-items:center;gap:11px}
+    .app-preview-brand img{width:42px;height:42px;object-fit:contain;padding:3px;border-radius:12px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09)}
+    .app-preview-brand span{display:flex;flex-direction:column}
+    .app-preview-brand strong{color:#fff;font-size:.82rem}
+    .app-preview-brand small{margin-top:3px;color:#77777d;font-size:.5rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase}
+    .app-preview-status{padding:5px 8px;border-radius:7px;color:#75d7b3;background:rgba(73,184,143,.11);border:1px solid rgba(73,184,143,.2);font-size:.5rem;font-weight:900;letter-spacing:.14em}
+    .app-preview-body{position:relative;z-index:1;padding:28px}
+    .app-preview-kicker{margin:0 0 8px;color:#ff625b;font-size:.55rem;font-weight:900;letter-spacing:.2em}
+    .app-preview-body h2{margin:0;color:#fff;font-family:'Montserrat',sans-serif;font-size:1.45rem;font-weight:850;letter-spacing:-.045em}
+    .app-preview-sub{margin:7px 0 22px;color:#77777e;font-size:.72rem}
+    .app-preview-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .app-preview-metrics>div{padding:15px;border-radius:15px;background:#f5f2ed;border:1px solid #fff;box-shadow:0 10px 22px rgba(0,0,0,.18)}
+    .app-preview-metrics span{display:block;color:#9b1714;font-size:.48rem;font-weight:900;letter-spacing:.16em}
+    .app-preview-metrics strong{display:block;margin-top:6px;color:#1c1b1d;font-size:.82rem}
+    .app-preview-metrics small{display:block;margin-top:3px;color:#7a756f;font-size:.58rem}
+    .app-preview-plan{display:flex;align-items:center;gap:11px;margin-top:12px;padding:14px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09)}
+    .app-preview-plan-icon{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff;background:#c91c17;font-size:.6rem}
+    .app-preview-plan>span:nth-child(2){display:flex;flex-direction:column;min-width:0}
+    .app-preview-plan strong{color:#f5f5f6;font-size:.72rem}
+    .app-preview-plan small{margin-top:3px;color:#77777d;font-size:.57rem}
+    .app-preview-plan b{margin-left:auto;color:#77777d;font-size:1rem}
+    .app-preview-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:15px}
+    .app-preview-days span{height:28px;border-radius:8px;display:grid;place-items:center;color:#77777d;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:.52rem;font-weight:800}
+    .app-preview-days .active{color:#fff;background:#c91c17;border-color:#d93630}
+
+    .ai-plans-redesign .stats-strip{position:relative;z-index:3;max-width:1040px;margin:-24px auto 0;border:1px solid #d3cec6;border-radius:19px;background:#f8f6f2;box-shadow:0 18px 38px rgba(45,39,32,.09);overflow:hidden}
+    .ai-plans-redesign .stats-inner{max-width:none}
+    .ai-plans-redesign .stat-item{border-color:#d7d2ca;background:transparent}
+    .ai-plans-redesign .stat-num{color:#181719;font-size:1.7rem}
+    .ai-plans-redesign .stat-desc{color:#6b655d}
+    .ai-plans-redesign .hero-cta-strip{display:none}
+
+    .ai-plans-redesign .ai-section{padding:108px 24px}
+    .ai-plans-redesign .features-section{background:#ece9e3;border:0}
+    .ai-plans-redesign .ai-section-title{color:#181719;letter-spacing:-.045em}
+    .ai-plans-redesign .ai-section-sub{color:#6d6862}
+    .ai-plans-redesign .features-grid{grid-template-columns:repeat(3,1fr);gap:14px;max-width:1120px}
+    .ai-plans-redesign .feature-card{min-height:250px;padding:30px;border-radius:20px;background:#f8f6f2;border:1px solid #d6d1c9;box-shadow:0 10px 28px rgba(50,43,35,.055)}
+    .ai-plans-redesign .feature-card::before{left:30px;right:30px;top:0;bottom:auto;width:auto;height:2px;transform:scaleX(0);transform-origin:left;background:#c91c17}
+    .ai-plans-redesign .feature-card:hover{border-color:#bbb5ac;box-shadow:0 19px 40px rgba(50,43,35,.1);transform:translateY(-4px)}
+    .ai-plans-redesign .feature-card:hover::before{transform:scaleX(1)}
+    .ai-plans-redesign .feature-icon{width:42px;height:42px;border-radius:12px;margin-bottom:28px;color:#a5120f;background:#f3dfdc;border:1px solid #e5c4bf;font-family:'Montserrat',sans-serif;font-size:.68rem;font-weight:900;letter-spacing:.08em}
+    .ai-plans-redesign .feature-card h3{color:#1c1b1d;font-family:'Montserrat',sans-serif;font-size:1rem}
+    .ai-plans-redesign .feature-card p{color:#716c66}
+
+    .ai-plans-redesign .credibility-section{background:#151517;border:0;color:#fff}
+    .ai-plans-redesign .credibility-inner{max-width:1120px;grid-template-columns:.85fr 1.15fr;gap:84px}
+    .ai-plans-redesign .credibility-photo-wrap{display:flex;flex-direction:column;gap:14px}
+    .ai-plans-redesign .credibility-photo{border-radius:24px;border-color:rgba(255,255,255,.12);aspect-ratio:4/5}
+    .ai-plans-redesign .credibility-photo-wrap::before{background:rgba(201,28,23,.22)}
+    .ai-plans-redesign .credibility-badge{position:relative;inset:auto;padding:14px 16px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);backdrop-filter:none;box-shadow:inset 0 1px rgba(255,255,255,.035)}
+    .ai-plans-redesign .credibility-badge-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(201,28,23,.13);border:1px solid rgba(201,28,23,.22);font-size:16px}
+    .ai-plans-redesign .credibility-text .ai-section-title{color:#fff}
+    .ai-plans-redesign .credibility-text p{color:#aaaab0}
+    .ai-plans-redesign .stat-card{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.09)}
+    .ai-plans-redesign .stat-label{color:#fff}
+
+    .ai-plans-redesign .pricing-section{padding-top:112px;background:#0b0b0d}
+    .ai-plans-redesign .pricing-section .ai-section-title{color:#fff}
+    .ai-plans-redesign .pricing-section .ai-section-sub{color:#8c8c92}
+
+    .ai-plans-redesign .free-trial-section{background:#ece9e3!important;border-color:#d5d0c8!important}
+    .ai-plans-redesign .free-trial-section>div:first-child{background:radial-gradient(ellipse at center,rgba(201,28,23,.12) 0%,transparent 65%)!important}
+    .ai-plans-redesign .free-trial-section h2{color:#181719!important;letter-spacing:-.045em}
+    .ai-plans-redesign .free-trial-section p{color:#6b6660!important}
+    .ai-plans-redesign .free-trial-section a:first-child{background:#c91c17!important;box-shadow:0 14px 30px rgba(130,15,13,.26)!important}
+    .ai-plans-redesign .free-trial-section a:last-child{background:#f8f6f2!important;color:#181719!important;border-color:#cbc5bc!important}
+    .ai-plans-redesign .service-bar{background:#181719;border-color:#2a292c}
+    .ai-plans-redesign .db-footer{background:#0d0d0f}
+    .ai-plans-redesign .db-fb-name{color:#f5f5f6}
+    .ai-plans-redesign .db-fb-tag,.ai-plans-redesign .db-fb-stars{color:#9b9ba1}
+
+    @media(max-width:980px){
+      .ai-plans-redesign .article-hero-content{grid-template-columns:1fr;gap:54px;padding-top:132px}
+      .app-preview{max-width:620px;width:100%;margin:0 auto;transform:none}
+      .ai-plans-redesign .features-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:1200px){
+      .ai-plans-redesign .credibility-inner{grid-template-columns:minmax(0,1fr);max-width:720px;gap:46px}
+      .ai-plans-redesign .credibility-photo-wrap{width:100%;max-width:520px;margin:0 auto}
+      .ai-plans-redesign .credibility-text{width:100%}
+      .ai-plans-redesign .credibility-text .ai-eyebrow{text-align:center}
+      .ai-plans-redesign .credibility-text .ai-section-title{text-align:center;font-size:clamp(2rem,6vw,3rem)}
+      .ai-plans-redesign .credibility-text>p:not(.ai-eyebrow){max-width:650px;margin-left:auto;margin-right:auto;font-size:1rem;line-height:1.72}
+      .ai-plans-redesign .credibility-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:650px;margin:30px auto}
+      .ai-plans-redesign .visit-link{display:flex;width:max-content;margin:10px auto 0}
+    }
+    @media(max-width:600px){
+      .ai-plans-redesign .article-hero{min-height:0}
+      .ai-plans-redesign .article-hero-content{padding:116px 18px 64px;gap:42px}
+      .ai-plans-redesign .article-hero h1{font-size:clamp(2.55rem,13vw,3.6rem)}
+      .ai-plans-redesign .hero-lead{font-size:.92rem}
+      .ai-plans-redesign .hero-main-actions{display:grid;grid-template-columns:1fr}
+      .ai-plans-redesign .hero-main-actions>*{width:100%}
+      .app-preview{border-radius:22px;box-shadow:0 24px 55px rgba(28,24,20,.24),0 0 0 5px rgba(255,255,255,.45)}
+      .app-preview-body{padding:21px}
+      .app-preview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ai-plans-redesign .stats-strip{margin:-18px 16px 0}
+      .ai-plans-redesign .features-section .ai-center::after,
+      .ai-plans-redesign .pricing-section .ai-center::after{content:'Swipe to explore  →';display:block;margin-top:20px;color:#9b1714;font-size:.65rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+      .ai-plans-redesign .pricing-section .ai-center::after{color:#ff625b}
+      .ai-plans-redesign .features-grid{
+        display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(82vw,330px);
+        gap:12px;max-width:none;margin:0 -18px;padding:0 18px 14px;overflow-x:auto;
+        scroll-snap-type:x mandatory;scroll-padding-left:18px;overscroll-behavior-inline:contain;
+        scrollbar-width:none;-ms-overflow-style:none
+      }
+      .ai-plans-redesign .features-grid::-webkit-scrollbar,
+      .ai-plans-redesign .pricing-grid::-webkit-scrollbar{display:none}
+      .ai-plans-redesign .feature-card{min-height:238px;scroll-snap-align:start;padding:26px}
+      .ai-plans-redesign .feature-card .feature-icon{margin-bottom:22px}
+      .ai-plans-redesign .ai-section{padding:76px 18px}
+      .ai-plans-redesign .credibility-inner{gap:46px}
+      .ai-plans-redesign .credibility-photo-wrap{max-width:none}
+      .ai-plans-redesign .credibility-photo{aspect-ratio:4/5;border-radius:20px}
+      .ai-plans-redesign .credibility-badge{padding:12px 14px}
+      .ai-plans-redesign .credibility-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .ai-plans-redesign .credibility-stats .stat-card{min-width:0;padding:16px}
+      .ai-plans-redesign .credibility-text .ai-section-title{font-size:2rem;line-height:1.08}
+      .ai-plans-redesign .credibility-text>p:not(.ai-eyebrow){font-size:.92rem;line-height:1.68}
+      .ai-plans-redesign .db-nav-logo img{width:46px;height:46px}
+      .ai-plans-redesign .pricing-section{padding-top:78px}
+      .ai-plans-redesign .pricing-grid{
+        display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(88vw,360px);
+        align-items:stretch;gap:12px;max-width:none;margin:0 -18px;padding:14px 18px 18px;
+        overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:18px;
+        overscroll-behavior-inline:contain;scrollbar-width:none;-ms-overflow-style:none
+      }
+      .ai-plans-redesign .pricing-card{scroll-snap-align:start;padding:28px 22px}
+      .ai-plans-redesign .pricing-card::after{left:22px;right:22px}
+      .ai-plans-redesign .pricing-amount{font-size:2.8rem}
+      .ai-plans-redesign .pricing-price-row{gap:10px}
+      .ai-plans-redesign .pricing-price-meta{font-size:.66rem}
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "AI Workout & Nutrition Plans",
+    "description": "Personalised AI-powered workout and nutrition plans designed by Dean Burt, REPs certified personal trainer in East London.",
+    "provider": { "@type": "LocalBusiness", "name": "DB's Workouts", "url": "https://dbworkouts.co.uk" },
+    "url": "https://dbworkouts.co.uk/ai-plans",
+    "areaServed": "East London",
+    "offers": [
+      { "@type": "Offer", "name": "Monthly AI Plan", "price": "7.99", "priceCurrency": "GBP", "description": "Monthly personalised AI workout and nutrition plan" },
+      { "@type": "Offer", "name": "Free Plan Generator", "price": "0", "priceCurrency": "GBP", "description": "Free one-time workout and nutrition plan" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://dbworkouts.co.uk/" },
+      { "@type": "ListItem", "position": 2, "name": "AI Plans", "item": "https://dbworkouts.co.uk/ai-plans" }
+    ]
+  }
+  </script>
+<style>@media(max-width:767px){.db-wa-fab{display:none!important}}</style>
+</head>
+<body class="ai-plans-redesign">
+
+<nav class="db-nav" id="dbNav">
+  <div class="db-nav-inner">
+    <a href="index.html" class="db-nav-logo"><img src="./logo.png" alt="DB's Workouts" width="68" height="68" loading="lazy"><span>DB's Workouts</span></a>
+    <div class="db-nav-links">
+      <a href="index.html">Home</a><a href="about.html">About</a><a href="pricing.html">Pricing</a><a href="testimonials.html">Results</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a>
+    </div>
+    <a href="contact.html" class="db-nav-cta">Book Free Consultation</a>
+    <button class="db-nav-hamburger" id="navToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+  <div class="db-mobile-menu" id="mobileMenu">
+    <a href="index.html">Home</a><a href="about.html">About</a><a href="pricing.html">Pricing</a><a href="testimonials.html">Results</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a>
+    <a href="contact.html" class="db-mobile-cta">Book Free Consultation</a>
+  </div>
+</nav>
+<script>(function(){var t=document.getElementById("navToggle"),m=document.getElementById("mobileMenu");if(!t||!m)return;var o=false;t.addEventListener("click",function(){o=!o;t.classList.toggle("active",o);m.classList.toggle("open",o);});m.querySelectorAll("a").forEach(function(a){a.addEventListener("click",function(){o=false;t.classList.remove("active");m.classList.remove("open");});});})();</script>
+
+<!-- Hero -->
+<header class="article-hero">
+  <div class="article-hero-bg">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="rg1" cx="68%" cy="45%" r="52%">
+          <stop offset="0%" stop-color="#b30018" stop-opacity=".28"/>
+          <stop offset="100%" stop-color="#b30018" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="rg2" cx="20%" cy="30%" r="40%">
+          <stop offset="0%" stop-color="#1a3560" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#1a3560" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dots" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,.045)"/>
+        </pattern>
+        <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="softglow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="leftFade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#060710" stop-opacity=".92"/>
+          <stop offset="38%" stop-color="#060710" stop-opacity=".55"/>
+          <stop offset="60%" stop-color="#060710" stop-opacity=".1"/>
+          <stop offset="100%" stop-color="#060710" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Base -->
+      <rect width="1200" height="560" fill="#060710"/>
+      <rect width="1200" height="560" fill="url(#rg1)"/>
+      <rect width="1200" height="560" fill="url(#rg2)"/>
+      <rect width="1200" height="560" fill="url(#dots)"/>
+
+      <!-- Neural net connections -->
+      <g stroke="rgba(179,0,24,.18)" stroke-width="1" fill="none">
+        <line x1="830" y1="65"  x2="980" y2="118"/>
+        <line x1="980" y1="118" x2="1130" y2="78"/>
+        <line x1="980" y1="118" x2="920" y2="215"/>
+        <line x1="1130" y1="78" x2="1165" y2="198"/>
+        <line x1="920" y1="215" x2="1075" y2="255"/>
+        <line x1="920" y1="215" x2="835" y2="300"/>
+        <line x1="1075" y1="255" x2="1165" y2="198"/>
+        <line x1="1075" y1="255" x2="1015" y2="365"/>
+        <line x1="835" y1="300" x2="865" y2="415"/>
+        <line x1="1015" y1="365" x2="865" y2="415"/>
+        <line x1="1015" y1="365" x2="1140" y2="400"/>
+        <line x1="1140" y1="400" x2="1165" y2="198"/>
+      </g>
+      <g stroke="rgba(255,255,255,.035)" stroke-width="1" fill="none">
+        <line x1="760" y1="148" x2="830" y2="65"/>
+        <line x1="760" y1="148" x2="920" y2="215"/>
+        <line x1="760" y1="148" x2="835" y2="300"/>
+        <line x1="830" y1="65"  x2="835" y2="300"/>
+        <line x1="1140" y1="400" x2="865" y2="415"/>
+        <line x1="865" y1="415" x2="835" y2="300"/>
+      </g>
+
+      <!-- Dim nodes -->
+      <g fill="rgba(255,255,255,.12)">
+        <circle cx="760" cy="148" r="4.5"/>
+        <circle cx="1130" cy="78"  r="4"/>
+        <circle cx="1165" cy="198" r="4"/>
+        <circle cx="865"  cy="415" r="4.5"/>
+        <circle cx="1140" cy="400" r="5"/>
+      </g>
+      <!-- Mid nodes -->
+      <g fill="rgba(255,255,255,.22)" filter="url(#softglow)">
+        <circle cx="830" cy="65"  r="5.5"/>
+        <circle cx="835" cy="300" r="5.5"/>
+        <circle cx="1015" cy="365" r="5"/>
+      </g>
+      <!-- Active glow nodes -->
+      <g filter="url(#glow)" fill="#cc0020">
+        <circle cx="980" cy="118" r="7"/>
+        <circle cx="1075" cy="255" r="8"/>
+        <circle cx="920" cy="215" r="6"/>
+      </g>
+      <g fill="#ff4060">
+        <circle cx="980" cy="118" r="4"/>
+        <circle cx="1075" cy="255" r="5"/>
+        <circle cx="920" cy="215" r="3.5"/>
+      </g>
+
+      <!-- Floating card: Calories -->
+      <g transform="translate(912,308)" opacity=".75">
+        <rect width="154" height="62" rx="11" fill="rgba(8,8,18,.88)" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+        <text x="14" y="21" fill="rgba(255,255,255,.36)" font-size="7.5" font-family="'Inter',system-ui,sans-serif" font-weight="700" letter-spacing=".8">DAILY TARGET</text>
+        <text x="14" y="44" fill="rgba(255,255,255,.9)" font-size="20" font-family="'Montserrat',system-ui,sans-serif" font-weight="900">2,340</text>
+        <text x="78" y="44" fill="rgba(255,255,255,.38)" font-size="11" font-family="'Inter',system-ui,sans-serif">kcal</text>
+      </g>
+
+      <!-- Floating pill: Progress -->
+      <g transform="translate(1048,142)" opacity=".72">
+        <rect width="118" height="36" rx="18" fill="rgba(179,0,24,.14)" stroke="rgba(179,0,24,.38)" stroke-width="1"/>
+        <text x="17" y="24" fill="rgba(255,110,120,.95)" font-size="11" font-family="'Inter',system-ui,sans-serif" font-weight="700">↑ 2.1 kg lost</text>
+      </g>
+
+      <!-- Floating pill: Protein -->
+      <g transform="translate(1050,430)" opacity=".65">
+        <rect width="132" height="34" rx="17" fill="rgba(16,100,200,.1)" stroke="rgba(59,130,246,.3)" stroke-width="1"/>
+        <text x="16" y="22" fill="rgba(140,180,255,.85)" font-size="10.5" font-family="'Inter',system-ui,sans-serif" font-weight="600">Protein: 160g / day</text>
+      </g>
+
+      <!-- Subtle horizontal grid lines -->
+      <g stroke="rgba(255,255,255,.02)" stroke-width="1">
+        <line x1="600" y1="140" x2="1200" y2="140"/>
+        <line x1="600" y1="280" x2="1200" y2="280"/>
+        <line x1="600" y1="420" x2="1200" y2="420"/>
+      </g>
+
+      <!-- Left fade for text readability -->
+      <rect width="1200" height="560" fill="url(#leftFade)"/>
+    </svg>
+  </div>
+  <div class="article-hero-content">
+    <div class="hero-copy">
+      <p class="section-label">DB’s intelligent coaching app</p>
+      <h1>Your plan.<br><span>Built around you.</span></h1>
+      <p class="hero-lead">Professional workout programming, full nutrition planning and weekly progress support—created by a real PT and delivered through one focused app.</p>
+      <div class="hero-btns hero-main-actions">
+        <a class="db-btn-primary" target="_top" href="/pricing">View app memberships</a>
+        <a target="_top" href="/login" class="db-btn-outline">Open the app</a>
+      </div>
+      <div class="article-meta">
+        <span>No contract</span><span>•</span><span>Cancel anytime</span><span>•</span><span>Secure Stripe payment</span>
+      </div>
+    </div>
+    <div class="app-preview" aria-label="Preview of the DB's Workouts coaching app">
+      <div class="app-preview-top">
+        <div class="app-preview-brand"><img src="./logo.png" alt="" width="44" height="44"><span><strong>DB’s Workouts</strong><small>Personal coaching</small></span></div>
+        <span class="app-preview-status">LIVE</span>
+      </div>
+      <div class="app-preview-body">
+        <p class="app-preview-kicker">TODAY’S BRIEFING</p>
+        <h2>Good morning, Alex</h2>
+        <p class="app-preview-sub">Your training and nutrition, ready for today.</p>
+        <div class="app-preview-metrics">
+          <div><span>SESSION</span><strong>Upper Body</strong><small>8 exercises · 55 min</small></div>
+          <div><span>NUTRITION</span><strong>2,180 kcal</strong><small>160g protein</small></div>
+        </div>
+        <div class="app-preview-plan">
+          <span class="app-preview-plan-icon">▶</span>
+          <span><strong>Incline dumbbell press</strong><small>4 × 10–12 · Video demo included</small></span>
+          <b>›</b>
+        </div>
+        <div class="app-preview-days"><span>M</span><span class="active">T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-num">69</div><div class="stat-desc">★ Google Reviews</div></div>
+    <div class="stat-item"><div class="stat-num">5.0</div><div class="stat-desc">Star Rating</div></div>
+    <div class="stat-item"><div class="stat-num">12+</div><div class="stat-desc">Years Experience</div></div>
+    <div class="stat-item"><div class="stat-num">£7.99</div><div class="stat-desc">Starting / Month</div></div>
+  </div>
+</div>
+
+<!-- Hero CTA strip -->
+<div class="hero-cta-strip">
+  <p>Personalised workout and nutrition plans, powered by AI. Designed by Dean Burt — DB's Workouts, East London.</p>
+  <div class="hero-btns">
+    <a class="db-btn-primary" id="heroGetStarted" target="_top" href="/pricing">View app memberships →</a>
+    <a href="/tools/workout-plan-generator" class="db-btn-outline">Try Free Version</a>
+  </div>
+</div>
+
+<!-- Features -->
+<section id="features" class="ai-section features-section">
+  <div class="ai-center" style="max-width:1040px;margin:0 auto 52px">
+    <p class="ai-eyebrow" style="color:var(--accent)">Feature Set</p>
+    <h2 class="ai-section-title">Everything You Need to <span style="color:var(--accent)">Transform Your Body</span></h2>
+    <p class="ai-section-sub" style="margin-bottom:0">Six powerful tools working together like your own personal training team.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-blue">01</div>
+      <h3>AI Workout Plans</h3>
+      <p>Personalised training programmes that adapt to your level, equipment, and goals in real time.</p>
+    </div>
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-red">02</div>
+      <h3>7-Day Meal Plans</h3>
+      <p>Custom nutrition plans built around your calories, macros, dietary needs, and food preferences.</p>
+    </div>
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-blue">03</div>
+      <h3>Weekly Check-ins</h3>
+      <p>Track your weight, energy, and performance weekly so your plan evolves with you.</p>
+    </div>
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-red">04</div>
+      <h3>Progressive Overload</h3>
+      <p>Smart load management ensures you're always progressing — never plateauing.</p>
+    </div>
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-blue">05</div>
+      <h3>Meal Swaps</h3>
+      <p>Don't like a meal? Swap it instantly for something that fits your macros and taste.</p>
+    </div>
+    <div class="feature-card" data-reveal>
+      <div class="feature-icon fi-red">06</div>
+      <h3>Progress Photo Analysis</h3>
+      <p>Upload photos and let AI track visual changes in your physique over time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Credibility / About Dean -->
+<section id="about" class="ai-section credibility-section">
+  <div class="credibility-inner">
+    <div class="credibility-photo-wrap" data-reveal>
+      <div class="credibility-photo">
+        <img src="./pics/dean-photo-web.jpg" alt="Dean Burt – DB's Workouts personal trainer East London" loading="lazy" decoding="async" width="800">
+      </div>
+      <div class="credibility-badge">
+        <div class="credibility-badge-icon">🛡️</div>
+        <div>
+          <div class="credibility-badge-text">REPs Level 3 Certified PT</div>
+          <div class="credibility-badge-sub">East London, UK</div>
+        </div>
+      </div>
+    </div>
+    <div class="credibility-text" data-reveal>
+      <p class="ai-eyebrow" style="color:var(--accent)">The Human Behind The AI</p>
+      <h2 class="ai-section-title" style="margin-bottom:24px">Built By a Real PT,<br><span style="color:var(--text-dim)">Not Just a Developer</span></h2>
+      <p>I'm <strong style="color:var(--accent)">Dean</strong>, a REPs Level 3 qualified personal trainer based in East London with 12+ years of experience and over 69 five-star Google reviews.</p>
+      <p>I built DB's AI to give everyone access to professional-level planning at a fraction of the cost. Every workout, every meal plan, every check-in is built on the same principles I use with my in-person clients.</p>
+      <div class="credibility-stats">
+        <div class="stat-card">
+          <div>
+            <div class="stat-stars">★★★★★</div>
+            <div class="stat-label">5.0 Rating</div>
+            <div class="stat-sub">69 Google Reviews</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div style="font-size:24px;color:var(--accent)">🏆</div>
+            <div class="stat-label">12+ Years</div>
+            <div class="stat-sub">Personal Training</div>
+          </div>
+        </div>
+      </div>
+      <a href="https://dbworkouts.co.uk" class="visit-link">Visit dbworkouts.co.uk →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Membership pricing lives on this app-owned page -->
+<section id="pricing" class="ai-section pricing-section">
+  <div class="ai-center">
+    <p class="ai-eyebrow" style="color:#ff625b">Choose Your Access</p>
+    <h2 class="ai-section-title">One App. Two Ways to Train.</h2>
+    <p class="ai-section-sub">Choose personal access for your own programme, or PT Pro to coach and manage clients from one premium workspace.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card" data-reveal>
+      <div class="pricing-card-top">
+        <div class="pricing-audience">For individuals</div>
+        <div class="pricing-name">Personal</div>
+        <div class="pricing-desc">Your complete training and nutrition programme, personalised around your body, goals and routine.</div>
+      </div>
+      <div class="pricing-price-row">
+        <div class="pricing-amount"><span class="curr">£</span>7.99<span class="period">/month</span></div>
+        <div class="pricing-price-meta"><strong>Cancel anytime</strong>No contract</div>
+      </div>
+      <ul class="pricing-features">
+        <li><span class="tick tick-red">✓</span>Personalised 7-day workout programme</li>
+        <li><span class="tick tick-red">✓</span>Full meal plan with calories and macros</li>
+        <li><span class="tick tick-red">✓</span>Exercise video demonstrations</li>
+        <li><span class="tick tick-red">✓</span>Weekly check-ins and plan adjustments</li>
+        <li><span class="tick tick-red">✓</span>Meal swaps and nutrition preferences</li>
+        <li><span class="tick tick-red">✓</span>Progress photos and body analysis</li>
+      </ul>
+      <a class="btn-plan" target="_top" href="/register?plan=personal" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start Personal Membership →</a>
+    </div>
+    <div class="pricing-card popular" data-reveal>
+      <div class="popular-badge">Coach’s choice</div>
+      <div class="pricing-card-top">
+        <div class="pricing-audience">For personal trainers</div>
+        <div class="pricing-name">PT Pro</div>
+        <div class="pricing-desc">A branded coaching workspace to create, deliver and manage every client’s plan in one place.</div>
+      </div>
+      <div class="pricing-price-row">
+        <div class="pricing-amount"><span class="curr">£</span>24.99<span class="period">/month</span></div>
+        <div class="pricing-price-meta"><strong>Professional access</strong>Cancel anytime</div>
+      </div>
+      <ul class="pricing-features">
+        <li><span class="tick tick-red">✓</span>Everything included in Personal</li>
+        <li><span class="tick tick-red">✓</span>Client dashboard and profile management</li>
+        <li><span class="tick tick-red">✓</span>Branded workout and nutrition delivery</li>
+        <li><span class="tick tick-red">✓</span>Full client meal plans and daily macros</li>
+        <li><span class="tick tick-red">✓</span>Add YouTube demos to every exercise</li>
+        <li><span class="tick tick-red">✓</span>Client check-ins and progress tracking</li>
+        <li><span class="tick tick-red">✓</span>Priority support</li>
+      </ul>
+      <a class="btn-plan" target="_top" href="/register?plan=pt_pro" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start PT Pro Membership →</a>
+    </div>
+  </div>
+  <p class="pricing-note">Secure payment via Stripe · No setup fees · Cancel anytime</p>
+  <div class="app-access-panel">
+    <div class="app-access-copy">
+      <span class="app-access-icon">DB</span>
+      <span><strong>Already part of DB’s Workouts?</strong>Open your account without leaving the app.</span>
+    </div>
+    <div class="app-access-actions">
+      <a class="app-login" target="_top" href="/login">Log in</a>
+      <a class="app-register" target="_top" href="/register">Create account</a>
+    </div>
+  </div>
+</section>
+
+<!-- Free tool CTA -->
+<section class="free-trial-section" style="background:var(--bg);border-top:1px solid var(--border);padding:96px 24px;text-align:center;position:relative;overflow:hidden">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(179,0,24,.14) 0%,transparent 65%);pointer-events:none"></div>
+  <div style="position:relative;z-index:1">
+    <p style="font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px">No Risk. No Card.</p>
+    <h2 style="font-family:'Montserrat',sans-serif;font-size:clamp(1.8rem,5vw,3rem);font-weight:900;color:var(--text);margin:0 0 18px;line-height:1.08">Not Ready to Commit?<br><span style="color:var(--accent)">Try It Free First.</span></h2>
+    <p style="color:var(--text-dim);font-size:1rem;margin:0 0 44px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.72">Get a personalised workout and nutrition plan completely free — no account, no card, no catch.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center">
+      <a href="/tools/workout-plan-generator" style="display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:18px 44px;font-size:.95rem;font-weight:800;font-family:'Montserrat',sans-serif;text-decoration:none;box-shadow:0 4px 28px rgba(179,0,24,.38)">✨ Try Free Plan Generator →</a>
+      <a href="contact.html" style="display:inline-flex;align-items:center;gap:10px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:16px 36px;font-size:.9rem;font-weight:700;font-family:'Montserrat',sans-serif;text-decoration:none">Book a Real PT Session</a>
+    </div>
+  </div>
+</section>
+
+<!-- Service bar -->
+<div class="service-bar">
+  <p>Serving: <a href="personal-trainer-stratford.html">Stratford</a> · <a href="outdoor-pt-walthamstow.html">Walthamstow</a> · <a href="personal-trainer-ilford.html">Ilford</a> · <a href="personal-trainer-goodmayes.html">Goodmayes</a> · <a href="personal-trainer-wanstead.html">Wanstead</a> · <a href="personal-trainer-romford.html">Romford</a> · <a href="personal-trainer-east-ham.html">East Ham</a> · <a href="personal-trainer-leytonstone.html">Leytonstone</a> · <a href="personal-trainer-barking.html">Barking</a></p>
+</div>
+
+<footer class="db-footer">
+  <div class="db-footer-inner">
+    <div><div class="db-footer-brand"><img src="./logo.png" alt="DB's Workouts logo" width="68" height="68" loading="lazy"><div><div class="db-fb-name">DB's Workouts</div><span class="db-fb-tag">East London Personal Trainer</span><span class="db-fb-stars">★★★★★ Google Rated</span></div></div><p style="font-size:.85rem;max-width:280px;line-height:1.7;color:var(--text-muted);margin-top:24px">Premium personal training across East London &amp; Essex parks. REPs certified since 2016.</p></div>
+    <div class="db-footer-col"><div class="db-footer-heading">Pages</div><a href="about.html">About Dean</a><a href="pricing.html">Pricing</a><a href="testimonials.html">Results</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
+    <div class="db-footer-col"><div class="db-footer-heading">Locations</div><a href="outdoor-pt-walthamstow.html">Walthamstow</a><a href="personal-trainer-ilford.html">Ilford</a><a href="personal-trainer-hackney.html">Hackney</a><a href="personal-trainer-chingford.html">Chingford</a><a href="personal-trainer-dagenham.html">Dagenham</a></div>
+    <div class="db-footer-col"><div class="db-footer-heading">Get In Touch</div><a href="tel:+447752300937" class="db-footer-contact-item">07752 300937</a><a href="mailto:dbs-workouts@yahoo.com" class="db-footer-contact-item">dbs-workouts@yahoo.com</a><a href="https://wa.me/447752300937" class="db-footer-contact-item" target="_blank" rel="noopener">WhatsApp</a></div>
+  </div>
+  <div class="db-footer-bottom"><p>© 2025 DB's Workouts. All rights reserved. · <a href="privacy-policy.html">Privacy Policy</a></p></div>
+</footer>
+<a href="https://wa.me/447752300937" class="db-wa-fab" aria-label="WhatsApp Dean" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.55 4.123 1.511 5.863L.057 23.01a.5.5 0 00.633.633l5.183-1.461A11.93 11.93 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.654-.49-5.193-1.349l-.371-.219-3.838 1.082 1.093-3.783-.238-.39A9.943 9.943 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg></a>
+
+<script src="Script/cookie-consent.js" defer></script>
+<script>
+  document.querySelectorAll('a[href]').forEach(function(link){
+    var href=link.getAttribute('href');
+    if(!href||href.charAt(0)==='#'||href.indexOf('tel:')===0||href.indexOf('mailto:')===0)return;
+    if(href.indexOf('://')>-1){if(href.indexOf('dbworkouts.co.uk')>-1)link.target='_top';return;}
+    if(link.target==='_top')return;
+    link.href='https://dbworkouts.co.uk/'+href.replace(/^\.\//,'').replace(/^\//,'');
+    link.target='_top';
+  });
+  var nav=document.getElementById('dbNav'),tog=document.getElementById('navToggle'),mob=document.getElementById('mobileMenu');
+  window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>20);},{passive:true});
+  tog.addEventListener('click',function(){var o=mob.classList.toggle('open');tog.classList.toggle('active',o);document.body.style.overflow=o?'hidden':'';});
+  var ro=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){x.target.classList.add('revealed');ro.unobserve(x.target);}});},{threshold:.1});
+  document.querySelectorAll('[data-reveal]').forEach(function(el){ro.observe(el);});
+</script>
+</body>
+</html>

@@ -19,7 +19,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // to prevent, but it can't fix itself retroactively from inside a stale SW.
 // Forcibly unregister everything and clear every cache once per device, then
 // reload into a completely clean state before registering the current SW.
-const PURGE_KEY = 'dbsai_sw_purge_v1';
+const PURGE_KEY = 'dbsai_sw_purge_v2_clean_routes';
 
 async function purgeStaleServiceWorkers() {
   if (localStorage.getItem(PURGE_KEY)) return false;
@@ -38,6 +38,24 @@ async function purgeStaleServiceWorkers() {
 }
 
 async function boot() {
+  // Never let a production PWA cache control the local design preview. It can
+  // otherwise keep serving an old HashRouter build after the routes change.
+  if (import.meta.env.DEV) {
+    try {
+      const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
+      await Promise.all(regs.map((registration) => registration.unregister()));
+      const keys = 'caches' in window ? await caches.keys() : [];
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    } catch { /* best-effort local cleanup */ }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+    return;
+  }
+
   if (await purgeStaleServiceWorkers()) {
     window.location.reload();
     return;

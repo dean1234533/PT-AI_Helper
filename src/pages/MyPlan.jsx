@@ -688,7 +688,7 @@ export default function MyPlan() {
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </button>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-extrabold">
               My Fitness Plan
             </h1>
             <p className="text-slate-400 text-sm mt-1">

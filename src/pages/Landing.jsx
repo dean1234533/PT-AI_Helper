@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Dumbbell, Zap, Brain, TrendingUp, ChevronRight, CheckCircle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 const features = [
   { icon: Brain,      title: 'AI Body Analysis',     desc: 'Upload a photo and Gemini Vision identifies your body type with personalised recommendations.' },
@@ -11,32 +9,28 @@ const features = [
 ];
 
 const steps = [
-  { num: '01', title: 'Sign Up Free',         desc: 'Create your account and add your free Gemini API key from Google AI Studio.' },
+  { num: '01', title: 'Choose Your Access',   desc: 'Pick Personal for your own programme or PT Pro to manage your clients.' },
   { num: '02', title: 'Build Your Profile',   desc: 'Tell us about yourself — goals, diet, equipment, and upload a body photo.' },
   { num: '03', title: 'Get Your Plan',        desc: 'AI generates a complete weekly workout and nutrition plan tailored to you.' },
   { num: '04', title: 'Track & Improve',      desc: 'Log weekly check-ins and watch your AI coach refine your plan over time.' },
 ];
 
 export default function Landing() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true });
-  }, [user]);
-
   return (
     <div className="min-h-screen bg-dark-800 text-white overflow-x-hidden">
       {/* ── Nav ── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-dark-800/80 backdrop-blur-xl border-b border-white/6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow-violet">
-              <Dumbbell className="w-4 h-4 text-white" />
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
+              <img src="/logo.png" alt="" className="w-9 h-9 object-contain" />
             </div>
             <span className="font-bold text-lg tracking-tight">DB's Workouts</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-3">
+            <Link to="/pricing" className="hidden sm:inline text-white/60 hover:text-white text-sm font-medium transition-colors">
+              Pricing
+            </Link>
             <Link to="/login" className="text-white/60 hover:text-white text-sm font-medium transition-colors">
               Sign in
             </Link>
@@ -44,7 +38,7 @@ export default function Landing() {
               to="/register"
               className="bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-glow-violet hover:shadow-lg"
             >
-              Get Started Free
+              Get Started
             </Link>
           </div>
         </div>
@@ -67,7 +61,7 @@ export default function Landing() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/25 rounded-full px-4 py-1.5 mb-8 animate-fade-in">
             <Zap className="w-3.5 h-3.5 text-brand-400" />
-            <span className="text-brand-300 text-xs font-semibold tracking-wide uppercase">Powered by Gemini AI</span>
+            <span className="text-brand-300 text-xs font-semibold tracking-wide uppercase">Built by a real personal trainer</span>
           </div>
 
           <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-none mb-6 animate-fade-in-up stagger">
@@ -77,16 +71,16 @@ export default function Landing() {
           </h1>
 
           <p className="text-lg sm:text-xl text-white/55 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            Upload your photo, get a body type analysis, and receive a fully personalised
-            workout and nutrition plan — all powered by Gemini AI. Free with your own API key.
+            Personalised workouts, complete nutrition planning, exercise demonstrations and
+            weekly progress support—delivered through one focused coaching app.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fade-in-up" style={{ animationDelay: '200ms' }}>
             <Link
-              to="/register"
+              to="/pricing"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-bold px-8 py-4 rounded-2xl text-base transition-all shadow-glow-violet hover:shadow-lg hover:-translate-y-0.5"
             >
-              Start For Free <ChevronRight className="w-5 h-5" />
+              View Memberships <ChevronRight className="w-5 h-5" />
             </Link>
             <Link
               to="/login"
@@ -98,7 +92,7 @@ export default function Landing() {
 
           {/* Trust indicators */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 animate-fade-in" style={{ animationDelay: '350ms' }}>
-            {['No subscription required', 'Your data stays private', 'Powered by Google Gemini'].map((t) => (
+            {['Personal and PT Pro access', 'Secure Stripe payment', 'Built by DB’s Workouts'].map((t) => (
               <div key={t} className="flex items-center gap-2 text-white/40 text-xs">
                 <CheckCircle className="w-3.5 h-3.5 text-accent-500" />
                 <span>{t}</span>
@@ -152,18 +146,18 @@ export default function Landing() {
       <section className="py-20 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to transform?</h2>
-          <p className="text-white/50 mb-8">Get a fully personalised AI fitness plan — free, private, and no subscription required.</p>
+          <p className="text-white/50 mb-8">Choose your membership and start building a programme around your real goals and routine.</p>
           <Link
-            to="/register"
+            to="/pricing"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-bold px-10 py-4 rounded-2xl text-base transition-all shadow-glow-violet hover:shadow-lg"
           >
-            Get Started Free <ChevronRight className="w-5 h-5" />
+            View Memberships <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
       </section>
 
       <footer className="border-t border-white/5 py-8 text-center text-white/25 text-xs px-4">
-        <p>DB's Workouts — Personal Fitness Coaching. Your data is stored locally on your device only.</p>
+        <p>DB's Workouts — professional training and nutrition coaching in one app.</p>
         <p className="mt-3">
           <a
             href="https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20DB%27s%20Workouts%20app"

@@ -151,7 +151,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
+    <div className="checkin-page min-h-screen bg-slate-950 text-white pb-32 relative overflow-hidden">
       <SEO title="Check-In" noIndex />
       {/* Background decorations */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-600/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -159,7 +159,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
 
       <div className="app-page max-w-5xl">
         {/* Header */}
-        <div className="border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="checkin-page-header border-b border-slate-800 pb-6 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <button
               onClick={() => navigate('/dashboard')}
@@ -168,7 +168,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </button>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-extrabold">
               Weekly Check-in
             </h1>
             <p className="text-slate-400 text-sm mt-1">
@@ -178,7 +178,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl max-w-xs mb-8">
+        <div className="checkin-tabs flex p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl max-w-xs mb-8">
           <button
             onClick={() => { setActiveTab('new'); setAdjustmentSummary(null); }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
@@ -254,9 +254,9 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
+            <form onSubmit={handleSubmit} className="checkin-form bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
               {/* Weight Slider / Input */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="checkin-metrics grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
                     <Weight className="w-4 h-4 text-brand-400" /> Current Weight (kg)
@@ -272,7 +272,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="checkin-wellbeing flex gap-4">
                   <div className="flex-1">
                     <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2 flex items-center gap-1.5">
                       <Zap className="w-4 h-4 text-amber-500" /> Energy Levels (1-10)
@@ -315,11 +315,11 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                   <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
                     Workout Plan Adherence
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="checkin-adherence-options grid grid-cols-3 gap-2">
                     {[
-                      { key: 'yes', label: '100% Stuck' },
-                      { key: 'partial', label: 'Partially' },
-                      { key: 'no', label: 'Missed Most' },
+                      { key: 'yes', label: 'Fully followed' },
+                      { key: 'partial', label: 'Partly' },
+                      { key: 'no', label: 'Missed most' },
                     ].map((item) => (
                       <button
                         key={item.key}
@@ -341,11 +341,11 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                   <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
                     Nutrition Plan Adherence
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="checkin-adherence-options grid grid-cols-3 gap-2">
                     {[
-                      { key: 'yes', label: '100% Stuck' },
-                      { key: 'partial', label: 'Partially' },
-                      { key: 'no', label: 'Missed Most' },
+                      { key: 'yes', label: 'Fully followed' },
+                      { key: 'partial', label: 'Partly' },
+                      { key: 'no', label: 'Missed most' },
                     ].map((item) => (
                       <button
                         key={item.key}

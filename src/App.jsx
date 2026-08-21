@@ -15,19 +15,19 @@ import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
 import PublicCheckIn from './pages/PublicCheckIn';
-import Pricing from './pages/Pricing';
+import AppHome from './pages/AppHome';
 import Layout from './components/Layout';
 
 function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<AppHome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkin/:id" element={<PublicCheckIn />} />
-      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/pricing" element={<AppHome section="pricing" />} />
 
       {/* Protected Setup/Onboarding Routes */}
       <Route

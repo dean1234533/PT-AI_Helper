@@ -1339,6 +1339,74 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .plan-header-actions { width: 100%; }
   .plan-header-actions button { flex: 1; justify-content: center; }
   .plan-main-tabs { max-width: none !important; }
+
+  /* Check-ins: retain a useful phone scale without overflowing segmented controls. */
+  .checkin-page .app-page { padding: 16px 14px 104px; }
+  .checkin-page-header { margin-bottom: 18px !important; padding-bottom: 18px !important; }
+  .checkin-page-header button { margin-bottom: 8px !important; font-size: 13px !important; }
+  .app-shell main .checkin-page-header h1 {
+    color: #181719 !important;
+    -webkit-text-fill-color: #181719 !important;
+    font-size: 27px !important;
+  }
+  .checkin-page-header p { margin-top: 5px !important; font-size: 14px !important; line-height: 1.45 !important; }
+  .checkin-tabs { width: 100%; max-width: none !important; margin-bottom: 18px !important; }
+  .checkin-tabs button { min-width: 0; min-height: 44px; padding: 8px 7px !important; font-size: 13px !important; white-space: nowrap; }
+  .checkin-tabs svg { width: 17px; height: 17px; }
+  .checkin-form { padding: 18px !important; border-radius: 22px !important; gap: 0; }
+  .checkin-form.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 20px !important; }
+  .checkin-form label { margin-bottom: 8px !important; font-size: 12px !important; line-height: 1.35 !important; letter-spacing: .08em !important; }
+  .checkin-form label svg { flex: none; width: 17px; height: 17px; }
+  .checkin-form input:not([type="range"]),
+  .checkin-form textarea { min-height: 48px; padding: 12px 14px !important; font-size: 16px !important; line-height: 1.45 !important; border-radius: 15px !important; }
+  .checkin-form textarea { min-height: 112px; }
+  .checkin-metrics { gap: 18px !important; }
+  .checkin-wellbeing { display: grid !important; grid-template-columns: 1fr; gap: 14px !important; }
+  .checkin-wellbeing > div { min-width: 0; }
+  .checkin-wellbeing > div > div { min-height: 50px; padding: 10px !important; gap: 8px !important; border-radius: 15px !important; }
+  .checkin-wellbeing input[type="range"] { min-width: 0; min-height: 20px; }
+  .checkin-wellbeing span { font-size: 15px !important; }
+  .checkin-adherence-options { gap: 6px !important; }
+  .checkin-adherence-options button {
+    min-width: 0;
+    min-height: 46px;
+    padding: 7px 4px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* My Plan: compact hierarchy and controls for a 390px phone viewport. */
+  .my-plan-page .app-page { padding: 16px 14px 104px; }
+  .my-plan-page .plan-hero { margin-bottom: 18px !important; padding: 20px !important; border-radius: 22px; gap: 16px !important; }
+  .my-plan-page .plan-hero::after { width: 120px; height: 120px; right: -45px; bottom: -62px; border-width: 20px; opacity: .5; }
+  .my-plan-page .plan-hero > div:first-child > button { margin-bottom: 9px !important; font-size: 13px !important; }
+  .app-shell main .my-plan-page .plan-hero h1 {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    background: none !important;
+    font-size: 28px !important;
+    line-height: 1.08 !important;
+  }
+  .my-plan-page .plan-hero p { font-size: 14px !important; line-height: 1.45 !important; }
+  .my-plan-page .plan-header-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+  .my-plan-page .plan-header-actions button { min-width: 0; min-height: 44px; padding: 8px 7px !important; font-size: 12px !important; line-height: 1.2 !important; }
+  .my-plan-page .plan-header-actions button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .my-plan-page .plan-main-tabs { margin-bottom: 18px !important; }
+  .my-plan-page .plan-main-tabs button { min-height: 44px; padding: 8px !important; font-size: 14px !important; }
+  .my-plan-page .plan-focus-card { padding: 17px !important; gap: 12px !important; border-radius: 20px !important; }
+  .my-plan-page .plan-focus-card > svg { width: 20px; height: 20px; }
+  .my-plan-page .plan-focus-card h3 { font-size: 14px !important; line-height: 1.3 !important; }
+  .my-plan-page .plan-focus-card p { font-size: 14px !important; line-height: 1.55 !important; text-align: left; }
+  .my-plan-page .plan-week-days { margin-top: 2px; }
+  .my-plan-page .plan-week-days button { min-width: 56px; min-height: 46px; padding: 7px 10px !important; font-size: 13px !important; }
+  .my-plan-page .plan-week-days button span { font-size: 9px !important; }
+  .my-plan-page .plan-day-detail { padding: 18px !important; border-radius: 22px !important; }
+
+  /* Keep support available without covering the active form or plan cards. */
+  #ai-chat-toggle { width: 52px; height: 52px; right: 14px; bottom: max(82px, calc(env(safe-area-inset-bottom) + 68px)); }
 }
 
 /* ── Page transitions ──────────────────────────────────── */

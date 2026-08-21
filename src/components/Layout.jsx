@@ -116,7 +116,7 @@ function Sidebar({ onClose, brandName, brandLogo }) {
           rel="noopener noreferrer"
           className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#a5a5aa] hover:text-white hover:bg-white/5 text-sm transition-all"
         >
-          <ExternalLink className="w-4 h-4" /> DB's Workouts website
+          <ExternalLink className="w-4 h-4" /> Website home
         </a>
         <NavLink
           to="/pricing"
