@@ -1,5 +1,12 @@
-# The custom domain hosts the complete app. BrowserRouter routes are handled
-# by the SPA fallback, while real assets and Pages Functions take precedence.
-/ /app-home.html 200
-/pricing /app-home.html 200
+# IMPORTANT: do not rewrite "/" (or any path the SPA itself resolves to "/")
+# to app-home.html here. Cloudflare Pages unconditionally 308-redirects any
+# literal *.html request to its extensionless form (e.g. /index.html -> /) —
+# that's a fixed platform behavior, not something _redirects controls. The
+# PWA service worker fetches /index.html directly to populate its precache,
+# so a "/" -> app-home.html rewrite here means the SW's own precache request
+# for index.html gets redirected into serving the marketing page instead of
+# the real SPA shell, which then gets served for every future navigation.
+# The marketing page is still reachable directly at /app-home(.html); it
+# must not be aliased onto "/" itself. BrowserRouter routes are handled by
+# the SPA fallback below; real assets and Pages Functions take precedence.
 /* /index.html 200

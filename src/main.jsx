@@ -19,11 +19,17 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // to prevent, but it can't fix itself retroactively from inside a stale SW.
 // Forcibly unregister everything and clear every cache once per device, then
 // reload into a completely clean state before registering the current SW.
-const PURGE_KEY = 'dbsai_sw_purge_v3_homepage_frame';
+const PURGE_KEY = 'dbsai_sw_purge_v4_fix_poisoned_index_precache';
 
 async function purgeStaleServiceWorkers() {
-  if (localStorage.getItem(PURGE_KEY)) return false;
-  localStorage.setItem(PURGE_KEY, '1');
+  // Safari can deny storage access in standalone/private contexts. Never let
+  // that stop the application mounting and leave the installed PWA blank.
+  try {
+    if (localStorage.getItem(PURGE_KEY)) return false;
+    localStorage.setItem(PURGE_KEY, '1');
+  } catch {
+    return false;
+  }
   try {
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -91,4 +97,17 @@ async function boot() {
   );
 }
 
-boot();
+boot().catch((error) => {
+  // Cache and service-worker maintenance is optional. If a browser rejects
+  // any of it, still mount the live app instead of leaving the launch screen.
+  console.error('PWA startup recovery:', error);
+  const root = document.getElementById('root');
+  if (root) {
+    root.replaceChildren();
+    ReactDOM.createRoot(root).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  }
+});
