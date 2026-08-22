@@ -118,13 +118,12 @@ function Sidebar({ onClose, brandName, brandLogo }) {
         >
           <ExternalLink className="w-4 h-4" /> Website home
         </a>
-        <NavLink
-          to="/pricing"
-          onClick={onClose}
+        <a
+          href="/app-home#pricing"
           className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[#a5a5aa] hover:text-white hover:bg-white/5 text-sm transition-all"
         >
           <CreditCard className="w-4 h-4" /> Membership & pricing
-        </NavLink>
+        </a>
         <a
           href="https://dbworkouts.co.uk/privacy-policy"
           target="_blank"

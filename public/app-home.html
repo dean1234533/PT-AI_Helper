@@ -15,7 +15,8 @@
     // iOS can reopen an installed web app at the page it was installed from
     // instead of honouring the manifest start_url. Keep the marketing homepage
     // for normal browsers, but launch standalone/PWA sessions into the app.
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    if ((window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true)
+        && window.location.pathname === '/') {
       window.location.replace('/dashboard');
     }
   </script>

@@ -440,6 +440,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: 0 8px 18px rgba(130,15,15,.2);
 }
 .app-shell main button[class*="bg-brand"] [class*="text-"] { color: white !important; }
+.app-shell main .checkin-adherence-option.is-selected {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: linear-gradient(135deg, #d11714 0%, #a80f0d 100%) !important;
+  border-color: #a80f0d !important;
+  box-shadow: 0 8px 18px rgba(144, 16, 14, .25), inset 0 1px 0 rgba(255, 255, 255, .2) !important;
+}
 .app-shell main input,
 .app-shell main select,
 .app-shell main textarea {

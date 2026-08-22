@@ -12,9 +12,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="DB's Workouts" />
     <title>DB's Workouts</title>
+    <style>
+      html,body,#root{min-height:100%;margin:0;background:#0b0b0d}
+      .app-launch-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#0b0b0d;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+      .app-launch-logo{width:104px;height:104px;object-fit:contain;filter:drop-shadow(0 14px 28px rgba(0,0,0,.4))}
+      .app-launch-copy{display:flex;flex-direction:column;align-items:center;gap:6px}
+      .app-launch-copy strong{font-size:1.35rem;letter-spacing:-.02em}
+      .app-launch-copy span{color:#a7a7ad;font-size:.88rem}
+      .app-launch-spinner{width:28px;height:28px;margin-top:6px;border:3px solid rgba(255,255,255,.16);border-top-color:#d01515;border-radius:50%;animation:app-launch-spin .75s linear infinite}
+      @keyframes app-launch-spin{to{transform:rotate(360deg)}}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="app-launch-screen" role="status" aria-label="Loading DB's Workouts">
+        <img src="/pwa-icon-192.png" alt="" class="app-launch-logo" />
+        <div class="app-launch-copy"><strong>DB's Workouts</strong><span>Loading your training room</span></div>
+        <div class="app-launch-spinner" aria-hidden="true"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

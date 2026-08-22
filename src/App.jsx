@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -17,6 +18,14 @@ import Clients from './pages/Clients';
 import PublicCheckIn from './pages/PublicCheckIn';
 import Layout from './components/Layout';
 
+function PricingRedirect() {
+  useEffect(() => {
+    window.location.replace(`/app-home${window.location.search}#pricing`);
+  }, []);
+
+  return <div className="app-launch-screen" role="status" aria-label="Opening membership and pricing" />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -29,7 +38,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkin/:id" element={<PublicCheckIn />} />
-      <Route path="/pricing" element={<Navigate to="/login" replace />} />
+      <Route path="/pricing" element={<PricingRedirect />} />
 
       {/* Protected Setup/Onboarding Routes */}
       <Route

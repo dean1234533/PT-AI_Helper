@@ -39,9 +39,22 @@ export function AuthProvider({ children }) {
 
   const deleteAccount = () => deleteUser(auth.currentUser);
 
+  if (loading) {
+    return (
+      <div className="app-launch-screen" role="status" aria-label="Loading DB's Workouts">
+        <img src="/pwa-icon-192.png" alt="" className="app-launch-logo" />
+        <div className="app-launch-copy">
+          <strong>DB's Workouts</strong>
+          <span>Loading your training room</span>
+        </div>
+        <div className="app-launch-spinner" aria-hidden="true" />
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout, resetPassword, deleteAccount }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

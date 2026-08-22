@@ -325,9 +325,10 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                         key={item.key}
                         type="button"
                         onClick={() => setAdherenceWorkout(item.key)}
-                        className={`py-3 text-xs font-semibold rounded-2xl border transition-all ${
+                        aria-pressed={adherenceWorkout === item.key}
+                        className={`checkin-adherence-option py-3 text-xs font-semibold rounded-2xl border transition-all ${
                           adherenceWorkout === item.key
-                            ? 'bg-brand-600 border-transparent text-white'
+                            ? 'is-selected bg-brand-600 border-transparent text-white'
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
@@ -351,9 +352,10 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                         key={item.key}
                         type="button"
                         onClick={() => setAdherenceNutrition(item.key)}
-                        className={`py-3 text-xs font-semibold rounded-2xl border transition-all ${
+                        aria-pressed={adherenceNutrition === item.key}
+                        className={`checkin-adherence-option py-3 text-xs font-semibold rounded-2xl border transition-all ${
                           adherenceNutrition === item.key
-                            ? 'bg-brand-600 border-transparent text-white'
+                            ? 'is-selected bg-brand-600 border-transparent text-white'
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
