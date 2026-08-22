@@ -19,7 +19,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // to prevent, but it can't fix itself retroactively from inside a stale SW.
 // Forcibly unregister everything and clear every cache once per device, then
 // reload into a completely clean state before registering the current SW.
-const PURGE_KEY = 'dbsai_sw_purge_v2_clean_routes';
+const PURGE_KEY = 'dbsai_sw_purge_v3_homepage_frame';
 
 async function purgeStaleServiceWorkers() {
   if (localStorage.getItem(PURGE_KEY)) return false;
