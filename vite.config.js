@@ -25,7 +25,11 @@ export default defineConfig({
         categories: ['health', 'fitness'],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Cache versioned assets only. HTML navigations must stay on the
+        // network because / is the public homepage while /dashboard is the
+        // authenticated app. Caching index.html here can swap those pages.
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
+        navigateFallback: null,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
