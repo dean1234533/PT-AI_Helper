@@ -332,7 +332,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
-                        {item.label}
+                        <span className="checkin-adherence-label">{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -359,7 +359,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                             : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
                         }`}
                       >
-                        {item.label}
+                        <span className="checkin-adherence-label">{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -434,7 +434,7 @@ const [submittedPlain, setSubmittedPlain] = useState(false);
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 py-4 border border-transparent rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="checkin-submit-button w-full flex justify-center items-center gap-2 py-4 border border-transparent rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-500 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
