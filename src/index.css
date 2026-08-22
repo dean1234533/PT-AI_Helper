@@ -440,19 +440,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: 0 8px 18px rgba(130,15,15,.2);
 }
 .app-shell main button[class*="bg-brand"] [class*="text-"] { color: white !important; }
-.app-shell main .checkin-adherence-option.is-selected {
+/* .is-selected/.checkin-submit-button duplicated below: the generic
+   "premium card" rule (`[class*="rounded-2xl"][class*="border"]`, further
+   down this file) matches these same buttons — since they legitimately use
+   rounded-2xl/border classes too — and ties or beats them on specificity,
+   winning on source order and silently resetting their background to the
+   pale card surface. Repeating a class token is a standard way to bump
+   specificity without touching the shared card rule (which many unrelated
+   elements rely on). */
+.app-shell main .checkin-adherence-option.is-selected.is-selected {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   background: linear-gradient(135deg, #d11714 0%, #a80f0d 100%) !important;
   border-color: #a80f0d !important;
   box-shadow: 0 8px 18px rgba(144, 16, 14, .25), inset 0 1px 0 rgba(255, 255, 255, .2) !important;
 }
-.app-shell main .checkin-adherence-option.is-selected .checkin-adherence-label {
+.app-shell main .checkin-adherence-option.is-selected.is-selected .checkin-adherence-label {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   opacity: 1 !important;
 }
-.app-shell main .checkin-submit-button {
+.app-shell main .checkin-submit-button.checkin-submit-button.checkin-submit-button {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   background: linear-gradient(135deg, #d11714 0%, #a80f0d 100%) !important;

@@ -19,7 +19,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // to prevent, but it can't fix itself retroactively from inside a stale SW.
 // Forcibly unregister everything and clear every cache once per device, then
 // reload into a completely clean state before registering the current SW.
-const PURGE_KEY = 'dbsai_sw_purge_v6_restore_homepage';
+const PURGE_KEY = 'dbsai_sw_purge_v7_checkin_bg_specificity';
 
 async function purgeStaleServiceWorkers() {
   // Safari can deny storage access in standalone/private contexts. Never let
