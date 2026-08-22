@@ -323,7 +323,7 @@ export default function ProfileSetup() {
           {isEditMode && (
             <button
               onClick={() => navigate('/dashboard')}
-              className="profile-dashboard-button self-start sm:self-center flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
+              className="page-inline-back profile-dashboard-button self-start sm:self-center flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to dashboard

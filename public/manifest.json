@@ -2,7 +2,7 @@
   "name": "DB's Workouts",
   "short_name": "DB's Workouts",
   "description": "AI-powered nutrition and workout plans",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0b0b0d",
   "theme_color": "#0b0b0d",

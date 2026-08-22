@@ -9,6 +9,16 @@
   <link rel="canonical" href="https://app.dbworkouts.co.uk/">
   <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
   <link rel="icon" href="./pics/IMG_8101.JPG" type="image/png" sizes="128x128">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0b0b0d">
+  <script>
+    // iOS can reopen an installed web app at the page it was installed from
+    // instead of honouring the manifest start_url. Keep the marketing homepage
+    // for normal browsers, but launch standalone/PWA sessions into the app.
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      window.location.replace('/dashboard');
+    }
+  </script>
 
   <meta property="og:title" content="AI Workout &amp; Nutrition Plans | DB's Workouts">
   <meta property="og:description" content="Personalised AI workout and nutrition plans from £7.99/month. Built by Dean Burt, REPs certified East London PT.">
@@ -739,6 +749,9 @@
   tog.addEventListener('click',function(){var o=mob.classList.toggle('open');tog.classList.toggle('active',o);document.body.style.overflow=o?'hidden':'';});
   var ro=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){x.target.classList.add('revealed');ro.unobserve(x.target);}});},{threshold:.1});
   document.querySelectorAll('[data-reveal]').forEach(function(el){ro.observe(el);});
+  if(window.location.pathname.replace(/\/$/,'')==='/pricing'){
+    requestAnimationFrame(function(){document.getElementById('pricing')?.scrollIntoView();});
+  }
 </script>
 </body>
 </html>

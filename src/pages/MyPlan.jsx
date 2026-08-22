@@ -683,7 +683,7 @@ export default function MyPlan() {
           <div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mb-3 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+              className="page-inline-back mb-3 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard

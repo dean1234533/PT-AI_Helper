@@ -498,6 +498,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .app-page { max-width: 1440px; margin: 0 auto; padding: 42px 36px 110px; }
+.page-inline-back { display: none !important; }
 .page-kicker { color: #a31212; font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
 .dashboard-hero {
   position: relative;

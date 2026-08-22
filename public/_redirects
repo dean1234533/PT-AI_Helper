@@ -1,3 +1,5 @@
 # The custom domain hosts the complete app. BrowserRouter routes are handled
 # by the SPA fallback, while real assets and Pages Functions take precedence.
+/ /app-home.html 200
+/pricing /app-home.html 200
 /* /index.html 200

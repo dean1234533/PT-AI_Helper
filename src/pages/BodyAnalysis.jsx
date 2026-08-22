@@ -137,7 +137,7 @@ export default function BodyAnalysis() {
         <p className="text-slate-400 text-sm">Your trainer is preparing your body analysis — check back soon.</p>
         <button
           onClick={() => navigate('/dashboard')}
-          className="mt-4 px-4 py-2 bg-brand-600 rounded-xl text-xs font-semibold"
+          className="page-inline-back mt-4 px-4 py-2 bg-brand-600 rounded-xl text-xs font-semibold"
         >
           Back to Dashboard
         </button>
