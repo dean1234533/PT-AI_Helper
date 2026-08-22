@@ -15,19 +15,21 @@ import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
 import PublicCheckIn from './pages/PublicCheckIn';
-import AppHome from './pages/AppHome';
 import Layout from './components/Layout';
 
 function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<AppHome />} />
+      {/* "/" and "/pricing" are served directly at the edge from
+          public/app-home.html (see public/_redirects) in production —
+          these are just the local-dev fallback when that rewrite doesn't apply. */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkin/:id" element={<PublicCheckIn />} />
-      <Route path="/pricing" element={<AppHome section="pricing" />} />
+      <Route path="/pricing" element={<Navigate to="/login" replace />} />
 
       {/* Protected Setup/Onboarding Routes */}
       <Route
