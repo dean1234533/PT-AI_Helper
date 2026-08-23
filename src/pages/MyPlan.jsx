@@ -364,7 +364,7 @@ function MealCard({ meal, onSwap, onRequestChange }) {
                   return (
                     <li key={i} className="text-xs text-slate-300 bg-slate-950/40 border border-slate-850 rounded-xl px-3 py-2">
                       <div className="flex items-start gap-2">
-                        <ChevronRight className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" aria-hidden="true" />
                         <div className="min-w-0">
                           <span>{label}</span>
                           {verified && (
