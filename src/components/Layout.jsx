@@ -226,14 +226,18 @@ export default function Layout({ children }) {
             and the floating chat button otherwise overlaps its short content.
             WorkoutReminder also owns push-permission request + token
             registration for every other page, so /clients needs its own
-            generic opt-in or the trainer would never get a token at all. */}
-        {location.pathname !== '/clients' ? (
+            generic opt-in or the trainer would never get a token at all.
+            On /profile, the fixed bottom-right chat launcher sits right on
+            top of the multi-step wizard's own bottom-right "Next Step"
+            button, so taps meant for the wizard can hit the chat bubble
+            instead and the user gets stuck unable to advance a step. */}
+        {location.pathname === '/clients' ? (
+          <PushNotificationSetup />
+        ) : (
           <>
             <WorkoutReminder />
-            <AIChat />
+            {location.pathname !== '/profile' && <AIChat />}
           </>
-        ) : (
-          <PushNotificationSetup />
         )}
         <InstallBanner />
       </div>
