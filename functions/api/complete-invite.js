@@ -7,11 +7,41 @@
  * endpoint's writes were silently rejected. Looks up the pending `clients`
  * doc and links it to the account. Returns the trainer's identity so the
  * frontend can stamp it onto the user's own profile doc.
- * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
+ * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON, RESEND_API_KEY, RESEND_FROM_EMAIL
  */
 
 import { firestoreList, firestorePatch } from '../_shared/firestore.js';
 import { sendPushToUid } from '../_shared/fcm.js';
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function buildSignupEmail({ trainerName, clientName }) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:24px">
+  <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:16px;padding:24px;margin-bottom:20px;text-align:center">
+    <p style="font-size:22px;margin:0 0 6px">🎉</p>
+    <h1 style="color:white;font-size:20px;font-weight:800;margin:0 0 4px">${escHtml(clientName)} just joined!</h1>
+    <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0">Signed up using your invite link</p>
+  </div>
+  <div style="background:white;border-radius:16px;padding:24px;text-align:center">
+    <p style="font-size:14px;color:#4b5563;margin:0 0 20px">Hi ${escHtml(trainerName)}, <strong>${escHtml(clientName)}</strong> has completed their signup. Head over to their profile to generate their first plan.</p>
+    <div style="background:#eff6ff;border-radius:12px;padding:16px">
+      <p style="font-size:14px;color:#2563eb;font-weight:600;margin:0">Log in to view their profile and get started.</p>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:16px">DB's Workouts — Client Signups</p>
+</div>
+</body></html>`;
+}
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -64,13 +94,28 @@ export async function onRequestPost(ctx) {
       env
     );
 
+    const clientName = f.name?.stringValue || 'A client';
+
     if (trainerId) {
-      const clientName = f.name?.stringValue || 'A client';
       await sendPushToUid(trainerId, {
         title: `${clientName} joined!`,
         body: `${clientName} signed up using your invite link.`,
         url: '/clients',
       }, env).catch((err) => console.error('Push error:', err.message));
+    }
+
+    if (trainerEmail && env.RESEND_API_KEY) {
+      const html = buildSignupEmail({ trainerName, clientName });
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: env.RESEND_FROM_EMAIL || "DB's Workouts <onboarding@resend.dev>",
+          to: [trainerEmail],
+          subject: `${clientName} just joined! 🎉`,
+          html,
+        }),
+      }).catch((err) => console.error('Signup email error:', err.message));
     }
 
     return Response.json({ success: true, trainerId, trainerName, trainerEmail }, { headers: CORS });
