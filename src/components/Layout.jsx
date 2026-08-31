@@ -13,6 +13,7 @@ import AIChat from './AIChat';
 import InstallBanner from './InstallBanner';
 import WorkoutReminder from './WorkoutReminder';
 import PushNotificationSetup from './PushNotificationSetup';
+import NotificationSettings from './NotificationSettings';
 
 const WHATSAPP_URL = 'https://wa.me/447752300937?text=Hi%2C%20I%20need%20help%20with%20the%20DB%27s%20Workouts%20app';
 
@@ -110,6 +111,7 @@ function Sidebar({ onClose, brandName, brandLogo }) {
           </svg>
           Help & Support
         </a>
+        <NotificationSettings />
         <a
           href="https://dbworkouts.co.uk"
           target="_blank"
