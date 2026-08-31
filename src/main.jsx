@@ -13,13 +13,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
   window.__deferredInstallPrompt = e;
 });
 
-// One-time hard reset: a service worker registered before the update-polling
-// fix below could be stuck permanently serving its own cached snapshot and
-// never even check for a newer one — the exact failure mode this file exists
-// to prevent, but it can't fix itself retroactively from inside a stale SW.
-// Forcibly unregister everything and clear every cache once per device, then
-// reload into a completely clean state before registering the current SW.
-const PURGE_KEY = 'dbsai_sw_purge_v10_delete_debug';
+// Force a full unregister-and-recache once per DEPLOY (not once ever) — keyed
+// to __BUILD_ID__, which Cloudflare Pages sets automatically per commit (see
+// vite.config.js). This used to be a hand-edited string bumped manually in
+// whichever commit needed it, which depended on remembering to bump it every
+// single time; forgetting once meant a real fix could ship and still not
+// reach anyone already running the app until they happened to force-quit and
+// reopen it themselves. Tying it to the build id makes every deploy refresh
+// every device automatically, with no manual step and no way to forget.
+const PURGE_KEY = `dbsai_sw_purge_${__BUILD_ID__}`;
 
 async function purgeStaleServiceWorkers() {
   // Safari can deny storage access in standalone/private contexts. Never let

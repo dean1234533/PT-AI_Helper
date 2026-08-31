@@ -2,7 +2,16 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Cloudflare Pages sets this automatically at build time — a real, unique
+// identifier for "this exact deploy" with zero manual upkeep. Falls back to
+// a timestamp for local builds (where it's unset and irrelevant anyway,
+// since main.jsx skips the purge entirely in dev).
+const BUILD_ID = process.env.CF_PAGES_COMMIT_SHA || String(Date.now());
+
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
   plugins: [
     react(),
     VitePWA({
