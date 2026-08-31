@@ -79,7 +79,12 @@ export async function onRequestPost(ctx) {
     const clientDoc = await firestoreGet(`clients/${clientDocId}`, env);
     const trainerId = clientDoc?.fields?.trainerId?.stringValue;
     if (!trainerId || trainerId !== caller.uid) {
-      return Response.json({ error: 'You are not this client\'s trainer.' }, { status: 403, headers: CORS });
+      // TEMPORARY debug detail — investigating a reported ownership mismatch
+      // for pending (not-yet-signed-up) invites. Remove once diagnosed.
+      return Response.json({
+        error: 'You are not this client\'s trainer.',
+        debug: { callerUid: caller.uid, storedTrainerId: trainerId || null, clientDocExists: !!clientDoc, clientDocId },
+      }, { status: 403, headers: CORS });
     }
 
     if (clientUid) {
