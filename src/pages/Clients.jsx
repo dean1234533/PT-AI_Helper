@@ -1153,10 +1153,16 @@ export default function Clients() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ clientUid: client.clientUid || null, clientDocId: client.id }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to delete client');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        // TEMPORARY: surface server debug detail while investigating a
+        // reported ownership-mismatch error on pending invites.
+        const debugSuffix = body.debug ? ` [${JSON.stringify(body.debug)}]` : '';
+        throw new Error((body.error || 'Failed to delete client') + debugSuffix);
+      }
       toast.success(`${client.name} deleted`);
     } catch (err) {
-      toast.error(err.message || 'Failed to remove client');
+      toast.error(err.message || 'Failed to remove client', { duration: 15000 });
       throw err;
     }
   };
