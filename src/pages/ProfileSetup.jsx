@@ -483,7 +483,7 @@ export default function ProfileSetup() {
             <div className="space-y-6">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
-                  Main Fitness Goal
+                  Main Fitness Goal <span className="normal-case text-slate-500 font-normal">— pick up to 2</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {[
@@ -493,23 +493,44 @@ export default function ProfileSetup() {
                     { val: 'Cardiovascular Health', desc: 'Enhance heart fitness & stamina' },
                     { val: 'Improve Strength', desc: 'Increase raw lifts & power output' },
                     { val: 'Flexibility & Core', desc: 'Improve posture, core, & flexibility' },
-                  ].map((item) => (
-                    <button
-                      key={item.val}
-                      type="button"
-                      onClick={() => handleChange('goal', item.val)}
-                      className={`p-4 border text-left rounded-2xl transition-all flex flex-col gap-1 ${
-                        formData.goal === item.val
-                          ? 'bg-gradient-to-tr from-brand-600 to-brand-700 border-transparent text-white ring-2 ring-brand-400/35'
-                          : 'bg-slate-950/40 border-slate-850 hover:border-slate-700 text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <span className="font-semibold text-sm">{item.val}</span>
-                      <span className={`text-xs ${formData.goal === item.val ? 'text-brand-200' : 'text-slate-500'}`}>
-                        {item.desc}
-                      </span>
-                    </button>
-                  ))}
+                  ].map((item) => {
+                    // Goals are stored as a single comma-joined string (e.g.
+                    // "Lose Fat, Build Muscle") so every existing consumer of
+                    // profile.goal — AI prompts, Dashboard's substring checks,
+                    // PDFs — keeps working on a plain string with no changes.
+                    const selectedGoals = (formData.goal || '').split(', ').filter(Boolean);
+                    const isSelected = selectedGoals.includes(item.val);
+                    const toggleGoal = () => {
+                      let next;
+                      if (isSelected) {
+                        next = selectedGoals.filter((g) => g !== item.val);
+                      } else {
+                        if (selectedGoals.length >= 2) {
+                          toast.error('You can select up to 2 goals — deselect one first');
+                          return;
+                        }
+                        next = [...selectedGoals, item.val];
+                      }
+                      handleChange('goal', next.join(', '));
+                    };
+                    return (
+                      <button
+                        key={item.val}
+                        type="button"
+                        onClick={toggleGoal}
+                        className={`p-4 border text-left rounded-2xl transition-all flex flex-col gap-1 ${
+                          isSelected
+                            ? 'bg-gradient-to-tr from-brand-600 to-brand-700 border-transparent text-white ring-2 ring-brand-400/35'
+                            : 'bg-slate-950/40 border-slate-850 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <span className="font-semibold text-sm">{item.val}</span>
+                        <span className={`text-xs ${isSelected ? 'text-brand-200' : 'text-slate-500'}`}>
+                          {item.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
