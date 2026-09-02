@@ -69,6 +69,25 @@ export async function firestoreDelete(path, env) {
 }
 
 /**
+ * Lists every subcollection ID that actually exists under a document, so
+ * callers can clean up "everything under this doc" without hand-maintaining
+ * a list of collection names that silently goes stale the next time a
+ * feature adds a new subcollection (e.g. mealRequests) and nobody remembers
+ * to add it to every place that deletes a user's data.
+ */
+export async function firestoreListCollectionIds(docPath, env) {
+  const { headers, url } = await base(env);
+  const res = await fetch(`${url}/${docPath}:listCollectionIds`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pageSize: 300 }),
+  });
+  if (!res.ok) throw new Error(`Firestore listCollectionIds ${docPath} failed: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  return data.collectionIds || [];
+}
+
+/**
  * Recursively converts a plain JS value into a Firestore REST API "Value"
  * object. Needed for deeply nested documents (e.g. a full workout/meal
  * plan) — every other helper here has only ever written flat key/value pairs.

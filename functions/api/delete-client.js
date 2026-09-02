@@ -10,7 +10,7 @@
  * Env vars: FIREBASE_PROJECT_ID, FCM_SERVICE_ACCOUNT_JSON
  */
 
-import { firestoreGet, firestoreList, firestoreDelete } from '../_shared/firestore.js';
+import { firestoreGet, firestoreList, firestoreDelete, firestoreListCollectionIds } from '../_shared/firestore.js';
 import { mintAccessToken } from '../_shared/gcp-auth.js';
 
 function getenv(name, env) {
@@ -84,13 +84,12 @@ export async function onRequestPost(ctx) {
 
     if (clientUid) {
       await deleteAuthAccount(clientUid, env);
-      await Promise.all([
-        deleteAllDocsIn(`users/${clientUid}/checkins`, env),
-        deleteAllDocsIn(`users/${clientUid}/fcmTokens`, env),
-        deleteAllDocsIn(`users/${clientUid}/plans`, env),
-        firestoreDelete(`users/${clientUid}/data/profile`, env),
-        firestoreDelete(`users/${clientUid}/data/analysis`, env),
-      ]);
+      // Discover every subcollection under this user rather than naming them
+      // by hand (checkins, fcmTokens, plans, data, mealRequests, ...) — a
+      // hardcoded list silently goes stale the moment a new feature adds a
+      // new subcollection and nobody remembers to add it here too.
+      const collectionIds = await firestoreListCollectionIds(`users/${clientUid}`, env).catch(() => []);
+      await Promise.all(collectionIds.map((id) => deleteAllDocsIn(`users/${clientUid}/${id}`, env)));
     }
 
     await firestoreDelete(`clients/${clientDocId}`, env);
