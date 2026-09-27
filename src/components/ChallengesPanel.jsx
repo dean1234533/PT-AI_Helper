@@ -163,14 +163,21 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
   const [suggestions, setSuggestions] = useState(null);
 
   useEffect(() => {
-    const q = query(collection(db, 'challenges'), where('clientId', '==', clientUid));
+    if (!user) return;
+    // Firestore can only verify a security rule for a LIST query using
+    // fields the query itself filters on — filtering by clientId alone
+    // isn't enough to prove the ptId-based read rule, even though the
+    // trainer legitimately owns every matching doc, so the whole listener
+    // gets rejected outright. Filtering on ptId too (which the rule
+    // actually checks) makes it provable.
+    const q = query(collection(db, 'challenges'), where('ptId', '==', user.uid), where('clientId', '==', clientUid));
     const unsub = onSnapshot(q, (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       setChallenges(list);
-    });
+    }, (err) => console.error('Challenges listener error:', err));
     return unsub;
-  }, [clientUid]);
+  }, [clientUid, user]);
 
   const saveChallenge = async (form) => {
     setSaving(true);
