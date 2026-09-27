@@ -58,7 +58,12 @@ function ChallengeCard({ challenge, onCelebrate }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Failed to log today');
-      toast.success('Logged ✓');
+      if (data.meetsTarget === false) {
+        const target = challenge.numberTarget ? `${challenge.numberTarget} ${challenge.unit || ''}`.trim() : 'target';
+        toast(`Logged, but below your ${target} — it won't count toward your streak today.`, { icon: '📝', duration: 6000 });
+      } else {
+        toast.success('Logged ✓ — streak continues!');
+      }
       if (data.newlyHitRewards?.length) {
         onCelebrate(data.newlyHitRewards[0]);
       }
@@ -116,10 +121,19 @@ function ChallengeCard({ challenge, onCelebrate }) {
       )}
 
       {todayLog ? (
-        <div className="flex items-center gap-2 bg-emerald-950/20 border border-emerald-900/30 rounded-xl px-3 py-2.5">
-          <Check className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-300">Logged ✓{todayLog.usedFreeze ? ' (freeze used)' : ''}</span>
-        </div>
+        todayLog.meetsTarget === false ? (
+          <div className="flex items-center gap-2 bg-amber-950/20 border border-amber-900/30 rounded-xl px-3 py-2.5">
+            <Check className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-semibold text-amber-300">
+              Logged {todayLog.value}{challenge.unit ? ` ${challenge.unit}` : ''} — below your {challenge.numberTarget}{challenge.unit ? ` ${challenge.unit}` : ''} target, streak not counted today
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 bg-emerald-950/20 border border-emerald-900/30 rounded-xl px-3 py-2.5">
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-300">Logged ✓{todayLog.usedFreeze ? ' (freeze used)' : ''}</span>
+          </div>
+        )
       ) : challenge.logType === 'tick' ? (
         <button onClick={() => submitLog({})} disabled={submitting}
           className="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50">

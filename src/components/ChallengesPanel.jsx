@@ -350,7 +350,7 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
                     {c.status !== 'active' && <span className="px-2 py-0.5 rounded-lg border border-slate-700 text-[10px] text-slate-500 uppercase">{c.status}</span>}
                   </p>
                   <p className="text-[10px] text-slate-500 mt-0.5">
-                    <Flame className="w-3 h-3 inline text-amber-500 -mt-0.5" /> {c.currentStreak || 0} day streak · longest {c.longestStreak || 0}
+                    <Flame className="w-3 h-3 inline text-amber-500 -mt-0.5" /> {c.currentStreak || 0} day streak · longest {c.longestStreak || 0} · {c.totalLogs || 0} total logs
                     {next && ` · ${next.daysRemaining}d to ${next.title}`}
                   </p>
                 </div>

@@ -146,6 +146,7 @@ export async function onRequestPost(ctx) {
     if (value !== undefined && value !== null) logFields.value = Number(value);
     if (note) logFields.note = note;
     if (photoUrl) logFields.photoUrl = photoUrl;
+    logFields.meetsTarget = meetsTarget;
 
     let statsUpdate = {};
     let usedFreeze = false;
@@ -191,11 +192,14 @@ export async function onRequestPost(ctx) {
       env
     );
 
-    let newlyHitRewards = [];
-    if (Object.keys(statsUpdate).length) {
-      statsUpdate.totalLogs = (challenge.totalLogs || 0) + 1;
-      await firestorePatch(`challenges/${challengeId}`, toFirestoreFields(statsUpdate), Object.keys(statsUpdate), env);
+    // totalLogs counts every attempt (engagement), whether or not it met
+    // target — a below-target log still shows the PT their client showed up,
+    // distinct from a streak day (which requires meeting target).
+    statsUpdate.totalLogs = (challenge.totalLogs || 0) + 1;
+    await firestorePatch(`challenges/${challengeId}`, toFirestoreFields(statsUpdate), Object.keys(statsUpdate), env);
 
+    let newlyHitRewards = [];
+    if (meetsTarget) {
       const newStreak = statsUpdate.currentStreak ?? challenge.currentStreak ?? 0;
       newlyHitRewards = getNewlyHitRewards(challenge.rewards, newStreak);
     }
@@ -231,6 +235,7 @@ export async function onRequestPost(ctx) {
     return Response.json({
       success: true,
       logDate,
+      meetsTarget,
       stats: statsUpdate,
       newlyHitRewards,
     }, { headers: CORS });
