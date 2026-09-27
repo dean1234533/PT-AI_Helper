@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Challenge progress photos: challenges/{challengeId}/{date}.jpg
+    // Clients upload only into their own challenge's folder, images only,
+    // capped at 1MB (the client already compresses to ~300KB before
+    // upload — this is a hard backstop, not the primary size control).
+    // The PT (challenge owner) can read; nobody else can.
+    match /challenges/{challengeId}/{fileName} {
+      allow read: if request.auth != null && (
+        request.auth.uid == firestore.get(/databases/(default)/documents/challenges/$(challengeId)).data.clientId ||
+        request.auth.uid == firestore.get(/databases/(default)/documents/challenges/$(challengeId)).data.ptId
+      );
+      allow write: if request.auth != null
+        && request.auth.uid == firestore.get(/databases/(default)/documents/challenges/$(challengeId)).data.clientId
+        && request.resource.size < 1 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+  }
+}

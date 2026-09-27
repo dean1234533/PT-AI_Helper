@@ -24,8 +24,14 @@ function row(label, value) {
   </div>`;
 }
 
-function buildEmail({ trainerName, clientName, checkinData }) {
+function buildEmail({ trainerName, clientName, checkinData, challengeSummary }) {
   const c = checkinData || {};
+  const streaksBlock = (challengeSummary || []).length
+    ? `<div style="margin-bottom:12px;padding:12px 14px;background:#fff7ed;border-radius:10px;border-left:3px solid #f59e0b">
+        <p style="font-size:11px;font-weight:700;color:#b45309;margin:0 0 6px;text-transform:uppercase">Challenge streaks</p>
+        ${challengeSummary.map((c2) => `<p style="font-size:13px;color:#374151;margin:0 0 4px">🔥 ${escHtml(c2.title)} — ${c2.currentStreak}-day streak</p>`).join('')}
+      </div>`
+    : '';
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
@@ -44,6 +50,7 @@ function buildEmail({ trainerName, clientName, checkinData }) {
     ${row('Nutrition adherence', c.adherenceNutrition)}
     ${row('What went well', c.notesWell)}
     ${row('Challenges', c.notesChallenging)}
+    ${streaksBlock}
     <div style="margin-top:24px;background:#eef2ff;border-radius:12px;padding:16px;text-align:center">
       <p style="font-size:14px;color:#4338ca;font-weight:600;margin:0">Log in to review their full history and progress photo.</p>
     </div>
@@ -66,7 +73,7 @@ export async function onRequestOptions() {
 export async function onRequestPost(ctx) {
   const env = ctx.env;
   try {
-    const { trainerId, trainerEmail, trainerName, clientName, checkinData } = await ctx.request.json();
+    const { trainerId, trainerEmail, trainerName, clientName, checkinData, challengeSummary } = await ctx.request.json();
     if (!trainerEmail || !clientName) {
       return Response.json({ error: 'trainerEmail and clientName are required' }, { status: 400, headers: CORS });
     }
@@ -82,7 +89,7 @@ export async function onRequestPost(ctx) {
     const resendKey = env.RESEND_API_KEY;
     if (!resendKey) return Response.json({ success: true, emailSkipped: true }, { headers: CORS });
 
-    const html = buildEmail({ trainerName: trainerName || 'Coach', clientName, checkinData });
+    const html = buildEmail({ trainerName: trainerName || 'Coach', clientName, checkinData, challengeSummary });
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },

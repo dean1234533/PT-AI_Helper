@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, CheckSquare, User, Users,
-  LogOut, Menu, X, ArrowLeft, ExternalLink, CreditCard,
+  LogOut, Menu, X, ArrowLeft, ExternalLink, CreditCard, Flame,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
@@ -28,12 +28,17 @@ const adminNavItems = [
   { to: '/clients',   label: 'Clients',    icon: Users },
 ];
 
+const challengeNavItems = [
+  { to: '/challenges', label: 'Challenges', icon: Flame },
+];
+
 function Sidebar({ onClose, brandName, brandLogo }) {
   const { user, logout } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
   const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
   const showClientsNav = isAdmin || !profile?.trainerId;
+  const showChallengesNav = Boolean(profile?.trainerId);
 
   const handleLogout = async () => {
     await logout();
@@ -70,7 +75,7 @@ function Sidebar({ onClose, brandName, brandLogo }) {
       {/* Nav */}
       <nav className="sidebar-navigation flex-1 px-4 py-7 space-y-1.5 overflow-y-auto">
         <p className="sidebar-section-label">Training room</p>
-        {[...navItems, ...(showClientsNav ? adminNavItems : [])].map(({ to, label, icon: Icon }) => (
+        {[...navItems, ...(showChallengesNav ? challengeNavItems : []), ...(showClientsNav ? adminNavItems : [])].map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -151,7 +156,7 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { brandName, brandColor, brandLogoBase64 } = useTrainerBranding();
   const brandLogo = brandLogoBase64 || null; // stored as a full data: URI (see ProfileSetup's logo upload)
-  const currentPage = [...navItems, ...adminNavItems].find((item) => item.to === location.pathname)?.label || 'Coaching';
+  const currentPage = [...navItems, ...challengeNavItems, ...adminNavItems].find((item) => item.to === location.pathname)?.label || 'Coaching';
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 

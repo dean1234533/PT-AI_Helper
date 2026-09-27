@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard';
 import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
+import MyChallenges from './pages/MyChallenges';
 import PublicCheckIn from './pages/PublicCheckIn';
 import Layout from './components/Layout';
 
@@ -105,6 +106,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Clients />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/challenges"
+        element={
+          <ProtectedRoute>
+            <MyChallenges />
           </ProtectedRoute>
         }
       />

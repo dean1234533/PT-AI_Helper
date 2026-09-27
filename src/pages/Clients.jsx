@@ -14,8 +14,10 @@ import {
   Trash2, ChevronDown, ChevronUp,
   Loader2, Calendar, X, Copy, Weight, Zap, Smile,
   Palette, Upload, Save, Sparkles, TrendingUp, Eye, EyeOff, Dumbbell, Apple,
-  Shuffle, MessageSquarePlus, ChevronRight, Youtube, ExternalLink, Link2
+  Shuffle, MessageSquarePlus, ChevronRight, Youtube, ExternalLink, Link2, Flame
 } from 'lucide-react';
+import ChallengesPanel from '../components/ChallengesPanel';
+import StreaksWidget from '../components/StreaksWidget';
 import {
   getFirestore, collection, addDoc, getDocs, onSnapshot,
   doc, query, where, orderBy, limit, updateDoc
@@ -458,7 +460,7 @@ function ClientPlanPreview({ plan, dayIdx, setDayIdx, onSwapMeal, onSaveExercise
   );
 }
 
-function ActiveClientDetails({ clientUid, clientDocId }) {
+function ActiveClientDetails({ clientUid, clientDocId, clientName }) {
   const { callAI } = useGemini();
   const [profile, setProfile] = useState(null);
   const [checkIns, setCheckIns] = useState([]);
@@ -468,6 +470,7 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
   const [progressText, setProgressText] = useState('');
   const [showScopeMenu, setShowScopeMenu] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
+  const [showChallenges, setShowChallenges] = useState(false);
   const [planDayIdx, setPlanDayIdx] = useState(0);
   const [mealRequests, setMealRequests] = useState([]);
   const [resolvingId, setResolvingId] = useState(null);
@@ -710,6 +713,13 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
             {showPlan ? 'Hide plan & videos' : 'Manage plan & videos'}
           </button>
         )}
+        <button
+          onClick={() => setShowChallenges((v) => !v)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 hover:text-amber-300 text-xs font-semibold rounded-xl transition-all"
+        >
+          <Flame className="w-3.5 h-3.5" />
+          {showChallenges ? 'Hide challenges' : 'Challenges'}
+        </button>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap bg-slate-950/40 border border-slate-800 rounded-xl px-3 py-2">
@@ -757,6 +767,17 @@ function ActiveClientDetails({ clientUid, clientDocId }) {
           setDayIdx={setPlanDayIdx}
           onSwapMeal={setSwapRequest}
           onSaveExerciseVideo={handleSaveExerciseVideo}
+        />
+      )}
+
+      {showChallenges && (
+        <ChallengesPanel
+          clientUid={clientUid}
+          clientDocId={clientDocId}
+          clientName={clientName}
+          profile={profile}
+          analysis={analysis}
+          callAI={callAI}
         />
       )}
 
@@ -929,8 +950,15 @@ function ClientCard({ client, onDelete, onCopyLink }) {
   const [expanded, setExpanded] = useState(false);
   const isActive = client.status === 'active' && client.clientUid;
 
+  // Lets the Streaks dashboard widget jump straight to a client's card.
+  useEffect(() => {
+    if (client.clientUid && window.location.hash === `#client-${client.clientUid}`) {
+      setExpanded(true);
+    }
+  }, [client.clientUid]);
+
   return (
-    <div className="client-card bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
+    <div id={client.clientUid ? `client-${client.clientUid}` : undefined} className="client-card bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md">
       <div className="p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-brand-600/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
@@ -968,7 +996,7 @@ function ClientCard({ client, onDelete, onCopyLink }) {
       {expanded && (
         <div className="border-t border-slate-800/60 p-5">
           {isActive ? (
-            <ActiveClientDetails clientUid={client.clientUid} clientDocId={client.id} />
+            <ActiveClientDetails clientUid={client.clientUid} clientDocId={client.id} clientName={client.name} />
           ) : (
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <Clock className="w-4 h-4 text-amber-400" />
@@ -1233,6 +1261,8 @@ export default function Clients() {
               </p>
             </div>
           </div>
+
+          <StreaksWidget trainerId={user?.uid} />
 
           {/* Client list */}
           {loading ? (

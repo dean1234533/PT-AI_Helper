@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, doc, setDoc, onSnapshot, query, orderBy, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, onSnapshot, query, where, orderBy, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from './useProfile';
@@ -36,6 +36,16 @@ export function useCheckIns() {
 
     if (profile?.trainerId) {
       await setDoc(doc(db, 'users', user.uid, 'data', 'profile'), { lastCheckInAt: newCheckIn.date }, { merge: true });
+
+      // Best-effort — a failed challenge lookup shouldn't block the check-in
+      // notification itself, just omit the streak summary from it.
+      let challengeSummary = [];
+      try {
+        const challengesQuery = query(collection(db, 'challenges'), where('clientId', '==', user.uid), where('status', '==', 'active'));
+        const snap = await getDocs(challengesQuery);
+        challengeSummary = snap.docs.map((d) => ({ title: d.data().title, currentStreak: d.data().currentStreak || 0 }));
+      } catch { /* omit */ }
+
       fetch('/api/notify-trainer-checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,6 +55,7 @@ export function useCheckIns() {
           trainerName: profile.trainerName,
           clientName: profile.name,
           checkinData: newCheckIn,
+          challengeSummary,
         }),
       }).catch(() => {});
     }

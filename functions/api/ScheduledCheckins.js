@@ -13,6 +13,7 @@
 
 import { sendPushToUid } from '../_shared/fcm.js';
 import { firestoreList, firestoreCreateDoc, firestoreGet } from '../_shared/firestore.js';
+import { getLocalDateString } from '../_shared/streakLogic.js';
 
 const CHECKIN_SYSTEM_PROMPT = `You are a supportive personal trainer assistant. Based on the client's plan and goals, generate a friendly, personalised weekly check-in.
 
@@ -267,8 +268,41 @@ async function sendWorkoutDayPush(clientUid, env) {
   }, env).catch((err) => console.error('Push error:', err.message));
 }
 
+// Daily challenge-streak reminder. This cron fires once a day (external
+// scheduler, no time-of-day precision available on Cloudflare Pages), so
+// "19:00 client local time" from the spec is achieved by pointing the
+// external cron trigger itself at ~19:00 Europe/London — see the setup
+// checklist. Every client is UK-based in practice, so one shared timezone
+// default is fine; per-challenge `timezone` (default Europe/London) is
+// still honoured if a challenge ever sets a different one.
+async function sendChallengeReminders(env) {
+  const challenges = await firestoreList('challenges', env, 300).catch(() => []);
+  const active = challenges.filter((doc) => doc.fields?.status?.stringValue === 'active');
+
+  for (const doc of active) {
+    const f = doc.fields || {};
+    const clientId = f.clientId?.stringValue;
+    if (!clientId) continue;
+    const timezone = f.timezone?.stringValue || 'Europe/London';
+    const today = getLocalDateString(timezone);
+    const challengeId = doc.name.split('/').pop();
+
+    const todayLog = await firestoreGet(`challenges/${challengeId}/logs/${today}`, env).catch(() => null);
+    if (todayLog) continue; // already logged today, skip
+
+    const streak = f.currentStreak?.integerValue ? Number(f.currentStreak.integerValue) : 0;
+    await sendPushToUid(clientId, {
+      title: `Keep your ${streak}-day streak 🔥`,
+      body: `Log today's "${f.title?.stringValue || 'challenge'}" before it resets.`,
+      url: '/challenges',
+    }, env).catch((err) => console.error('Challenge reminder push error:', err.message));
+  }
+}
+
 async function runScheduledCheckins(env) {
   console.log('Running scheduled check-ins:', new Date().toISOString());
+
+  await sendChallengeReminders(env).catch((err) => console.error('Challenge reminders failed:', err.message));
 
   const clients = await firestoreList('clients', env);
 

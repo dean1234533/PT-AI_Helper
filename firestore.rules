@@ -28,5 +28,35 @@ service cloud.firestore {
       allow update: if true;
       allow delete: if false;
     }
+
+    // Challenges & streaks. The PT owns the settings/rewards/denormalised
+    // stats on the parent doc; clients can only ever read it, never write
+    // it directly (so they can't fake a streak by editing the stats field).
+    // The app's real write path for a client's daily log is the
+    // /api/log-challenge server function (service-account auth, bypasses
+    // these rules, does the actual streak/freeze/reward math and enforces
+    // "today" in the client's own timezone). The create/update rule below
+    // is defense-in-depth for that same action, not the primary gate —
+    // rules have no timezone-aware clock, so it can only do a coarse sanity
+    // check (doc id matches the date field, right shape, own uid) rather
+    // than a precise "is this really today for this client" check.
+    match /challenges/{challengeId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.ptId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ptId;
+      allow read: if request.auth != null && request.auth.uid == resource.data.clientId;
+
+      match /logs/{date} {
+        allow read: if request.auth != null && (
+          request.auth.uid == get(/databases/$(database)/documents/challenges/$(challengeId)).data.ptId ||
+          request.auth.uid == get(/databases/$(database)/documents/challenges/$(challengeId)).data.clientId
+        );
+        allow create, update: if request.auth != null
+          && request.auth.uid == get(/databases/$(database)/documents/challenges/$(challengeId)).data.clientId
+          && request.resource.data.clientId == request.auth.uid
+          && request.resource.data.date == date
+          && date.size() == 10;
+        allow delete: if false;
+      }
+    }
   }
 }
