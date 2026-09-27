@@ -133,17 +133,29 @@ export async function onRequestPost(ctx) {
     const timezone = docFields(timezoneDoc)?.timezone || 'Europe/London';
     const logDate = getLocalDateString(timezone);
 
+    // "number" logs accumulate through the day (e.g. log 200ml, then 500ml,
+    // then 300ml as you actually drink it) rather than replacing a single
+    // guessed total — so a fresh submission adds to whatever's already
+    // logged for today instead of overwriting it.
+    let numberTotal = Number(value) || 0;
+    if (challenge.logType === 'number') {
+      const existingLogDoc = await firestoreGet(`challenges/${challengeId}/logs/${logDate}`, env).catch(() => null);
+      const existingValue = Number(docFields(existingLogDoc)?.value) || 0;
+      numberTotal = existingValue + (Number(value) || 0);
+    }
+
     // For the "number" log type, only counts towards streak progress if it
     // meets the target — but is still recorded either way (e.g. a partial
     // step count still shows on the heatmap, just not as a streak day).
-    const meetsTarget = challenge.logType !== 'number' || !challenge.numberTarget || Number(value) >= challenge.numberTarget;
+    const meetsTarget = challenge.logType !== 'number' || !challenge.numberTarget || numberTotal >= challenge.numberTarget;
 
     const logFields = {
       clientId: caller.uid,
       date: logDate,
       createdAt: new Date().toISOString(),
     };
-    if (value !== undefined && value !== null) logFields.value = Number(value);
+    if (challenge.logType === 'number') logFields.value = numberTotal;
+    else if (value !== undefined && value !== null) logFields.value = Number(value);
     if (note) logFields.note = note;
     if (photoUrl) logFields.photoUrl = photoUrl;
     logFields.meetsTarget = meetsTarget;

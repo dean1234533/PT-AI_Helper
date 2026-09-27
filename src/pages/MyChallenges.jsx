@@ -39,6 +39,7 @@ function ChallengeCard({ challenge, onCelebrate }) {
   const logsByDate = useChallengeLogs(challenge.id);
   const [numberValue, setNumberValue] = useState('');
   const [noteValue, setNoteValue] = useState('');
+  const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [stuckSuggestion, setStuckSuggestion] = useState('');
   const [stuckLoading, setStuckLoading] = useState(false);
@@ -58,11 +59,18 @@ function ChallengeCard({ challenge, onCelebrate }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Failed to log today');
-      if (data.meetsTarget === false) {
-        const target = challenge.numberTarget ? `${challenge.numberTarget} ${challenge.unit || ''}`.trim() : 'target';
-        toast(`Logged, but below your ${target} — it won't count toward your streak today.`, { icon: '📝', duration: 6000 });
+      if (challenge.logType === 'number') {
+        setNumberValue('');
+        if (data.meetsTarget === false) {
+          toast(`Added — still below your ${challenge.numberTarget}${challenge.unit ? ` ${challenge.unit}` : ''} target today.`, { icon: '📝', duration: 5000 });
+        } else {
+          toast.success('Target hit for today — streak continues! 🔥');
+        }
+      } else if (data.meetsTarget === false) {
+        toast(`Logged, but below target — it won't count toward your streak today.`, { icon: '📝', duration: 6000 });
       } else {
         toast.success('Logged ✓ — streak continues!');
+        setEditing(false);
       }
       if (data.newlyHitRewards?.length) {
         onCelebrate(data.newlyHitRewards[0]);
@@ -120,35 +128,60 @@ function ChallengeCard({ challenge, onCelebrate }) {
         </p>
       )}
 
-      {todayLog ? (
-        todayLog.meetsTarget === false ? (
-          <div className="flex items-center gap-2 bg-amber-950/20 border border-amber-900/30 rounded-xl px-3 py-2.5">
-            <Check className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-semibold text-amber-300">
-              Logged {todayLog.value}{challenge.unit ? ` ${challenge.unit}` : ''} — below your {challenge.numberTarget}{challenge.unit ? ` ${challenge.unit}` : ''} target, streak not counted today
-            </span>
+      {challenge.logType === 'number' ? (
+        <div className="space-y-2">
+          {todayLog && (
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border ${todayLog.meetsTarget === false ? 'bg-amber-950/20 border-amber-900/30' : 'bg-emerald-950/20 border-emerald-900/30'}`}>
+              <Check className={`w-4 h-4 ${todayLog.meetsTarget === false ? 'text-amber-400' : 'text-emerald-400'}`} />
+              <span className={`text-xs font-semibold ${todayLog.meetsTarget === false ? 'text-amber-300' : 'text-emerald-300'}`}>
+                {todayLog.value}{challenge.unit ? ` ${challenge.unit}` : ''} logged today
+                {todayLog.meetsTarget === false && ` — target is ${challenge.numberTarget}${challenge.unit ? ` ${challenge.unit}` : ''}`}
+                {todayLog.usedFreeze ? ' (freeze used)' : ''}
+              </span>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input type="number" value={numberValue} onChange={(e) => setNumberValue(e.target.value)}
+              placeholder={todayLog ? `Add more, e.g. 200` : `Target: ${challenge.numberTarget} ${challenge.unit || ''}`}
+              className="flex-1 bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 outline-none focus:border-brand-500" />
+            <button onClick={() => numberValue && submitLog({ value: Number(numberValue) })} disabled={submitting || !numberValue}
+              className="px-5 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl text-sm font-semibold transition-all disabled:opacity-50">
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : todayLog ? 'Add' : 'Log'}
+            </button>
           </div>
-        ) : (
-          <div className="flex items-center gap-2 bg-emerald-950/20 border border-emerald-900/30 rounded-xl px-3 py-2.5">
-            <Check className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-300">Logged ✓{todayLog.usedFreeze ? ' (freeze used)' : ''}</span>
-          </div>
-        )
+        </div>
+      ) : todayLog && !editing ? (
+        <div className="space-y-1.5">
+          {todayLog.meetsTarget === false ? (
+            <div className="flex items-center gap-2 bg-amber-950/20 border border-amber-900/30 rounded-xl px-3 py-2.5">
+              <Check className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-semibold text-amber-300">
+                Logged {todayLog.value}{challenge.unit ? ` ${challenge.unit}` : ''} — below your {challenge.numberTarget}{challenge.unit ? ` ${challenge.unit}` : ''} target, streak not counted today
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-emerald-950/20 border border-emerald-900/30 rounded-xl px-3 py-2.5">
+              <Check className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-emerald-300">Logged ✓{todayLog.usedFreeze ? ' (freeze used)' : ''}</span>
+            </div>
+          )}
+          {challenge.logType === 'note' && (
+            <button
+              onClick={() => {
+                setNoteValue(todayLog.note || '');
+                setEditing(true);
+              }}
+              className="text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2"
+            >
+              Edit today's entry
+            </button>
+          )}
+        </div>
       ) : challenge.logType === 'tick' ? (
         <button onClick={() => submitLog({})} disabled={submitting}
           className="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Log today
         </button>
-      ) : challenge.logType === 'number' ? (
-        <div className="flex gap-2">
-          <input type="number" value={numberValue} onChange={(e) => setNumberValue(e.target.value)}
-            placeholder={`Target: ${challenge.numberTarget} ${challenge.unit || ''}`}
-            className="flex-1 bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-sm text-slate-100 outline-none focus:border-brand-500" />
-          <button onClick={() => numberValue && submitLog({ value: Number(numberValue) })} disabled={submitting || !numberValue}
-            className="px-5 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-2xl text-sm font-semibold transition-all disabled:opacity-50">
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Log'}
-          </button>
-        </div>
       ) : challenge.logType === 'note' ? (
         <div className="space-y-2">
           <textarea value={noteValue} onChange={(e) => setNoteValue(e.target.value)} rows={2} placeholder="Quick note..."
@@ -165,7 +198,7 @@ function ChallengeCard({ challenge, onCelebrate }) {
         </label>
       )}
 
-      {!todayLog && (
+      {(!todayLog || todayLog.meetsTarget === false) && (
         <div>
           <button onClick={askStuck} disabled={stuckLoading} className="text-[11px] text-slate-500 hover:text-slate-300 flex items-center gap-1.5">
             <Sparkles className="w-3 h-3" /> {stuckLoading ? 'Thinking…' : 'Stuck for today?'}
