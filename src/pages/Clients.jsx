@@ -777,6 +777,8 @@ function ActiveClientDetails({ clientUid, clientDocId, clientName }) {
           clientName={clientName}
           profile={profile}
           analysis={analysis}
+          currentPlan={currentPlan}
+          recentCheckIn={checkIns[0]}
           callAI={callAI}
         />
       )}

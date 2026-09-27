@@ -153,7 +153,7 @@ function ChallengeForm({ initial, onSave, onCancel, saving }) {
   );
 }
 
-export default function ChallengesPanel({ clientUid, clientDocId, clientName, profile, analysis, callAI }) {
+export default function ChallengesPanel({ clientUid, clientDocId, clientName, profile, analysis, currentPlan, recentCheckIn, callAI }) {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -272,7 +272,8 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
   const suggestWithAI = async () => {
     setSuggesting(true);
     try {
-      const results = await generateChallengeSuggestions(profile, analysis, callAI);
+      const existingTitles = challenges.map((c) => c.title).filter(Boolean);
+      const results = await generateChallengeSuggestions(profile, analysis, callAI, { currentPlan, recentCheckIn, existingTitles });
       setSuggestions(Array.isArray(results) ? results : []);
     } catch (err) {
       toast.error(err.message || 'Could not generate suggestions');
@@ -298,7 +299,10 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
   };
 
   return (
-    <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-4">
+    <div
+      className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-4"
+      style={{ overflowAnchor: 'none' }}
+    >
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="flex items-center gap-1.5 text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
           <Flame className="w-3.5 h-3.5 text-amber-400" /> Challenges

@@ -7,9 +7,9 @@
 
 import { parseAIJson } from './json';
 
-export function buildChallengeSuggestionsPrompt(profile, analysis) {
+export function buildChallengeSuggestionsPrompt(profile, analysis, { currentPlan, recentCheckIn, existingTitles } = {}) {
   return `
-You are an expert personal trainer suggesting accountability challenges for a client, based on their profile and current plan.
+You are an expert personal trainer suggesting accountability challenges for ONE specific client, based on everything you know about them below. Suggestions must clearly connect to THIS client's actual goal, plan and recent check-in — not generic fitness advice that could apply to anyone.
 
 Client profile:
 - Goal: ${profile?.goal || 'General fitness'}
@@ -18,7 +18,20 @@ Client profile:
 - Dietary style: ${profile?.dietaryStyle || 'Not specified'}
 - Training days/week: ${profile?.trainingDaysPerWeek || 'Not specified'}
 
-Suggest exactly 3 short, achievable accountability challenges that would keep this specific client on track between sessions. Vary the type — mix daily habits and weekly-count habits, and mix workout/nutrition/lifestyle where it fits their goal.
+Current plan:
+- Workout split focus: ${currentPlan?.workoutPlan?.focus || 'Not specified'}
+- Daily calorie target: ${currentPlan?.nutritionPlan?.dailyTargetCalories || 'Not specified'}
+
+Most recent check-in${recentCheckIn ? '' : ' (none yet)'}:${recentCheckIn ? `
+- Workout adherence: ${recentCheckIn.adherenceWorkout || 'Not specified'}
+- Nutrition adherence: ${recentCheckIn.adherenceNutrition || 'Not specified'}
+- Energy (1-10): ${recentCheckIn.energy ?? 'Not specified'}
+- What was challenging: "${recentCheckIn.notesChallenging || 'None noted'}"` : ''}
+${existingTitles?.length ? `\nThis client already has these challenges running or archived — do not suggest anything overlapping with them: ${existingTitles.join(', ')}.` : ''}
+
+Suggest exactly 3 short, achievable accountability challenges that specifically address the weak point above (e.g. low adherence, a stated struggle, or a gap the current plan doesn't cover) — not just restating the goal. Vary the type — mix daily habits and weekly-count habits, and mix workout/nutrition/lifestyle where it fits. Avoid defaulting to the same generic picks (10k steps, water, workouts-per-week) unless they genuinely fit a struggle mentioned above.
+
+Session reference (ignore this line, it's just to vary your output between requests): ${Date.now()}
 
 Return ONLY a valid JSON array, no markdown, no preamble:
 [
@@ -46,8 +59,8 @@ Rules:
 `;
 }
 
-export async function generateChallengeSuggestions(profile, analysis, callAI) {
-  const text = await callAI(buildChallengeSuggestionsPrompt(profile, analysis));
+export async function generateChallengeSuggestions(profile, analysis, callAI, context) {
+  const text = await callAI(buildChallengeSuggestionsPrompt(profile, analysis, context));
   return parseAIJson(text);
 }
 
