@@ -17,7 +17,7 @@ const TEMPLATES = [
   { title: '10k Steps Daily', description: 'Hit 10,000 steps every day.', type: 'daily', logType: 'number', numberTarget: 10000, unit: 'steps', freezesPerMonth: 2 },
   { title: '3 Workouts a Week', description: 'Complete at least 3 training sessions every week.', type: 'x_per_week', targetPerWeek: 3, logType: 'tick', freezesPerMonth: 0 },
   { title: '30-Day Mobility', description: '10 minutes of mobility work every day for 30 days.', type: 'daily', logType: 'tick', freezesPerMonth: 3 },
-  { title: 'Drink 2L Water', description: 'Hit 2 litres of water daily.', type: 'daily', logType: 'number', numberTarget: 2, unit: 'litres', freezesPerMonth: 2 },
+  { title: 'Drink 2L Water', description: 'Hit 2 litres of water daily.', type: 'daily', logType: 'number', numberTarget: 2000, unit: 'ml', freezesPerMonth: 2 },
   { title: 'No Takeaway Weekdays', description: 'No takeaway food Monday to Friday.', type: 'x_per_week', targetPerWeek: 5, logType: 'tick', freezesPerMonth: 0 },
 ];
 
