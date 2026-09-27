@@ -21,6 +21,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import DashboardChallengesCard from '../components/DashboardChallengesCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { useIsManagedClient } from '../hooks/useIsManagedClient';
@@ -414,6 +415,8 @@ export default function Dashboard() {
               </div>
             );
           })()}
+
+          {isManagedClient && <DashboardChallengesCard uid={user?.uid} />}
 
           {/* Quick Actions Grid */}
           <div className="space-y-4">
