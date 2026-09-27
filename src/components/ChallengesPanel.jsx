@@ -242,6 +242,23 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
     }
   };
 
+  const deleteChallenge = async (challengeId, title) => {
+    if (!window.confirm(`Permanently delete "${title}"? This removes all its logged history and can't be undone.`)) return;
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/delete-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ challengeId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Failed to delete challenge');
+      toast.success('Challenge deleted');
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete challenge');
+    }
+  };
+
   const markRewardGiven = async (challenge, rewardIdx) => {
     const rewards = challenge.rewards.map((r, i) => i === rewardIdx ? { ...r, claimed: true, claimedAt: new Date().toISOString() } : r);
     try {
@@ -360,7 +377,11 @@ export default function ChallengesPanel({ clientUid, clientDocId, clientName, pr
                   ) : c.status === 'paused' ? (
                     <button onClick={() => setStatus(c.id, 'active')} title="Resume" className="p-1.5 text-slate-500 hover:text-emerald-400"><Play className="w-3.5 h-3.5" /></button>
                   ) : null}
-                  <button onClick={() => setStatus(c.id, 'archived')} title="Archive" className="p-1.5 text-slate-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  {c.status === 'archived' ? (
+                    <button onClick={() => deleteChallenge(c.id, c.title)} title="Delete permanently" className="p-1.5 text-slate-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  ) : (
+                    <button onClick={() => setStatus(c.id, 'archived')} title="Archive" className="p-1.5 text-slate-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                  )}
                 </div>
               </div>
               {unclaimedHit.length > 0 && (
