@@ -130,7 +130,7 @@
     .pricing-name{font-family:'Montserrat',sans-serif;font-size:1.35rem;font-weight:800;color:var(--text);margin-bottom:7px}
     .pricing-desc{max-width:390px;font-size:.84rem;color:#9b9ba1;margin:0;line-height:1.6}
     .pricing-price-row{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:26px 0 4px}
-    .pricing-amount{font-family:'Montserrat',sans-serif;font-size:3.45rem;font-weight:900;color:var(--text);line-height:1;margin:0;letter-spacing:-.05em}
+    .pricing-amount{font-family:'Montserrat',sans-serif;font-size:3.45rem;font-weight:900;color:var(--text);line-height:1;margin:0;letter-spacing:-.05em;white-space:nowrap}
     .pricing-amount .curr{font-size:1.2rem;color:#b8b8bd;vertical-align:top;margin-top:10px;margin-right:3px;display:inline-block;letter-spacing:0}
     .pricing-amount .period{font-size:.85rem;color:#85858c;font-family:'Inter',sans-serif;font-weight:500;letter-spacing:0}
     .pricing-price-meta{text-align:right;color:#85858c;font-size:.72rem;line-height:1.55}
@@ -361,8 +361,8 @@
       .ai-plans-redesign .pricing-card{scroll-snap-align:start;padding:28px 22px}
       .ai-plans-redesign .pricing-card::after{left:22px;right:22px}
       .ai-plans-redesign .pricing-amount{font-size:2.8rem}
-      .ai-plans-redesign .pricing-price-row{gap:10px}
-      .ai-plans-redesign .pricing-price-meta{font-size:.66rem}
+      .ai-plans-redesign .pricing-price-row{align-items:flex-start;flex-direction:column;gap:9px}
+      .ai-plans-redesign .pricing-price-meta{text-align:left;font-size:.66rem}
     }
   </style>
 
