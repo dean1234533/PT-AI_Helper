@@ -189,7 +189,6 @@
     .ai-plans-redesign .article-hero-bg{display:block;z-index:0}
     .ai-plans-redesign .article-hero-bg svg{display:none}
     .hero-background-video{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-    .hero-video-mobile{display:none}
     .ai-plans-redesign .article-hero-content{display:block;z-index:2;max-width:1240px;padding:154px 24px 104px}
     .ai-plans-redesign .hero-copy{position:relative;z-index:2;max-width:680px}
     .ai-plans-redesign .section-label{color:#ff918c;background:rgba(201,28,23,.18);border-color:rgba(255,105,99,.34);font-size:.66rem;font-weight:800;letter-spacing:.2em;padding:8px 15px}
@@ -307,8 +306,7 @@
     @media(max-width:600px){
       .ai-plans-redesign .article-hero{min-height:680px}
       .ai-plans-redesign .article-hero::after{background:linear-gradient(90deg,rgba(6,6,8,.76),rgba(6,6,8,.34)),linear-gradient(180deg,rgba(6,6,8,.08),rgba(6,6,8,.56))}
-      .hero-video-desktop{display:none}
-      .hero-video-mobile{display:block;object-position:center}
+      .hero-background-video{object-position:center}
       .ai-plans-redesign .article-hero-content{padding:124px 18px 76px}
       .ai-plans-redesign .article-hero h1{font-size:clamp(2.55rem,13vw,3.6rem)}
       .ai-plans-redesign .hero-lead{font-size:.92rem}
@@ -417,12 +415,33 @@
 <!-- Hero -->
 <header class="article-hero">
   <div class="article-hero-bg">
-    <video class="hero-background-video hero-video-desktop" autoplay muted loop playsinline preload="metadata" poster="/hero/fitness-workout-nutrition-background-poster.jpg" aria-hidden="true">
+    <video id="heroBackgroundVideo" class="hero-background-video" autoplay muted loop playsinline preload="metadata" poster="/hero/fitness-workout-nutrition-background-poster.jpg" aria-hidden="true">
       <source src="/hero/fitness-workout-nutrition-background.mp4" type="video/mp4">
     </video>
-    <video class="hero-background-video hero-video-mobile" autoplay muted loop playsinline preload="metadata" poster="/hero/fitness-workout-nutrition-background-mobile-poster.jpg" aria-hidden="true">
-      <source src="/hero/fitness-workout-nutrition-background-mobile.mp4" type="video/mp4">
-    </video>
+    <script>
+      (function () {
+        var video = document.getElementById('heroBackgroundVideo');
+        var mobileQuery = window.matchMedia('(max-width: 768px)');
+        var mobileSrc = '/hero/fitness-workout-nutrition-background-mobile.mp4';
+        var desktopSrc = '/hero/fitness-workout-nutrition-background.mp4';
+        function selectHeroVideo() {
+          var useMobile = mobileQuery.matches;
+          var nextSrc = useMobile ? mobileSrc : desktopSrc;
+          if (video.dataset.activeSrc === nextSrc) return;
+          video.dataset.activeSrc = nextSrc;
+          video.poster = useMobile
+            ? '/hero/fitness-workout-nutrition-background-mobile-poster.jpg'
+            : '/hero/fitness-workout-nutrition-background-poster.jpg';
+          video.src = nextSrc;
+          video.load();
+          var playAttempt = video.play();
+          if (playAttempt) playAttempt.catch(function () {});
+        }
+        selectHeroVideo();
+        if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', selectHeroVideo);
+        else mobileQuery.addListener(selectHeroVideo);
+      }());
+    </script>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
         <radialGradient id="rg1" cx="68%" cy="45%" r="52%">
