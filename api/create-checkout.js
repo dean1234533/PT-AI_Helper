@@ -2,8 +2,13 @@
  * Cloudflare Pages Function — POST /api/create-checkout
  * Creates a Stripe Checkout session for Personal or PT Pro.
  *
- * Env vars: STRIPE_SECRET_KEY, STRIPE_PRICE_ID, STRIPE_PORTAL_RETURN_URL
+ * Env vars: STRIPE_SECRET_KEY, STRIPE_PORTAL_RETURN_URL
  */
+
+const PRICE_IDS = {
+  personal: 'price_1UNVdIApRt9xazMOJD23Pmx0',
+  pt_pro: 'price_1UNVdIApRt9xazMOYjLNijR1',
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,9 +29,7 @@ export default async function handler(req, res) {
   try {
     const { plan = 'pt_pro', userId, userEmail } = req.body;
     if (!['personal', 'pt_pro'].includes(plan)) return res.status(400).json({ error: 'Invalid plan.' });
-    const priceId = plan === 'personal'
-      ? process.env.STRIPE_PERSONAL_PRICE_ID
-      : (process.env.STRIPE_PT_PRO_PRICE_ID || process.env.STRIPE_PRICE_ID);
+    const priceId = PRICE_IDS[plan];
     if (!process.env.STRIPE_SECRET_KEY || !priceId) return res.status(500).json({ error: 'Stripe is not configured for this plan.' });
     if (!priceId.startsWith('price_')) return res.status(500).json({ error: 'The Stripe price ID is invalid.' });
 

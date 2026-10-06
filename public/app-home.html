@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Workout &amp; Nutrition Plans | DB's Workouts – East London</title>
-  <meta name="description" content="Personalised AI workout and nutrition plans designed by Dean Burt — REPs certified East London PT. Get started from £7.99/month or try the free generator.">
+  <meta name="description" content="Personalised AI workout and nutrition plans designed by Dean Burt — REPs certified East London PT. Get started from £4.99/month or try the free generator.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://app.dbworkouts.co.uk/">
   <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
@@ -22,7 +22,7 @@
   </script>
 
   <meta property="og:title" content="AI Workout &amp; Nutrition Plans | DB's Workouts">
-  <meta property="og:description" content="Personalised AI workout and nutrition plans from £7.99/month. Built by Dean Burt, REPs certified East London PT.">
+  <meta property="og:description" content="Personalised AI workout and nutrition plans from £4.99/month. Built by Dean Burt, REPs certified East London PT.">
   <meta property="og:url" content="https://dbworkouts.co.uk/ai-plans">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://app.dbworkouts.co.uk/pics/homepage-preview.png">
@@ -31,7 +31,7 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="AI Workout &amp; Nutrition Plans | DB's Workouts">
-  <meta name="twitter:description" content="Personalised AI workout and nutrition plans from £7.99/month. Built by Dean Burt, REPs certified East London PT.">
+  <meta name="twitter:description" content="Personalised AI workout and nutrition plans from £4.99/month. Built by Dean Burt, REPs certified East London PT.">
   <meta name="twitter:image" content="https://app.dbworkouts.co.uk/pics/homepage-preview.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -227,6 +227,8 @@
     .app-preview-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:15px}
     .app-preview-days span{height:28px;border-radius:8px;display:grid;place-items:center;color:#77777d;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:.52rem;font-weight:800}
     .app-preview-days .active{color:#fff;background:#c91c17;border-color:#d93630}
+    .product-video-frame{position:relative;z-index:2;overflow:hidden;border-radius:24px;background:#09090b;border:1px solid #2c2c30;box-shadow:0 38px 90px rgba(28,24,20,.27),0 0 0 8px rgba(255,255,255,.48)}
+    .product-video-frame video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#09090b}
 
     .ai-plans-redesign .stats-strip{position:relative;z-index:3;max-width:1040px;margin:-24px auto 0;border:1px solid #d3cec6;border-radius:19px;background:#f8f6f2;box-shadow:0 18px 38px rgba(45,39,32,.09);overflow:hidden}
     .ai-plans-redesign .stats-inner{max-width:none}
@@ -277,7 +279,7 @@
 
     @media(max-width:980px){
       .ai-plans-redesign .article-hero-content{grid-template-columns:1fr;gap:54px;padding-top:132px}
-      .app-preview{max-width:620px;width:100%;margin:0 auto;transform:none}
+      .app-preview,.product-video-frame{max-width:620px;width:100%;margin:0 auto;transform:none}
       .ai-plans-redesign .features-grid{grid-template-columns:repeat(2,1fr)}
     }
     @media(max-width:1200px){
@@ -297,7 +299,7 @@
       .ai-plans-redesign .hero-lead{font-size:.92rem}
       .ai-plans-redesign .hero-main-actions{display:grid;grid-template-columns:1fr}
       .ai-plans-redesign .hero-main-actions>*{width:100%}
-      .app-preview{border-radius:22px;box-shadow:0 24px 55px rgba(28,24,20,.24),0 0 0 5px rgba(255,255,255,.45)}
+      .app-preview,.product-video-frame{border-radius:22px;box-shadow:0 24px 55px rgba(28,24,20,.24),0 0 0 5px rgba(255,255,255,.45)}
       .app-preview-body{padding:21px}
       .app-preview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
       .ai-plans-redesign .stats-strip{margin:-18px 16px 0}
@@ -349,7 +351,8 @@
     "url": "https://dbworkouts.co.uk/ai-plans",
     "areaServed": "East London",
     "offers": [
-      { "@type": "Offer", "name": "Monthly AI Plan", "price": "7.99", "priceCurrency": "GBP", "description": "Monthly personalised AI workout and nutrition plan" },
+      { "@type": "Offer", "name": "Personal", "price": "4.99", "priceCurrency": "GBP", "description": "Monthly personalised AI workout and nutrition plan" },
+      { "@type": "Offer", "name": "PT Pro", "price": "14.99", "priceCurrency": "GBP", "description": "Monthly professional coaching workspace for personal trainers" },
       { "@type": "Offer", "name": "Free Plan Generator", "price": "0", "priceCurrency": "GBP", "description": "Free one-time workout and nutrition plan" }
     ]
   }
@@ -516,26 +519,11 @@
         <span>No contract</span><span>•</span><span>Cancel anytime</span><span>•</span><span>Secure Stripe payment</span>
       </div>
     </div>
-    <div class="app-preview" aria-label="Preview of the DB's Workouts coaching app">
-      <div class="app-preview-top">
-        <div class="app-preview-brand"><img src="./logo.png" alt="" width="44" height="44"><span><strong>DB’s Workouts</strong><small>Personal coaching</small></span></div>
-        <span class="app-preview-status">LIVE</span>
-      </div>
-      <div class="app-preview-body">
-        <p class="app-preview-kicker">TODAY’S BRIEFING</p>
-        <h2>Good morning, Alex</h2>
-        <p class="app-preview-sub">Your training and nutrition, ready for today.</p>
-        <div class="app-preview-metrics">
-          <div><span>SESSION</span><strong>Upper Body</strong><small>8 exercises · 55 min</small></div>
-          <div><span>NUTRITION</span><strong>2,180 kcal</strong><small>160g protein</small></div>
-        </div>
-        <div class="app-preview-plan">
-          <span class="app-preview-plan-icon">▶</span>
-          <span><strong>Incline dumbbell press</strong><small>4 × 10–12 · Video demo included</small></span>
-          <b>›</b>
-        </div>
-        <div class="app-preview-days"><span>M</span><span class="active">T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
-      </div>
+    <div class="product-video-frame">
+      <video controls playsinline preload="metadata" poster="/video/dbs-workouts-product-walkthrough-poster.jpg" aria-label="DB's Workouts product walkthrough">
+        <source src="/video/dbs-workouts-product-walkthrough.mp4" type="video/mp4">
+        Your browser does not support HTML video.
+      </video>
     </div>
   </div>
 </header>
@@ -546,7 +534,7 @@
     <div class="stat-item"><div class="stat-num">69</div><div class="stat-desc">★ Google Reviews</div></div>
     <div class="stat-item"><div class="stat-num">5.0</div><div class="stat-desc">Star Rating</div></div>
     <div class="stat-item"><div class="stat-num">12+</div><div class="stat-desc">Years Experience</div></div>
-    <div class="stat-item"><div class="stat-num">£7.99</div><div class="stat-desc">Starting / Month</div></div>
+    <div class="stat-item"><div class="stat-num">£4.99</div><div class="stat-desc">Starting / Month</div></div>
   </div>
 </div>
 
@@ -656,7 +644,7 @@
         <div class="pricing-desc">Your complete training and nutrition programme, personalised around your body, goals and routine.</div>
       </div>
       <div class="pricing-price-row">
-        <div class="pricing-amount"><span class="curr">£</span>7.99<span class="period">/month</span></div>
+        <div class="pricing-amount"><span class="curr">£</span>4.99<span class="period">/month</span></div>
         <div class="pricing-price-meta"><strong>Cancel anytime</strong>No contract</div>
       </div>
       <ul class="pricing-features">
@@ -677,7 +665,7 @@
         <div class="pricing-desc">A branded coaching workspace to create, deliver and manage every client’s plan in one place.</div>
       </div>
       <div class="pricing-price-row">
-        <div class="pricing-amount"><span class="curr">£</span>24.99<span class="period">/month</span></div>
+        <div class="pricing-amount"><span class="curr">£</span>14.99<span class="period">/month</span></div>
         <div class="pricing-price-meta"><strong>Professional access</strong>Cancel anytime</div>
       </div>
       <ul class="pricing-features">

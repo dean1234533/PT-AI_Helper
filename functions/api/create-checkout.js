@@ -1,9 +1,13 @@
 /**
  * POST /api/create-checkout
  * Creates a Stripe Checkout session for Personal or PT Pro.
- * Env vars: STRIPE_SECRET_KEY, STRIPE_PERSONAL_PRICE_ID,
- * STRIPE_PT_PRO_PRICE_ID (or legacy STRIPE_PRICE_ID), APP_URL
+ * Env vars: STRIPE_SECRET_KEY, APP_URL
  */
+
+const PRICE_IDS = {
+  personal: 'price_1UNVdIApRt9xazMOJD23Pmx0',
+  pt_pro: 'price_1UNVdIApRt9xazMOYjLNijR1',
+};
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -21,9 +25,7 @@ export async function onRequestPost(ctx) {
     const { plan = 'pt_pro', userId, userEmail } = await ctx.request.json();
     if (!['personal', 'pt_pro'].includes(plan)) return Response.json({ error: 'Invalid plan.' }, { status: 400, headers: CORS });
 
-    const priceId = plan === 'personal'
-      ? env.STRIPE_PERSONAL_PRICE_ID
-      : (env.STRIPE_PT_PRO_PRICE_ID || env.STRIPE_PRICE_ID);
+    const priceId = PRICE_IDS[plan];
     if (!env.STRIPE_SECRET_KEY || !priceId) return Response.json({ error: 'Stripe is not configured for this plan.' }, { status: 500, headers: CORS });
     if (!priceId.startsWith('price_')) return Response.json({ error: 'The Stripe price ID is invalid.' }, { status: 500, headers: CORS });
 
