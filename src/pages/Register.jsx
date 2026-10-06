@@ -1,25 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+
+const PLAN_LABELS = { personal: 'Personal', pt_pro: 'PT Pro' };
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
-  const selectedPlan = ['personal', 'pt_pro'].includes(searchParams.get('plan'))
-    ? searchParams.get('plan')
-    : null;
+  const sessionId = searchParams.get('session_id');
+  const isPostPayment = searchParams.get('subscription') === 'success' && Boolean(sessionId);
+
+  // Paid-plan signups now go: pricing card -> Stripe Checkout -> here. The
+  // account is only ever created AFTER payment is verified, so there's no
+  // window where a Firebase password exists for someone who never paid.
+  const [checkoutState, setCheckoutState] = useState(isPostPayment ? 'verifying' : 'n/a');
+  const [paidSession, setPaidSession] = useState(null);
+
+  useEffect(() => {
+    if (!isPostPayment) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/verify-checkout?session_id=${encodeURIComponent(sessionId)}`);
+        const data = await res.json();
+        if (res.ok && data.paid) {
+          setPaidSession(data);
+          setCheckoutState('paid');
+        } else {
+          setCheckoutState('unpaid');
+        }
+      } catch {
+        setCheckoutState('unpaid');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPostPayment, sessionId]);
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [healthConsent, setHealthConsent] = useState(false);
+
+  useEffect(() => {
+    if (paidSession?.email) setForm((f) => ({ ...f, email: paidSession.email }));
+  }, [paidSession]);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -63,30 +93,37 @@ export default function Register() {
         }
       }
 
-      if (selectedPlan) {
-        // Mark the account as pending payment up front — if the user
-        // abandons Stripe Checkout, ProtectedRoute blocks them on this
-        // instead of silently granting full access to an unpaid account.
+      if (isPostPayment && paidSession) {
+        // Payment already verified above — activate immediately, no
+        // webhook round-trip needed for this first activation.
         await setDoc(
           doc(db, 'users', cred.user.uid, 'data', 'profile'),
-          { pendingPlan: selectedPlan, subscriptionStatus: 'pending' },
+          {
+            subscriptionStatus: 'active',
+            plan: paidSession.plan,
+            stripeCustomerId: paidSession.stripeCustomerId || null,
+            stripeSubscriptionId: paidSession.stripeSubscriptionId || null,
+          },
           { merge: true }
         );
 
-        const checkoutResponse = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plan: selectedPlan,
-            userId: cred.user.uid,
-            userEmail: cred.user.email,
-          }),
-        });
-        const checkout = await checkoutResponse.json();
-        if (!checkoutResponse.ok || !checkout.url) {
-          throw new Error(checkout.error || 'Your account was created, but checkout could not be opened.');
+        // Tag the Stripe subscription with this uid so future renewal/
+        // cancellation webhooks (which only carry the subscription, not the
+        // checkout session) can find this user. Best-effort — if it fails,
+        // the account is still correctly activated above.
+        try {
+          const idToken = await cred.user.getIdToken();
+          await fetch('/api/link-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+            body: JSON.stringify({ sessionId, userId: cred.user.uid }),
+          });
+        } catch {
+          // Non-fatal — the account is already active either way.
         }
-        window.location.assign(checkout.url);
+
+        toast.success('Payment confirmed! Let\'s set up your profile.');
+        navigate('/setup/profile');
         return;
       }
 
@@ -102,6 +139,34 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  if (checkoutState === 'verifying') {
+    return (
+      <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 text-white/60">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
+          <p className="text-sm">Confirming your payment…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (checkoutState === 'unpaid') {
+    return (
+      <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-dark-600/80 border border-white/8 rounded-2xl p-8 text-center space-y-4">
+          <XCircle className="w-10 h-10 text-red-400 mx-auto" />
+          <h1 className="text-lg font-bold text-white">We couldn't confirm that payment</h1>
+          <p className="text-sm text-white/50">
+            Your checkout session wasn't completed, so no account was created — nothing was charged. Head back to pricing to try again.
+          </p>
+          <Link to="/pricing" className="inline-block mt-2 text-brand-400 hover:text-brand-300 font-semibold text-sm">
+            ← Back to pricing
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-dark-800 flex items-center justify-center p-4 relative overflow-hidden">
@@ -126,6 +191,15 @@ export default function Register() {
         </div>
 
         <div className="bg-dark-600/80 border border-white/8 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+          {checkoutState === 'paid' ? (
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-xl px-4 py-3 mb-6">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <p className="text-xs text-emerald-300">
+                Payment confirmed for {PLAN_LABELS[paidSession?.plan] || 'your plan'} — set a password to finish creating your account.
+              </p>
+            </div>
+          ) : null}
+
           <h2 className="text-xl font-bold text-white mb-6">Create Account</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -150,8 +224,9 @@ export default function Register() {
                 onChange={update('email')}
                 placeholder="you@example.com"
                 required
+                readOnly={checkoutState === 'paid'}
                 autoComplete="email"
-                className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all disabled:opacity-60 read-only:opacity-60 read-only:cursor-not-allowed"
               />
             </div>
 

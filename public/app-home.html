@@ -717,7 +717,7 @@
         <li><span class="tick tick-red">✓</span>Meal swaps and nutrition preferences</li>
         <li><span class="tick tick-red">✓</span>Progress photos and body analysis</li>
       </ul>
-      <a class="btn-plan" target="_top" href="/register?plan=personal" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start Personal Membership →</a>
+      <button type="button" class="btn-plan" data-plan="personal" style="display:flex;align-items:center;justify-content:center">Start Personal Membership →</button>
     </div>
     <div class="pricing-card popular" data-reveal>
       <div class="popular-badge">Coach’s choice</div>
@@ -739,10 +739,43 @@
         <li><span class="tick tick-red">✓</span>Client check-ins and progress tracking</li>
         <li><span class="tick tick-red">✓</span>Priority support</li>
       </ul>
-      <a class="btn-plan" target="_top" href="/register?plan=pt_pro" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Start PT Pro Membership →</a>
+      <button type="button" class="btn-plan" data-plan="pt_pro" style="display:flex;align-items:center;justify-content:center">Start PT Pro Membership →</button>
     </div>
   </div>
   <p class="pricing-note">Secure payment via Stripe · No setup fees · Cancel anytime</p>
+  <script>
+    (function () {
+      // Payment now happens BEFORE account creation — clicking a plan goes
+      // straight to Stripe Checkout with no Firebase account created yet.
+      // The account only gets created on /register once payment is
+      // confirmed (see create-checkout.js's success_url + Register.jsx).
+      document.querySelectorAll('.btn-plan[data-plan]').forEach(function (btn) {
+        var originalText = btn.textContent;
+        btn.addEventListener('click', function () {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          btn.style.opacity = '0.7';
+          btn.textContent = 'Loading…';
+          fetch('/api/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: btn.getAttribute('data-plan') }),
+          })
+            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+            .then(function (res) {
+              if (!res.ok || !res.d.url) throw new Error((res.d && res.d.error) || 'Could not start checkout.');
+              window.top.location.assign(res.d.url);
+            })
+            .catch(function (err) {
+              btn.disabled = false;
+              btn.style.opacity = '';
+              btn.textContent = originalText;
+              alert(err.message || 'Could not start checkout. Please try again.');
+            });
+        });
+      });
+    })();
+  </script>
   <div class="app-access-panel">
     <div class="app-access-copy">
       <span class="app-access-icon">DB</span>

@@ -43,6 +43,8 @@ export async function onRequestGet(ctx) {
     return Response.json({
       paid: true,
       userId: session.client_reference_id || session.metadata?.userId,
+      plan: session.metadata?.plan || null,
+      email: session.customer_details?.email || session.customer_email || null,
       stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
       stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
     }, { headers: CORS });
