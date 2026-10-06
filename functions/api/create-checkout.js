@@ -5,8 +5,8 @@
  */
 
 const PRICE_IDS = {
-  personal: 'price_1UNVdIApRt9xazMOJD23Pmx0',
-  pt_pro: 'price_1UNVdIApRt9xazMOYjLNijR1',
+  personal: 'price_1UNccfEAMbXUn6Pi0cXICsOc', // £4.99/month
+  pt_pro: 'price_1UNca7EAMbXUn6PiYKH5DSS7', // £14.99/month
 };
 
 const CORS = {
