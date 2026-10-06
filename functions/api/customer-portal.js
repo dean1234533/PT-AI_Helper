@@ -31,7 +31,7 @@ export async function onRequestPost(ctx) {
     const stripeRes = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        Authorization: `Bearer ${env.STRIPE_SECRET_KEY.trim()}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),

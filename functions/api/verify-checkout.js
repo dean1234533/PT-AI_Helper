@@ -26,7 +26,7 @@ export async function onRequestGet(ctx) {
 
     const stripeRes = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${sessionId}?expand[]=subscription&expand[]=customer`,
-      { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } }
+      { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY.trim()}` } }
     );
 
     if (!stripeRes.ok) {
