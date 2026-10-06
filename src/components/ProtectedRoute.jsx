@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }) {
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
 
   // If on a setup route, let them through regardless
-  const setupRoutes = ['/setup/api-key', '/setup/profile'];
+  const setupRoutes = ['/setup/api-key', '/setup/profile', '/complete-payment'];
   if (setupRoutes.includes(location.pathname)) return children;
 
   if (profileLoading) return null;
@@ -22,6 +22,14 @@ export default function ProtectedRoute({ children }) {
   // Clients invited by a trainer share the server-side AI cascade — no personal key needed
   const isManagedClient = Boolean(profile?.trainerId);
   if (isAdmin || isManagedClient) return children;
+
+  // Signed up for Personal/PT Pro but never finished Stripe Checkout (or the
+  // subscription has since lapsed) — block app access instead of silently
+  // letting an unpaid account through. Accounts that never went through the
+  // paid-plan signup flow (pendingPlan never set) are unaffected.
+  if (profile?.pendingPlan && profile?.subscriptionStatus !== 'active') {
+    return <Navigate to="/complete-payment" replace />;
+  }
 
   // Regular users must have a Gemini key
   const geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || '';

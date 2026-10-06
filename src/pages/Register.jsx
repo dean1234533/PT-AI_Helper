@@ -64,6 +64,15 @@ export default function Register() {
       }
 
       if (selectedPlan) {
+        // Mark the account as pending payment up front — if the user
+        // abandons Stripe Checkout, ProtectedRoute blocks them on this
+        // instead of silently granting full access to an unpaid account.
+        await setDoc(
+          doc(db, 'users', cred.user.uid, 'data', 'profile'),
+          { pendingPlan: selectedPlan, subscriptionStatus: 'pending' },
+          { merge: true }
+        );
+
         const checkoutResponse = await fetch('/api/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

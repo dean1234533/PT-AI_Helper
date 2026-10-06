@@ -16,6 +16,7 @@ import MyPlan from './pages/MyPlan';
 import CheckIn from './pages/CheckIn';
 import Clients from './pages/Clients';
 import MyChallenges from './pages/MyChallenges';
+import CompletePayment from './pages/CompletePayment';
 import PublicCheckIn from './pages/PublicCheckIn';
 import Layout from './components/Layout';
 
@@ -55,6 +56,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfileSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/complete-payment"
+        element={
+          <ProtectedRoute>
+            <CompletePayment />
           </ProtectedRoute>
         }
       />
