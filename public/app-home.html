@@ -183,22 +183,24 @@
     .ai-plans-redesign .db-nav-logo span{color:#fff}
     .ai-plans-redesign .db-nav-cta{background:#cf211c;border-radius:12px;box-shadow:0 10px 24px rgba(130,15,13,.28)}
 
-    .ai-plans-redesign .article-hero{height:auto;min-height:700px;align-items:center;background:#ece9e3;color:#181719;border-bottom:1px solid #d4cfc7}
-    .ai-plans-redesign .article-hero::before{content:'';position:absolute;right:-170px;top:-220px;width:560px;height:560px;border:92px solid rgba(201,28,23,.13);border-radius:50%}
-    .ai-plans-redesign .article-hero::after{background:linear-gradient(90deg,rgba(201,28,23,.055) 0 5px,transparent 5px),radial-gradient(circle at 12% 12%,rgba(201,28,23,.09),transparent 26rem)}
-    .ai-plans-redesign .article-hero-bg{display:none}
-    .ai-plans-redesign .article-hero-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,.92fr);align-items:center;gap:72px;max-width:1240px;padding:150px 24px 84px}
-    .ai-plans-redesign .hero-copy{position:relative;z-index:2}
-    .ai-plans-redesign .section-label{color:#a5120f;background:rgba(201,28,23,.07);border-color:rgba(201,28,23,.18);font-size:.66rem;font-weight:800;letter-spacing:.2em;padding:8px 15px}
-    .ai-plans-redesign .article-hero h1{font-family:'Montserrat',sans-serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:.95;letter-spacing:-.065em;color:#171719;margin:0}
+    .ai-plans-redesign .article-hero{height:auto;min-height:760px;align-items:center;background:#0b0b0d;color:#fff;border-bottom:1px solid #242327}
+    .ai-plans-redesign .article-hero::before{display:none}
+    .ai-plans-redesign .article-hero::after{z-index:1;background:linear-gradient(90deg,rgba(6,6,8,.93) 0%,rgba(6,6,8,.82) 36%,rgba(6,6,8,.43) 68%,rgba(6,6,8,.34) 100%),linear-gradient(180deg,rgba(6,6,8,.2),rgba(6,6,8,.62))}
+    .ai-plans-redesign .article-hero-bg{display:block;z-index:0}
+    .ai-plans-redesign .article-hero-bg svg{display:none}
+    .hero-background-video{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+    .ai-plans-redesign .article-hero-content{display:block;z-index:2;max-width:1240px;padding:154px 24px 104px}
+    .ai-plans-redesign .hero-copy{position:relative;z-index:2;max-width:680px}
+    .ai-plans-redesign .section-label{color:#ff918c;background:rgba(201,28,23,.18);border-color:rgba(255,105,99,.34);font-size:.66rem;font-weight:800;letter-spacing:.2em;padding:8px 15px}
+    .ai-plans-redesign .article-hero h1{font-family:'Montserrat',sans-serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:.95;letter-spacing:-.065em;color:#fff;margin:0;text-shadow:0 4px 28px rgba(0,0,0,.45)}
     .ai-plans-redesign .article-hero h1 span{color:#c91c17}
-    .ai-plans-redesign .hero-lead{max-width:620px;margin:26px 0 0;color:#5d5954;font-size:1.02rem;line-height:1.75}
+    .ai-plans-redesign .hero-lead{max-width:620px;margin:26px 0 0;color:rgba(255,255,255,.76);font-size:1.02rem;line-height:1.75;text-shadow:0 2px 18px rgba(0,0,0,.42)}
     .ai-plans-redesign .hero-main-actions{justify-content:flex-start;margin-top:32px}
     .ai-plans-redesign .hero-main-actions .db-btn-primary,.ai-plans-redesign .hero-main-actions .db-btn-outline{min-height:52px;display:inline-flex;align-items:center;justify-content:center;border-radius:13px;padding:0 22px;font-size:.86rem;font-weight:800;text-decoration:none}
     .ai-plans-redesign .hero-main-actions .db-btn-primary{background:#c91c17;border:1px solid #d93630;box-shadow:0 14px 30px rgba(130,15,13,.28)}
-    .ai-plans-redesign .hero-main-actions .db-btn-outline{background:#f8f6f2;color:#181719;border:1px solid #cbc5bc;box-shadow:0 10px 22px rgba(45,39,32,.07)}
+    .ai-plans-redesign .hero-main-actions .db-btn-outline{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.34);box-shadow:0 10px 22px rgba(0,0,0,.2);backdrop-filter:blur(10px)}
     .ai-plans-redesign .article-meta{margin-top:22px;gap:9px}
-    .ai-plans-redesign .article-meta span{color:#7b766f;font-size:.73rem;font-weight:600}
+    .ai-plans-redesign .article-meta span{color:rgba(255,255,255,.58);font-size:.73rem;font-weight:600}
 
     .app-preview{position:relative;z-index:2;overflow:hidden;border-radius:29px;background:#111113;border:1px solid #2c2c30;box-shadow:0 38px 90px rgba(28,24,20,.27),0 0 0 8px rgba(255,255,255,.48);transform:rotate(1deg)}
     .app-preview::before{content:'';position:absolute;right:-80px;top:-100px;width:260px;height:260px;border:46px solid rgba(201,28,23,.72);border-radius:50%;pointer-events:none}
@@ -287,7 +289,7 @@
     .ai-plans-redesign .db-fb-tag,.ai-plans-redesign .db-fb-stars{color:#9b9ba1}
 
     @media(max-width:980px){
-      .ai-plans-redesign .article-hero-content{grid-template-columns:1fr;gap:54px;padding-top:132px}
+      .ai-plans-redesign .article-hero-content{padding-top:132px}
       .app-preview,.product-video-frame{max-width:620px;width:100%;margin:0 auto;transform:none}
       .ai-plans-redesign .features-grid{grid-template-columns:repeat(2,1fr)}
     }
@@ -302,8 +304,10 @@
       .ai-plans-redesign .visit-link{display:flex;width:max-content;margin:10px auto 0}
     }
     @media(max-width:600px){
-      .ai-plans-redesign .article-hero{min-height:0}
-      .ai-plans-redesign .article-hero-content{padding:116px 18px 64px;gap:42px}
+      .ai-plans-redesign .article-hero{min-height:680px}
+      .ai-plans-redesign .article-hero::after{background:linear-gradient(90deg,rgba(6,6,8,.91),rgba(6,6,8,.58)),linear-gradient(180deg,rgba(6,6,8,.2),rgba(6,6,8,.76))}
+      .hero-background-video{object-position:60% center}
+      .ai-plans-redesign .article-hero-content{padding:124px 18px 76px}
       .ai-plans-redesign .article-hero h1{font-size:clamp(2.55rem,13vw,3.6rem)}
       .ai-plans-redesign .hero-lead{font-size:.92rem}
       .ai-plans-redesign .hero-main-actions{display:grid;grid-template-columns:1fr}
@@ -402,6 +406,9 @@
 <!-- Hero -->
 <header class="article-hero">
   <div class="article-hero-bg">
+    <video class="hero-background-video" autoplay muted loop playsinline preload="metadata" poster="/hero/fitness-workout-nutrition-background-poster.jpg" aria-hidden="true">
+      <source src="/hero/fitness-workout-nutrition-background.mp4" type="video/mp4">
+    </video>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
         <radialGradient id="rg1" cx="68%" cy="45%" r="52%">
@@ -531,11 +538,6 @@
         <span>No contract</span><span>•</span><span>Cancel anytime</span><span>•</span><span>Secure Stripe payment</span>
       </div>
     </div>
-    <div class="product-video-frame">
-      <video class="hero-animation" autoplay muted loop playsinline preload="metadata" poster="/hero/fitness-workout-nutrition-hero-poster.jpg" aria-label="Fitness training, workout planning and balanced nutrition">
-        <source src="/hero/fitness-workout-nutrition-hero-loop.mp4" type="video/mp4">
-      </video>
-    </div>
   </div>
 </header>
 
@@ -552,8 +554,8 @@
 <section class="walkthrough-section" aria-labelledby="walkthrough-title">
   <div class="walkthrough-inner">
     <div class="walkthrough-copy">
-      <p class="ai-eyebrow" style="color:#a5120f">Inside the coaching app</p>
-      <h2 id="walkthrough-title">See how your plan comes together</h2>
+      <p class="ai-eyebrow" style="color:#a5120f">App explainer</p>
+      <h2 id="walkthrough-title">See DB’s Workouts in action</h2>
       <p>A quick look at the trainer and client experience, from tailored planning and challenges to weekly progress check-ins.</p>
     </div>
     <div class="walkthrough-video">
