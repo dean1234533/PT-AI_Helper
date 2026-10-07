@@ -1,0 +1,26 @@
+# DB's Workouts
+
+> AI-powered workout and nutrition app built by Dean Burt, a REPs certified personal trainer in East London with 12+ years of experience and a 5.0 star rating across 69 Google reviews.
+
+DB's Workouts generates a personalised 7-day training and nutrition plan from a user's body, goals and equipment, and adjusts it weekly based on check-ins. It offers two plans: Personal (£4.99/month) for individuals, and PT Pro (£14.99/month) for personal trainers who want to manage multiple clients from a branded dashboard with check-ins, challenges and progress tracking. A free one-time plan generator is available with no account or card required.
+
+## Key facts
+
+- Founder/trainer: Dean Burt, REPs certified, East London, 12+ years of personal training experience
+- Personal plan: £4.99/month — personalised workout programme, full meal plan, exercise demonstrations, weekly check-ins, progress photos
+- PT Pro plan: £14.99/month — everything in Personal, plus client dashboard, branded delivery, client check-ins, challenges & streaks, progress tracking for multiple clients
+- Free plan generator: one-time personalised plan, no signup required
+- Both paid plans are no-contract monthly subscriptions, cancel anytime
+- Service area: East London and surrounding boroughs (Stratford, Walthamstow, Ilford, Hackney, Leytonstone, Barking, and more)
+
+## Pages
+
+- [Homepage / AI Plans](https://app.dbworkouts.co.uk/): plan details, pricing, FAQ
+- [Main site](https://dbworkouts.co.uk/): in-person personal training, about, testimonials, blog, contact
+- [Pricing](https://app.dbworkouts.co.uk/#pricing): Personal and PT Pro plan comparison
+
+## Contact
+
+- Phone: +44 7752 300937
+- Email: dbs-workouts@yahoo.com
+- WhatsApp: https://wa.me/447752300937

@@ -1,8 +1,31 @@
 User-agent: *
 Allow: /
 Allow: /pricing
+Allow: /login
+Allow: /register
 Disallow: /dashboard
+Disallow: /plan
+Disallow: /checkin
+Disallow: /profile
 Disallow: /clients
-Disallow: /plans
+Disallow: /challenges
+Disallow: /analysis
+Disallow: /setup/
+Disallow: /complete-payment
+Disallow: /reset-password
+
+# AI assistants / answer engines — explicitly allowed for GEO/AEO discovery
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
 
 Sitemap: https://app.dbworkouts.co.uk/sitemap.xml
