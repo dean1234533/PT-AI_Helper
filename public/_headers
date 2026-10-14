@@ -6,3 +6,45 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/index.html
+  X-Robots-Tag: noindex, nofollow
+
+/login
+  X-Robots-Tag: noindex, nofollow
+
+/register
+  X-Robots-Tag: noindex, nofollow
+
+/reset-password
+  X-Robots-Tag: noindex, nofollow
+
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+
+/plan
+  X-Robots-Tag: noindex, nofollow
+
+/checkin
+  X-Robots-Tag: noindex, nofollow
+
+/checkin/*
+  X-Robots-Tag: noindex, nofollow
+
+/profile
+  X-Robots-Tag: noindex, nofollow
+
+/clients
+  X-Robots-Tag: noindex, nofollow
+
+/challenges
+  X-Robots-Tag: noindex, nofollow
+
+/analysis
+  X-Robots-Tag: noindex, nofollow
+
+/setup/*
+  X-Robots-Tag: noindex, nofollow
+
+/complete-payment
+  X-Robots-Tag: noindex, nofollow

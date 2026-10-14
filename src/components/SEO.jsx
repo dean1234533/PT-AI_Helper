@@ -1,8 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME = "DB's Workouts";
-const DEFAULT_DESC = 'AI-powered nutrition and workout plans for personal trainers. Generate personalised client plans in seconds using Claude AI, real USDA food data, and verified exercise databases.';
-const DEFAULT_IMAGE = '/og-image.png';
+const DEFAULT_DESC = 'Workout and nutrition planning with Personal access and a PT Pro client coaching workspace.';
+const DEFAULT_IMAGE = 'https://app.dbworkouts.co.uk/pics/homepage-preview.png';
 
 export default function SEO({
   title,
@@ -33,18 +33,7 @@ export default function SEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {/* Structured data */}
-      <script type="application/ld+json">{JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: SITE_NAME,
-        applicationCategory: 'HealthApplication',
-        description: DEFAULT_DESC,
-        offers: [
-          { '@type': 'Offer', price: '0', priceCurrency: 'GBP', name: 'Free Plan' },
-          { '@type': 'Offer', price: '19', priceCurrency: 'GBP', name: 'Pro Plan', billingIncrement: 'Month' },
-        ],
-      })}</script>
+
     </Helmet>
   );
 }

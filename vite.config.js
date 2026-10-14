@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const BUILD_ID = process.env.CF_PAGES_COMMIT_SHA || String(Date.now());
 
 export default defineConfig({
+  cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
@@ -51,7 +52,8 @@ export default defineConfig({
   ],
   base: '/',
   build: {
-    outDir: 'dist',
+    outDir: process.env.BUILD_OUTPUT_DIR || 'dist',
+    emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
       output: {

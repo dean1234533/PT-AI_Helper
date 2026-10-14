@@ -59,7 +59,7 @@
     banner.id = 'dbw-cookie-banner';
     banner.setAttribute('role', 'dialog');
     banner.setAttribute('aria-label', 'Cookie consent');
-    banner.innerHTML = '<p>We use analytics cookies (Google Analytics &amp; Microsoft Clarity) to improve this site. Your data stays on your device. <a href="/privacy-policy" target="_blank" rel="noopener" aria-label="Read the privacy policy">Privacy Policy</a></p><div id="dbw-cookie-btns"><button id="dbw-cookie-decline" aria-label="Decline analytics cookies">Decline</button><button id="dbw-cookie-accept" aria-label="Accept analytics cookies">Accept</button></div>';
+    banner.innerHTML = '<p>We use analytics cookies (Google Analytics &amp; Microsoft Clarity) to improve this site. You can choose whether to allow optional analytics. <a href="https://dbworkouts.co.uk/privacy-policy" target="_blank" rel="noopener" aria-label="Read the privacy policy">Privacy Policy</a></p><div id="dbw-cookie-btns"><button id="dbw-cookie-decline" aria-label="Decline analytics cookies">Decline</button><button id="dbw-cookie-accept" aria-label="Accept analytics cookies">Accept</button></div>';
     document.body.appendChild(banner);
 
     function dismissBanner() {

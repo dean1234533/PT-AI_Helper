@@ -115,3 +115,9 @@ Built by **Dean Da Dev**, a UK full-stack developer building web apps, websites,
 and AI tools.
 
 🌐 [dean-da-dev.co.uk](https://www.dean-da-dev.co.uk/) · 💼 [More projects](https://www.dean-da-dev.co.uk/portfolio) · 🐙 [GitHub](https://github.com/dean1234533)
+
+### Public app discovery pages
+
+The build also generates static feature, comparison and pricing pages from `src/seo/publicPages.js`, alongside the app-owned homepage. The public sitemap is generated from the same registry. Account, client and check-in routes use the SPA shell with `noindex` metadata and remain outside this sitemap. Generated marketing pages reuse the existing navigation, styles and checkout script; the API and billing implementation are independent of these copy changes.
+
+Set `BUILD_OUTPUT_DIR`, `VITE_CACHE_DIR`, `TMPDIR` and `npm_config_cache` to external-drive paths for local builds. Review the resulting output and the existing test suite before deploying the complete Pages project, including its unchanged Functions directory.
