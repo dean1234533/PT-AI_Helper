@@ -41,7 +41,16 @@ export default function Register() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPostPayment, sessionId]);
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  // Accounts are created after checkout (or from a trainer's invite). Anyone
+  // else landing here used to be walked into a "paste your Gemini API key"
+  // wall with no plan — send them to pick a plan instead.
+  const isInviteSignup = Boolean(inviteToken);
+  useEffect(() => {
+    if (!isPostPayment && !isInviteSignup) navigate('/pricing', { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
@@ -55,10 +64,6 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password !== form.confirm) {
-      toast.error('Passwords do not match');
-      return;
-    }
     if (form.password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
@@ -250,19 +255,6 @@ export default function Register() {
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-white/70 block mb-1.5">Confirm password</label>
-              <input
-                type="password"
-                value={form.confirm}
-                onChange={update('confirm')}
-                placeholder="Repeat password"
-                required
-                autoComplete="new-password"
-                className="w-full bg-dark-800/60 border border-white/12 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-              />
             </div>
 
             <div className="space-y-3 pt-1">

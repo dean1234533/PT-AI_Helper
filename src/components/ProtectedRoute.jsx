@@ -21,7 +21,9 @@ export default function ProtectedRoute({ children }) {
   const isAdmin = user.email === import.meta.env.VITE_ADMIN_EMAIL;
   // Clients invited by a trainer share the server-side AI cascade — no personal key needed
   const isManagedClient = Boolean(profile?.trainerId);
-  if (isAdmin || isManagedClient) return children;
+  // Paying members use the server's AI, so they never need their own key.
+  const isSubscriber = profile?.subscriptionStatus === 'active' && Boolean(profile?.stripeSubscriptionId);
+  if (isAdmin || isManagedClient || isSubscriber) return children;
 
   // Signed up for Personal/PT Pro but never finished Stripe Checkout (or the
   // subscription has since lapsed) — block app access instead of silently

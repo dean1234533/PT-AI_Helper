@@ -216,7 +216,7 @@ export default function Login() {
               </form>
               <p className="text-center text-sm text-white/40 mt-6">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">Sign up</Link>
+                <Link to="/pricing" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">Start your free trial</Link>
               </p>
               <p className="text-center mt-3">
                 <Link to="/pricing" className="text-xs text-white/45 hover:text-white font-semibold transition-colors">View membership options</Link>

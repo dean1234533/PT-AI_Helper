@@ -124,6 +124,24 @@ async function isLinkedClient(uid, env) {
   return Boolean(doc.fields?.trainerId?.stringValue);
 }
 
+// Paying members use the server's AI so they never have to bring their own
+// Gemini key. The profile doc is client-writable, so it is only used to find
+// the Stripe subscription id; entitlement is decided by Stripe itself, and the
+// subscription must have been tagged with this uid by /api/link-subscription
+// (or the checkout, for upgrades made while signed in).
+async function hasActiveSubscription(uid, env) {
+  if (!env.STRIPE_SECRET_KEY) return false;
+  const doc = await firestoreGet(`users/${uid}/data/profile`, env).catch(() => null);
+  const subId = doc?.fields?.stripeSubscriptionId?.stringValue;
+  if (!subId || !/^sub_[a-zA-Z0-9]+$/.test(subId)) return false;
+  const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+    headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY.trim()}` },
+  }).catch(() => null);
+  if (!res || !res.ok) return false;
+  const sub = await res.json();
+  return ['active', 'trialing'].includes(sub.status) && sub.metadata?.userId === uid;
+}
+
 function getKey(provider, env) {
   for (const envKey of provider.envKeys) {
     const val = env[envKey];
@@ -160,7 +178,7 @@ export async function onRequestPost(ctx) {
 
   const adminEmail = getenv('ADMIN_EMAIL', env);
   const isAdmin = adminEmail && caller.email && caller.email.toLowerCase() === adminEmail.toLowerCase();
-  if (!isAdmin && !(await isLinkedClient(caller.uid, env))) {
+  if (!isAdmin && !(await isLinkedClient(caller.uid, env)) && !(await hasActiveSubscription(caller.uid, env))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS });
   }
 

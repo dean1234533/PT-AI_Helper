@@ -29,7 +29,12 @@ export function GeminiProvider({ children }) {
     const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
     const isManagedClient = Boolean(profile?.trainerId);
 
-    if (isAdmin || isManagedClient) {
+    // Paying members use the server's AI too; the server re-checks the Stripe
+    // subscription, so this flag is only a routing hint.
+    const isSubscriber = profile?.subscriptionStatus === 'active' && Boolean(profile?.stripeSubscriptionId);
+    const ownKey = geminiKey || localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+
+    if (isAdmin || isManagedClient || (isSubscriber && !ownKey)) {
       const idToken = await user.getIdToken();
       const res = await fetch('/api/admin-ai', {
         method: 'POST',
@@ -72,7 +77,7 @@ export function GeminiProvider({ children }) {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('The AI returned an empty response. Please try again.');
     return text;
-  }, [user, geminiKey, profile?.trainerId]);
+  }, [user, geminiKey, profile?.trainerId, profile?.subscriptionStatus, profile?.stripeSubscriptionId]);
 
   const testKey = useCallback(async (keyToTest) => {
     const key = keyToTest || geminiKey;

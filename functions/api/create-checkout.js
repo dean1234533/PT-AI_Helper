@@ -41,6 +41,11 @@ export async function onRequestPost(ctx) {
       'metadata[plan]': plan,
       'allow_promotion_codes': 'true',
     });
+    // Free trial so the first step is "try it", not "pay £4.99 for an app you
+    // haven't seen". Stripe still collects a card and bills after the trial;
+    // set TRIAL_DAYS=0 in the Pages environment to switch it off.
+    const trialDays = Math.max(0, Math.min(30, parseInt(env.TRIAL_DAYS ?? '7', 10) || 0));
+    if (trialDays > 0) params.set('subscription_data[trial_period_days]', String(trialDays));
     if (userId) {
       params.set('client_reference_id', userId);
       params.set('metadata[userId]', userId);
